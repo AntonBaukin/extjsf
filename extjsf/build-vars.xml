@@ -1,0 +1,86 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<properties>
+
+ <!--===============================================
+  =  Project Shared Variables                      =
+  ================================================-->
+
+  <!-- is release or development version -->
+  <release>false</release>
+
+  <!-- root directory of the project-->
+  <rootdir>${basedir}/..</rootdir>
+
+  <!-- build work directory -->
+  <buildir>${rootdir}/build</buildir>
+
+  <!-- version of Java -->
+  <javav>1.8</javav>
+
+
+  <!--===============================================
+  =  Module Dependent Variables                     =
+  ================================================-->
+
+  <!-- module name -->
+  <module>${ant.project.name}</module>
+
+  <!-- module root directory -->
+  <module-base>${rootdir}/${module}</module-base>
+
+  <!-- directory with module Java source files -->
+  <module-sources>${module-base}/src/main/java</module-sources>
+
+  <!-- directory with module resource files -->
+  <module-resources>${module-base}/src/main/resources</module-resources>
+
+  <!-- directory with files of web application -->
+  <module-web>${module-base}/src/main/webapp</module-web>
+
+  <!-- module target directory -->
+  <module-target>${module-base}/target</module-target>
+
+  <!-- module target Java classes directory -->
+  <module-classes>${module-target}/classes</module-classes>
+
+  <!-- module target Java test classes directory -->
+  <module-test-classes>${module-target}/test-classes</module-test-classes>
+
+  <!-- path to target module archive file -->
+  <module-package>${module-target}/${module}.war</module-package>
+
+
+  <!--===============================================
+  =  Ivy Configuration                              =
+  ================================================-->
+
+  <!-- local Ivy cache (repository) -->
+  <ivy-cache>${buildir}/.ivy-cache</ivy-cache>
+
+  <!-- Ivy setup file -->
+  <ivy-setup>${buildir}/setup.ivy</ivy-setup>
+
+  <!-- module configuration file -->
+  <ivy-module>${module-base}/${module}.ivy</ivy-module>
+
+
+  <!--===============================================
+  =  Dependencies                                   =
+  ================================================-->
+
+  <!-- directory with libraries to include to the package -->
+  <deplibs-required>${buildir}/libs.pkg</deplibs-required>
+
+  <!-- directory with libraries provided by the server -->
+  <deplibs-provided>${buildir}/libs.dep</deplibs-provided>
+
+  <!-- directory with libraries needed to test -->
+  <deplibs-test>${buildir}/libs.tst</deplibs-test>
+
+  <!-- directory with sources of all the libraries -->
+  <deplibs-sources>${buildir}/libs.src</deplibs-sources>
+
+  <!-- name of archive with all compile-only dependencies -->
+  <deplibs-archive>${module-target}/dependencies.zip</deplibs-archive>
+
+</properties>

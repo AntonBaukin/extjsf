@@ -1,0 +1,71 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<project name      = 'extjsf-demo'
+         default   = 'extjsf'>
+
+
+  <!--===============================================
+   =  Project Shared Variables                      =
+   ================================================-->
+
+  <!-- is release or development version -->
+  <property name  = 'release'
+            value = 'false'/>
+
+  <!-- version of Java -->
+  <property name  = 'javav'
+            value = '1.8'/>
+
+
+  <!--——————————————————————————————————————————————+
+   | extjsf module                                  |
+   +-——————————————————————————————————————————————-->
+
+  <target name = 'extjsf'>
+
+    <!-- invoke the module -->
+    <ant dir = 'extjsf'/>
+
+    <!-- global target -->
+    <mkdir dir = 'target'/>
+
+    <!-- move the resulting packages-->
+    <move todir = 'target'>
+      <fileset dir = 'extjsf/target'>
+        <include name = '*.war'/>
+      </fileset>
+    </move>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | clean                                          |
+   +-——————————————————————————————————————————————-->
+
+  <target name = 'clean'>
+
+    <ant dir = 'extjsf' target = 'clean'/>
+
+    <!-- remove global target -->
+    <delete dir = 'target'
+      failonerror = 'false'/>
+
+    <!-- remove the libraries -->
+    <delete failonerror = 'false' includeemptydirs = 'true'>
+      <dirset dir = 'build' includes = 'libs.*'/>
+    </delete>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | clean all                                      |
+   +-——————————————————————————————————————————————-->
+
+  <target name = 'clean-all' depends = 'clean'>
+
+    <!-- remove Ivy cache -->
+    <delete dir = 'build/.ivy-cache'
+      failonerror = 'false'/>
+  </target>
+
+</project>

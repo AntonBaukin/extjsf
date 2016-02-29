@@ -1,0 +1,217 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<facelet-taglib version = '2.0'>
+  <description>
+    JavsServer Faces Tag Library for ExtJS Demo Application.
+    It contains only functions to use in XHTML pages.
+  </description>
+  <display-name>
+    ExtJSF Tag Library
+  </display-name>
+
+  <namespace>uri:extjs.jsf.java.net</namespace>
+
+
+  <!--=================================================
+    =  XHTML                                          =
+    =================================================-->
+
+  <!-- cdata -->
+
+  <function>
+    <description>
+      Wraps the text into CDATA section.
+    </description>
+    <display-name>Wraps into CDATA</display-name>
+
+    <function-name>cdata</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String cdata(java.lang.Object)
+    </function-signature>
+  </function>
+
+
+  <!-- xss -->
+
+  <function>
+    <description>
+      Escapes XML/HTML strings.
+    </description>
+    <display-name>Escapes XML/HTML Strings</display-name>
+
+    <function-name>xss</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String escapeHTMLString(java.lang.Object)
+    </function-signature>
+  </function>
+
+
+  <!-- trim -->
+
+  <function>
+    <description>
+      Trims object depending on it's type.
+      Always returns string.
+    </description>
+    <display-name>Trims object to string</display-name>
+
+    <function-name>trim</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String trim(java.lang.Object)
+    </function-signature>
+  </function>
+
+
+  <!--=================================================
+    =  URLs                                           =
+    =================================================-->
+
+  <!-- url -->
+
+  <function>
+    <description>
+      Adds application context path before the path given.
+    </description>
+    <display-name>Relative URL with Context Path</display-name>
+
+    <function-name>url</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String encodePath(java.lang.String)
+    </function-signature>
+  </function>
+
+
+  <!-- absurl -->
+
+  <function>
+    <description>
+      Creates absolute URL adding the context path.
+    </description>
+    <display-name>Absolute URL</display-name>
+
+    <function-name>absurl</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String absoluteURL(java.lang.String)
+    </function-signature>
+  </function>
+
+
+  <!-- go -->
+
+  <function>
+    <description>
+      Creates go-link based on path given (context excluded),
+      or the root request URI.
+    </description>
+    <display-name>Go-link with Context Path</display-name>
+
+    <function-name>go</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String goPath(java.lang.String)
+    </function-signature>
+  </function>
+
+
+  <!--=================================================
+    =  JavaScript support                             =
+    =================================================-->
+
+  <!-- jss -->
+
+  <function>
+    <description>
+      Escapes JavaScript strings.
+    </description>
+    <display-name>Escapes JavaScript Strings</display-name>
+
+    <function-name>jss</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String escapeJSString(java.lang.Object)
+    </function-signature>
+  </function>
+
+
+  <!--=================================================
+    =  Model Views support                            =
+    =================================================-->
+
+  <!-- vid -->
+
+  <function>
+    <description>
+      Generates node ID based on the view ID.
+    </description>
+    <display-name>Generate View ID for node</display-name>
+
+    <function-name>vid</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String genViewId(net.java.jsf.extjs.faces.ViewWithModes, java.lang.String)
+    </function-signature>
+  </function>
+
+
+  <!--=================================================
+    =  Collections and iterations                     =
+    =================================================-->
+
+  <function>
+    <description>
+      Converts Map Entries Set to List.
+    </description>
+    <display-name>Map As List</display-name>
+
+    <function-name>mapAsList</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.util.List mapAsList(java.util.Map)
+    </function-signature>
+  </function>
+
+
+  <!--=================================================
+    =  Formatting of various data types               =
+    =================================================-->
+
+  <function>
+    <description>
+      Formats a Big Decimal to currency
+      value with trailing '.00'.
+    </description>
+    <display-name>Big Decimal Currency</display-name>
+
+    <function-name>currency</function-name>
+    <function-class>
+      net.java.jsf.extjs.faces.Functions
+    </function-class>
+    <function-signature>
+      java.lang.String currency(java.lang.Object)
+    </function-signature>
+  </function>
+
+</facelet-taglib>

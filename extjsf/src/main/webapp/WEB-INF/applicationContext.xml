@@ -1,0 +1,20 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<beans xmlns    = 'http://www.springframework.org/schema/beans'
+  xmlns:context = 'http://www.springframework.org/schema/context'>
+
+
+  <!--——————————————————————————————————————————————+
+   | Annotation based configuration                 |
+   +-——————————————————————————————————————————————-->
+
+  <context:annotation-config/>
+
+
+  <!--——————————————————————————————————————————————+
+   | Beans scan (auto detection) packages           |
+   +-——————————————————————————————————————————————-->
+
+  <context:component-scan base-package = 'net.java.jsf.extjs'/>
+
+</beans>

@@ -1,0 +1,246 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<project xmlns:ivy = 'antlib:org.apache.ivy.ant'
+         name      = 'extjsf'
+         default   = 'package'>
+
+  <!--——————————————————————————————————————————————+
+   | variables                                      |
+   +-——————————————————————————————————————————————-->
+
+  <xmlproperty file = 'build-vars.xml'
+    keepRoot = 'false' semanticAttributes = 'true'/>
+
+  <condition property = '?deps'>
+    <isset property = 'withDeps'/>
+  </condition>
+
+  <condition property = '?debug'>
+    <isfalse value = '${release}'/>
+  </condition>
+
+
+  <!--——————————————————————————————————————————————+
+   | compile                                        |
+   +-——————————————————————————————————————————————-->
+
+  <target name    = 'compile'
+          depends = 'init-dep'>
+
+    <mkdir dir = '${module-classes}'/>
+
+    <!-- compile the classes -->
+    <javac srcdir   = '${module-sources}'
+           destdir  = '${module-classes}'
+           encoding = 'UTF-8'
+           debug    = '${?debug}' includeAntRuntime = 'false'
+           source   = '${javav}' target = '${javav}'>
+
+      <classpath>
+        <fileset dir = '${deplibs-required}' includes = '*.jar'/>
+        <fileset dir = '${deplibs-provided}' includes = '*.jar'/>
+      </classpath>
+    </javac>
+
+    <!-- copy direct resources of the classes -->
+    <copy todir = '${module-classes}' overwrite = 'true'>
+      <fileset dir = '${module-sources}'
+        erroronmissingdir = 'false'>
+
+        <exclude name = '**/*.java'/>
+        <include name = '**/*'/>
+      </fileset>
+    </copy>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | package                                        |
+   +-——————————————————————————————————————————————-->
+
+  <target name    = 'package'
+          depends = 'package-default, package-deps'/>
+
+  <target name    = 'package-default'
+          depends = 'compile'>
+
+    <war destfile = '${module-package}'
+      manifest = '${module-web}/META-INF/MANIFEST.MF'
+      needxmlfile = 'false'>
+
+      <!-- compiled classes and direct resources -->
+      <classes dir = '${module-classes}'/>
+
+      <!-- additional resources -->
+      <classes dir = '${module-resources}'
+        erroronmissingdir = 'false'/>
+
+      <!-- web resources -->
+      <fileset dir = '${module-web}'>
+        <exclude name = 'META-INF/MANIFEST.MF'/>
+      </fileset>
+
+      <!-- libraries required to run -->
+      <lib dir = '${deplibs-required}'/>
+    </war>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | package with dependencies                      |
+   +-——————————————————————————————————————————————-->
+
+  <target name    = 'package-deps' if = '?deps'
+          depends = 'package-default'>
+
+    <zip destfile = '${module-package}'
+         update   = 'true'
+         level    = '0'
+         encoding = 'UTF-8'>
+
+      <zipfileset prefix = 'WEB-INF/lib'
+                  refid  = 'dependencies'/>
+    </zip>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | dependencies archive                           |
+   +-——————————————————————————————————————————————-->
+
+  <!-- the set of libraries not shipped with default package -->
+  <fileset id  = 'dependencies'
+           dir = '${deplibs-provided}'>
+
+    <!-- exclude files not allowed by a server-->
+    <exclude name = '*servlet-api*'/>
+    <exclude name = '*el-api*'/>
+    <exclude name = '*jsp-api*'/>
+  </fileset>
+
+  <target name    = 'dependencies'
+          depends = 'init-dep'>
+
+    <delete file = '${deplibs-archive}'
+      failonerror = 'false'/>
+
+    <zip destfile = '${deplibs-archive}'
+         compress = 'false'
+         encoding = 'UTF-8'>
+
+      <fileset refid = 'dependencies'/>
+    </zip>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | clean (target)                                 |
+   +-——————————————————————————————————————————————-->
+
+  <target name = 'clean'>
+
+    <delete dir = '${module-target}'
+      failonerror = 'false'/>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | system: dependencies on the libraries          |
+   +-——————————————————————————————————————————————-->
+
+  <target name = 'init-ivy'>
+
+    <mkdir dir = '${ivy-cache}'/>
+    <ivy:configure file = '${ivy-setup}'/>
+
+    <ivy:resolve resolveId = 'main'
+      file = '${ivy-module}'/>
+  </target>
+
+  <target name    = 'init-dep'
+          depends = 'init-dep-retrieve, init-dep-merge-libs'/>
+
+  <target name    = 'init-dep-retrieve'
+          depends = 'init-dep-retrieve-runtime, init-dep-retrieve-compile,
+                     init-dep-retrieve-sources'/>
+
+  <target name    = 'init-dep-retrieve-runtime'
+          depends = 'init-ivy'>
+
+    <!-- libraries (required to run) -->
+    <ivy:retrieve conf = 'runtime'
+       resolveId = 'main' type = 'jar, bundle'
+       pattern = '${deplibs-required}/[artifact]-[revision].[ext]'/>
+  </target>
+
+  <target name    = 'init-dep-retrieve-compile'
+          depends = 'init-ivy'>
+
+    <!-- libraries (all compile-only) -->
+    <ivy:retrieve conf = 'compile'
+       resolveId = 'main' type = 'jar, bundle'
+       pattern = '${deplibs-provided}/[artifact]-[revision].[ext]'/>
+  </target>
+
+  <target name    = 'init-dep-retrieve-test'
+          depends = 'init-ivy'>
+
+    <!-- libraries (test) -->
+    <ivy:retrieve conf = 'test'
+       resolveId = 'main' type = 'jar, bundle'
+       pattern = '${deplibs-test}/[artifact]-[revision].[ext]'/>
+  </target>
+
+  <target name    = 'init-dep-retrieve-sources'
+          depends = 'init-ivy'>
+
+    <!-- sources (shared for runtime and compile) -->
+    <ivy:retrieve resolveId = 'main' type = 'sources, source, src'
+       pattern = '${deplibs-sources}/[artifact]-[revision].[ext]'/>
+  </target>
+
+  <target name    = 'init-dep-merge-libs-condition'>
+
+    <condition property = 'init_dev_merge_libs_condition'>
+      <and>
+        <available file = '${deplibs-required}' type = 'dir'/>
+        <available file = '${deplibs-provided}' type = 'dir'/>
+      </and>
+    </condition>
+  </target>
+
+  <!--
+    This system task removes all libraries required to run
+    (that are included in the package) from the libraries
+    required for compile-only. This also allows to separate
+    libraries to list them as artifacts of IDE. (You don't
+    need to package compile-only libraries that are shipped
+    with the application server.)
+  -->
+  <target name    = 'init-dep-merge-libs'
+          depends = 'init-dep-merge-libs-condition'
+          if      = 'init_dev_merge_libs_condition'>
+
+    <!-- first, take libraries required to run -->
+    <copy todir = '${buildir}/libs.tmp'>
+      <fileset dir = '${deplibs-required}' includes = '*.jar'/>
+    </copy>
+
+    <!-- second, set their size to zero -->
+    <truncate>
+      <fileset dir = '${buildir}/libs.tmp'/>
+    </truncate>
+
+    <!-- third, move them to the compile-time only -->
+    <move todir = '${deplibs-provided}'>
+      <fileset dir = '${buildir}/libs.tmp'/>
+    </move>
+
+    <!-- finally, delete them -->
+    <delete>
+      <fileset dir = '${deplibs-provided}'>
+        <size value = '0' when = 'eq'/>
+      </fileset>
+    </delete>
+  </target>
+</project>
