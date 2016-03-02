@@ -1,0 +1,49 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<Configuration packages = 'com.tverts.support.log4j'>
+
+  <Appenders>
+
+    <File name = 'spring' append = 'false' bufferSize = '512'
+      fileName = 'extjsf_spring.log'>
+
+      <PatternLayout pattern = '%-5p %d{HH:mm:ss.SSS} %c{1}: %m%n'/>
+      <filters>
+        <ThresholdFilter level = 'INFO'/>
+      </filters>
+    </File>
+
+    <File name = 'debug' append = 'false' bufferSize = '2048'
+      fileName = 'extjsf_debug.log'>
+
+      <PatternLayout pattern = '%-5p %d{HH:mm:ss.SSS} %c{1}: %m%n'/>
+    </File>
+
+    <File name = 'debug.json' append = 'false' bufferSize = '2048'
+      fileName = 'extjsf_debug.json'>
+
+      <FastJSONLayout/>
+    </File>
+  </Appenders>
+
+  <Loggers>
+
+    <!-- Spring -->
+
+    <Logger name = 'org.springframework'
+      level = 'INFO' additivity = 'false'>
+
+      <AppenderRef ref = 'spring'/>
+      <AppenderRef ref = 'debug'/>
+      <AppenderRef ref = 'debug.json'/>
+    </Logger>
+
+
+    <!-- Root Logger -->
+
+    <Root level = 'INFO'>
+      <AppenderRef ref = 'debug'/>
+      <AppenderRef ref = 'debug.json'/>
+    </Root>
+  </Loggers>
+</Configuration>

@@ -54,6 +54,12 @@
 
     <dependency
       org  = 'org.springframework'
+      name = 'spring-context'
+      rev  = '4.2.5.RELEASE'
+      conf = 'sources'/>
+
+    <dependency
+      org  = 'org.springframework'
       name = 'spring-context-support'
       rev  = '4.2.5.RELEASE'
       conf = 'sources'/>

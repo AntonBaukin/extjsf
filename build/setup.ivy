@@ -28,13 +28,7 @@
              root = 'https://maven.java.net/content/repositories/releases/'/>
 
 
-    <!-- repository: ibiblio.org (main) -->
-
-    <ibiblio name = 'ibiblio.org' m2compatible = 'true' useMavenMetadata = 'false'
-             root = 'http://mirrors.ibiblio.org/maven2/'/>
-
-
-    <!-- repository: maven.org (central, fallback) -->
+    <!-- repository: Maven.org -->
 
     <ibiblio name = 'maven.org' m2compatible = 'true' useMavenMetadata = 'false'
              root = 'http://repo1.maven.org/maven2/'/>
@@ -45,7 +39,6 @@
     <chain name = 'default' returnFirst = 'true'>
       <resolver ref = 'jboss.org'/>
       <resolver ref = 'java.net'/>
-      <resolver ref = 'ibiblio.org'/>
       <resolver ref = 'maven.org'/>
     </chain>
   </resolvers>
