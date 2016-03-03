@@ -1,0 +1,54 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
+   xmlns:f  = 'http://java.sun.com/jsf/core'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'value' required = 'true'
+       type = 'java.lang.Object'/>
+
+    <co:editableValueHolder name = 'hidden'
+       targets = '#{cc.clientId}-#{cc.attrs.coid}'/>
+
+    <co:facet name = 'extjs-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <h:inputHidden id = "hidden" value = "#{cc.attrs.value}"/>
+
+    <div id = "#{cc.clientId}-hidden-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <script type = "text/javascript">
+
+  (function()
+  {
+    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+
+    field.nodeId("#{cc.clientId}-hidden")
+    field.extjsPropsNode().extjsProps({
+      xtype   : 'hiddenfield',
+      inputId : "#{cc.attrs.coid}",
+      name    : "#{cc.clientId}-hidden"
+    })
+
+    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', field)
+
+  })()
+
+    </script>
+  </co:implementation>
+</ui:fragment>

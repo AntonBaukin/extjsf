@@ -1,0 +1,157 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:f  = 'http://java.sun.com/jsf/core'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+      type = 'java.lang.Object'/>
+
+    <co:attribute name = 'value' required = 'true'
+      type = 'java.lang.Object'/>
+
+    <!--
+      Use this attribute to temporary assign
+      the same visible value while the store
+      is loading. This eliminates temporary
+      displaying the store key instead of
+      the associated item title.
+    -->
+    <co:attribute name = 'displayValue' default = ""
+      type = 'java.lang.String'/>
+
+    <co:attribute name = 'labels'
+      type = 'java.util.Map'/>
+
+    <co:attribute name = 'storeId'
+      type = 'java.lang.String'/>
+
+    <co:editableValueHolder name = 'valueInput'
+      targets = 'hidden'/>
+
+    <co:facet name = 'drop-props'/>
+    <co:facet name = 'label-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <h:inputHidden id = "hidden" value = "#{cc.attrs.value}"/>
+
+    <div id = "#{cc.clientId}-hidden-props" style = "display:none">
+      <co:renderFacet name = "drop-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-labels" style = "display:none">
+
+      <h:outputText escape = "true" value = "#{cc.attrs.labels}">
+        <f:converter converterId = "com.tverts:fmt:special:json-strings-map-list"/>
+      </h:outputText>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-label-props" style = "display:none">
+      <co:renderFacet name = "label-props"/>
+    </div>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  (function()
+  {
+    //~: on change
+    function on_change(f, key)
+    {
+      var n = Ext.getDom('#{cc.clientId}-hidden');
+      if(!ZeT.iss(key) || !key.length) n.value = '';
+      else n.value = key;
+    }
+
+    //~: create component bind
+    var bind = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    bind.nodeId('#{cc.clientId}-hidden');
+    bind.on('change', on_change)
+
+    bind.extjsProps({xtype: 'combobox'})
+    bind.extjsProps({nodeId: '#{cc.attrs.coid}', name: '#{cc.clientId}-#{cc.attrs.coid}'})
+    bind.extjsProps({displayhidden: 'label', valuehidden: 'key'})
+    bind.extjsPropsNode()
+
+    //?: {external store is provided}
+    if("#{cc.attrs.storeId}".length)
+    {
+      bind.extjsProps({store: "#{cc.attrs.storeId}"})
+
+      //~: refresh source on repeated expand
+      var expandTime; if(!bind.extjsPropsRaw().notRefreshOnExpand)
+        bind.on('expand', function()
+      {
+        var ts = new Date().getTime()
+        if(expandTime && (ts - expandTime < 2000))
+          bind.co().getStore().reload()
+        expandTime = ts
+      })
+    }
+    //~: evaluate label mapping      !: it is array
+    else {
+
+      var labls = Ext.getDom("#{cc.clientId}-#{cc.attrs.coid}-labels").innerHTML;
+      labls = eval('('.concat(labls, ')'));
+
+      var items = [];
+      for(var i = 0;(i + 1 < labls.length);i += 2)
+        items.push([labls[i], labls[i + 1]])
+
+      //~: items as a store
+      bind.extjsProps({store: items, queryMode: 'local'})
+    }
+
+    var label = new extjsf.Bind();
+    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
+
+    if(!label.isPropsNode()) label = null; else
+    {
+      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      bind.extjsProps({hideLabel: true})
+
+      //~: label click expand-collapse support
+      bind.on('collapse', function()
+      { bind.collapseTime = new Date().getTime(); })
+
+      label.on('afterrender', function(l) { l.getEl().addListener('click', function()
+      {
+        var drop = bind.co()
+        if(drop.isDisabled() || drop.readOnly) return
+        var ct = bind.collapseTime; ct = new Date().getTime() - ((!ct)?(0):(ct))
+        if(ct > 500) bind.co().expand()
+      })})
+
+      label.extjsPropsNode().extjsProps({
+        xtype: 'label', forId: "#{cc.attrs.coid}"
+      })
+    }
+
+    //~: bind label first
+    if(label) extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', label)
+
+    //~: display value substitute
+    if("#{cc.attrs.displayValue}".length)
+      bind.on('afterrender', function(f)
+      {
+        if(f.inputEl) $(f.inputEl.dom).val("#{cc.attrs.displayValue}")
+      })
+
+    //~: bind drop-list to the parent
+    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', bind)
+
+  })()
+
+    //]]>
+    </script>
+
+  </co:implementation>
+</ui:fragment>

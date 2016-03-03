@@ -1,0 +1,76 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid'
+      required = 'true'
+      type = 'java.lang.String'/>
+
+    <co:attribute name = 'action'
+      method-signature = "java.lang.String action()"/>
+
+    <co:facet name = 'extjs-props'/>
+    <co:facet name = 'action-params'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-params" style = "display:none">
+      <co:renderFacet name = "action-params"/>
+    </div>
+
+    <h:form id = "#{cc.attrs.coid}" style = "display:none">
+      <h:commandButton id = "submit" action = "#{cc.attrs.action}"/>
+    </h:form>
+
+    <script type = "text/javascript">
+
+  ZeT.scope(function()
+  {
+    //~: create button bind
+    var button = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    button.nodeId('#{cc.clientId}-#{cc.attrs.coid}')
+    button.goFormAction()
+
+    //~: configure the bind
+    button.extjsProps({xtype: 'button'})
+    button.extjsPropsNode()
+
+    //~: submit handler
+    function submit_handler()
+    {
+      var params = button.evalPropsNode("#{cc.clientId}-#{cc.attrs.coid}-params");
+      var method = undefined; if(ZeT.iss(params.method)) { method = params.method; delete params.method; }
+
+      new extjsf.WinmainLoader('${rootView.extjsDomain}').
+        form('#{cc.clientId}-#{cc.attrs.coid}').button(true).
+        addParams({'${rootView.extjsDomainParam}': '${rootView.extjsDomain}',
+          '${rootView.viewModeParam}': '${rootView.viewModeStr}',
+          '${rootView.viewIdParam}': '${rootView.id}'}).
+        addParams(params).setMethod(method).
+        load()
+    }
+
+    button.handler = submit_handler;
+    button.extjsProps({handler: submit_handler})
+
+    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', button)
+  })
+
+    </script>
+
+    <co:insertChildren/>
+
+  </co:implementation>
+</ui:fragment>

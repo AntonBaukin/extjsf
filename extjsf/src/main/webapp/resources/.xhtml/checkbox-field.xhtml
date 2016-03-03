@@ -1,0 +1,94 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'value' required = 'false'
+       type = 'java.lang.Object'/>
+
+    <co:editableValueHolder name = 'valueInput'
+       targets = 'checkbox'/>
+
+    <co:facet name = 'extjs-props'/>
+    <co:facet name = 'label-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <h:inputHidden id = "checkbox" value = "#{cc.attrs.value}"/>
+
+    <div id = "#{cc.clientId}-checkbox-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-label-props" style = "display:none">
+      <co:renderFacet name = "label-props"/>
+    </div>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  (function()
+  {
+    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    field.nodeId("#{cc.clientId}-checkbox")
+    field.initialChecked = ('true' == Ext.getDom(field.nodeId()).value);
+
+    field.extjsProps({labelSeparator: '', xtype: 'checkboxfield'})
+    field.extjsPropsNode().extjsProps({
+      inputId : "#{cc.attrs.coid}",
+      name    : "#{cc.clientId}-checkbox",
+      inputValue : 'true', uncheckedValue: 'false'
+    })
+
+    if(field.initialChecked) field.extjsProps({ checked : true })
+    else if(field.extjsPropsRaw().checked && !field.initialChecked)
+      Ext.getDom(field.nodeId()).value = 'true';
+
+    var label = new extjsf.Bind();
+    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
+
+    if(!label.isPropsNode()) label = null; else
+    {
+      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      field.extjsProps({hideLabel: true})
+
+      //~: set for attribute
+      label.on('afterrender', function(l) {
+        l.getEl().set({'for': "#{cc.attrs.coid}"})
+      })
+
+      var lstyle = field.extjsPropsRaw()['style'] || {};
+      if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
+      if(!lstyle.cursor) lstyle.cursor = 'pointer';
+
+      label.extjsPropsNode().extjsProps({
+        xtype: 'label', style: lstyle
+      })
+    }
+
+    var form  = extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}');
+
+    if(!label) { form.addItem(field); return; }
+
+    field.extjsProps({hideLabel: true, hideEmptyLabel: true})
+    if(label.extjsPropsRaw()['labelAlign'] == 'left')
+    {      form.addItem(label); form.addItem(field); }
+    else { form.addItem(field); form.addItem(label); }
+
+  })()
+
+    //]]>
+    </script>
+  </co:implementation>
+</ui:fragment>

@@ -1,0 +1,80 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
+   xmlns:f  = 'http://java.sun.com/jsf/core'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'modelView' required = 'true'
+       type = 'com.tverts.faces.ModelViewBase'/>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'renderTo' default = ''
+       type = 'java.lang.String'/>
+
+    <co:facet name = 'extjs-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <script type = "text/javascript">
+
+  extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+    nodeId("#{cc.clientId}-#{cc.attrs.coid}").
+    renderTo("#{cc.attrs.renderTo}")
+
+    </script>
+
+
+    <h:form id = "#{cc.attrs.coid}">
+
+      <input type="hidden" name = "model" value = "#{cc.attrs.modelView.modelKeys}"/>
+      <input type="hidden" name = "view"  value = "#{cc.attrs.modelView.id}"/>
+
+      <co:insertChildren/>
+    </h:form>
+
+
+    <script type = "text/javascript">
+
+  Ext.onReady(function()
+  {
+    var form  = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    form.goFormAction()
+
+    var props = form.extjsPropsRaw();
+
+    if(!props || !props['errorReader']) form.extjsProps({
+
+      errorReader: Ext.create('Ext.data.reader.Xml', {
+        record: 'field', model: 'retrade.model.FormValidation'
+      })
+    })
+
+    form.extjsPropsNode({ margin: 0, border: false })
+    form.extjsPropsNode()
+    form.extjsProps({ xtype: 'form', id : "#{cc.attrs.coid}" })
+
+    extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+      co(Ext.create('Ext.form.Panel', form.extjsProps()))
+  })
+
+  extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', '#{cc.attrs.coid}')
+
+    </script>
+
+  </co:implementation>
+</ui:fragment>

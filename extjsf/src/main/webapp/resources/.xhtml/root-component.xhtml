@@ -1,0 +1,164 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'domainOwner' default = 'false'
+       type = 'java.lang.Boolean'/>
+
+    <co:facet name = 'extjs-props'/>
+    <co:facet name = 'toolbar-props'/>
+    <co:facet name = 'toolbar'/>
+    <co:facet name = 'status-props'/>
+    <co:facet name = 'status'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-toolbar-props" style = "display:none">
+      <co:renderFacet name = "toolbar-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-status-props" style = "display:none">
+      <co:renderFacet name = "status-props"/>
+    </div>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  (function()
+  {
+    var domain = '${rootView.extjsDomain}';
+    var bind   = extjsf.defineBind('#{cc.attrs.coid}', domain).
+      nodeId('#{cc.clientId}-#{cc.attrs.coid}').
+      extjsProps({xtype: 'panel', id: '#{cc.attrs.coid}'}).
+      extjsProps({border: false, frame: false, layout: 'fit'}).
+      extjsPropsNode()
+
+    var parent = !!'#{cc.parent.attrs.coid}'.length &&
+      extjsf.bind('#{cc.parent.attrs.coid}', domain)
+    var render = !!bind.extjsPropsRaw()['renderTo']
+
+    if(parent && !render) parent.addItem(bind)
+
+    //~: create the toolbar
+    var toolbar = extjsf.defineBind('#{cc.attrs.coid}-toolbar', domain)
+    toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
+    toolbar.extjsProps({ xtype: 'toolbar', dock: 'top', border: false })
+    toolbar.extjsPropsNode()
+
+    //~: create the status bar
+    var status = extjsf.defineBind('#{cc.attrs.coid}-status', domain)
+    status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
+    status.extjsProps({xtype: 'statusbar', dock: 'bottom'}).extjsPropsNode()
+
+  })()
+
+    //]]>
+    </script>
+
+
+    <!-- [insert toolbar controls -->
+
+    <co:renderFacet name = "toolbar"/>
+
+    <script type = "text/javascript">
+
+  (function()
+  {
+    var domain  = '${rootView.extjsDomain}';
+    var comp    = extjsf.bind("#{cc.attrs.coid}", domain);
+    var toolbar = extjsf.bind('#{cc.attrs.coid}-toolbar', domain);
+
+    //HINT: we steal the items from the root component
+    //  and add them to the toolbar!
+
+    toolbar.replaceItems(comp.replaceItems())
+
+  })()
+
+    </script>
+
+    <!-- insert toolbar controls] -->
+
+
+    <!-- [insert status bar controls -->
+
+    <co:renderFacet name = "status"/>
+
+    <script type = "text/javascript">
+
+  (function()
+  {
+    var domain = '${rootView.extjsDomain}';
+    var comp   = extjsf.bind("#{cc.attrs.coid}", domain);
+    var status = extjsf.bind('#{cc.attrs.coid}-status', domain);
+
+    //HINT: we steal the items from the root component
+    //  and add them to the status bar (the same as for the toolbar)!
+
+    status.replaceItems(comp.replaceItems())
+
+  })()
+
+    </script>
+
+    <!-- insert status bar controls] -->
+
+
+    <co:insertChildren/>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  Ext.onReady(function()
+  {
+    var domain  = '${rootView.extjsDomain}';
+    var parent  = !!'#{cc.parent.attrs.coid}'.length &&
+      extjsf.bind('#{cc.parent.attrs.coid}', domain);
+    var comp    = extjsf.bind("#{cc.attrs.coid}", domain);
+    var render  = !!comp.extjsPropsRaw()['renderTo'];
+    var toolbar = extjsf.bind('#{cc.attrs.coid}-toolbar', domain);
+    var status  = extjsf.bind('#{cc.attrs.coid}-status', domain);
+
+    //?: {was not added to the parent} just create the component now
+    if(!(parent && !render)) comp.co(
+      Ext.ComponentManager.create(comp.extjsProps()))
+
+    //?: {toolbar has items} add it to the component
+    if(toolbar.hasItems() || toolbar.hasHTML())
+      comp.co().addDocked(toolbar.extjsProps())
+
+    //?: {status bar has items} add it to the component
+    if(status.hasItems() || status.hasHTML())
+      comp.co().addDocked(status.extjsProps())
+
+    if(('#{cc.attrs.domainOwner}' === 'true') && domain.length)
+    {
+      //~: register domain destroyer
+      if(!comp._domain_deleter)
+        comp._domain_deleter = extjsf.domainDeleter(domain)
+      comp.on('beforedestroy', comp._domain_deleter)
+
+      //~: register this bind by the global name
+      extjsf.defineBind('domain-owner', domain, comp)
+    }
+  })
+
+    //]]>
+    </script>
+
+  </co:implementation>
+</ui:fragment>

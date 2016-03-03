@@ -1,0 +1,106 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <!--
+         DOM node id to render the component to.
+         May be followed by 'renderParent' attribute.
+    -->
+    <co:attribute name = 'renderTo' default = ''
+       type = 'java.lang.String'/>
+
+    <!--
+         Defines ExtJSF Bind id to nest the component
+         as a child. Note that that the component must
+         not actually render (or display) it's children.
+    -->
+    <co:attribute name = 'renderParent' default = ''
+       type = 'java.lang.String'/>
+
+    <!--
+        ExtJSF Bind name of the container to append
+        this to as a child. Conflicts with 'renderTo'!
+    -->
+    <co:attribute name = 'parentId' default = ''
+       type = 'java.lang.String'/>
+
+    <co:facet name = 'extjs-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+    ZeT.scope(function()
+    {
+      var bind = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+        nodeId('#{cc.clientId}-#{cc.attrs.coid}').
+        extjsProps({xtype: 'panel', id: '#{cc.attrs.coid}'}).
+        extjsPropsNode()
+
+      //?: {rendering to DOM node}
+      if(!ZeTS.ises("#{cc.attrs.renderTo}"))
+        bind.renderTo("#{cc.attrs.renderTo}")
+      //?: {not inserting into target parent}
+      else if(ZeTS.ises("#{cc.attrs.parentId}"))
+        if(!ZeTS.ises("#{cc.parent.attrs.coid}"))
+          extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', '#{cc.attrs.coid}')
+    })
+
+    //]]>
+    </script>
+
+    <co:insertChildren/>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  //?: {render to DOM node}
+  if(!ZeTS.ises("#{cc.attrs.renderTo}")) Ext.onReady(function()
+  {
+    var bind = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+
+    //~: create the component
+    bind.co(Ext.ComponentManager.create(bind.extjsProps()))
+
+    //?: {has component render parent}
+    if('#{cc.attrs.renderParent}'.length)
+      bind.renderParent('#{cc.attrs.renderParent}')
+    //~: connect destroy listener
+    else
+      extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}').
+        on('beforedestroy', bind.boundDestroy())
+  })
+
+  //?: {render to container component}
+  else if(!ZeTS.ises("#{cc.attrs.parentId}"))
+    extjsf.bind('#{cc.attrs.parentId}', '${rootView.extjsDomain}').on('added', function(parent)
+    {
+      var bind = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+
+      //~: create the component
+      bind.co(Ext.ComponentManager.create(bind.extjsProps()))
+
+      //~: append to the parent
+      parent.add(bind.co())
+    })
+
+    //]]>
+    </script>
+
+  </co:implementation>
+</ui:fragment>

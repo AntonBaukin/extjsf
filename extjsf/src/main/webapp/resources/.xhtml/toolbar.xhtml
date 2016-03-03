@@ -1,0 +1,42 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:facet name = 'extjs-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <script type = "text/javascript">
+
+  //~: create the toolbar
+  extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+    nodeId("#{cc.clientId}-#{cc.attrs.coid}").
+    extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
+    extjsPropsNode()
+
+  //~: add it on the component created
+  extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}').on('added', function(parent)
+  {
+    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}').extjsProps())
+  })
+
+    </script>
+
+    <co:insertChildren/>
+
+  </co:implementation>
+</ui:fragment>

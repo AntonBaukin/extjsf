@@ -1,0 +1,45 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:facet name = 'extjs-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <script type = "text/javascript">
+
+  extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}').menu =
+
+    extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+      nodeId('#{cc.clientId}-#{cc.attrs.coid}').
+      extjsPropsNode();
+
+    </script>
+
+    <co:insertChildren/>
+
+    <script type = "text/javascript">
+
+  Ext.onReady(function()
+  {
+    extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}').co(Ext.create(
+      'Ext.menu.Menu', extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}').extjsProps()))
+  })
+
+    </script>
+  </co:implementation>
+</ui:fragment>

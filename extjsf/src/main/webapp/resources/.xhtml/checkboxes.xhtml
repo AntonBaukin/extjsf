@@ -1,0 +1,191 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:f  = 'http://java.sun.com/jsf/core'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <!--
+
+    Note that this component inserts the checkboxes
+    created right into the parent component. This
+    allows to mix checkboxes with other things in
+    the same layout.
+
+  -->
+
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'value' required = 'true'
+       type = 'java.util.Set'/>
+
+    <co:attribute name = 'labels' required = 'true'
+       type = 'java.util.Map'/>
+
+    <co:attribute name = 'allowNone' default = 'true'
+       type = 'java.lang.Boolean'/>
+
+    <co:attribute name = 'onlyOne' default = 'false'
+       type = 'java.lang.Boolean'/>
+
+    <co:facet name = 'check-props'/>
+    <co:facet name = 'label-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <h:inputHidden id = "#{cc.attrs.coid}" value = "#{cc.attrs.value}">
+      <f:converter converterId = "com.tverts:fmt:special:bool-set-items"/>
+    </h:inputHidden>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "check-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-label-props" style = "display:none">
+      <co:renderFacet name = "label-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-labels" style = "display:none">
+
+      <h:outputText escape = "true" value = "#{cc.attrs.labels}">
+        <f:converter converterId = "com.tverts:fmt:special:json-strings-map-list"/>
+      </h:outputText>
+    </div>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  (function()
+  {
+    var none = ("#{cc.attrs.allowNone}" == 'true')
+    var one  = ("#{cc.attrs.onlyOne}" == 'true')
+
+    //HINT: this bind is shared between all the checkboxes!
+
+    var bind = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+      nodeId('#{cc.clientId}-#{cc.attrs.coid}').
+      extjsPropsNode().extjsProps({extjsfRawItem: true}).
+      extjsProps({xtype: 'checkboxfield', name: '#{cc.attrs.coid}'})
+
+
+    //~: on check value change
+    bind.on('change', function(cb)
+    {
+      var n = Ext.getDom(bind.nodeId())
+      var v = (n.value.length)?(n.value.split(',')):[]
+      var i = v.indexOf(cb.inputValue)
+      if(i != -1) v.splice(i, 1)
+
+      if(cb.getValue()) v.push(cb.inputValue)
+      n.value = v.join(',')
+
+      //?: {has no value}
+      if(!none && (n.value == '')) {
+        n.value = cb.inputValue
+        cb.setValue(true)
+      }
+
+      //?: {one & checkbox checked}
+      if(one && cb.getValue())
+      {
+        n.value = cb.inputValue
+        ZeT.each(bind.checkboxes, function(x)
+        {
+          if(x != cb) x.setValue(false)
+        })
+      }
+    })
+
+    //~: set special create component listener
+    bind.checkboxes = []; bind.on_create = function(cb)
+    {
+      for(var i = 0;(i < bind.checkboxes.length);i++)
+        if(bind.checkboxes[i].inputValue == cb.inputValue) return
+      bind.checkboxes.push(cb)
+    }
+
+    //~: checkBoxes()
+    bind.checkBoxes = function(v)
+    {
+      var i, x = {}
+      var a = bind.checkboxes
+
+      if(v === 'all') for(i = 0;(i < a.length);i++)
+        x[a[i].inputValue] = true
+
+      if(ZeT.isa(v)) for(i = 0;(i < v.length);i++)
+        if(ZeT.iss(v[i])) x[v[i]] = true
+
+      var got = false
+      for(i = 0;(i < a.length);i++)
+        if(x[a[i].inputValue]) { got = true; break; }
+
+      ZeT.assert( !got && !none,
+        'Can not uncheck all ExtJSF checkboxes, ',
+        'it is forbidden for bind #{cc.attrs.coid}!')
+
+      var xv, xvs = []
+      for(i = 0;(i < a.length);i++)
+        if(!x[xv = a[i].inputValue]) a[i].setValue(false)
+        else { a[i].setValue(true); xvs.push(xv); }
+
+      Ext.getDom(bind.nodeId()).value = xvs.join(',')
+    }
+
+    //~: decode the items (codes) checked
+    var items = Ext.getDom('#{cc.clientId}-#{cc.attrs.coid}').value.split(',')
+    var itmap = {}
+
+    for(var i = 0;(i < items.length);i++)
+      itmap[items[i]] = true
+
+    //~: evaluate label mapping      !: it is array
+    var labls = Ext.getDom(bind.nodeId() + '-labels').innerHTML
+    labls = eval('('.concat(labls, ')'))
+
+    //~: labels phony bind
+    var label = new extjsf.Bind()
+    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
+    label.extjsPropsNode().extjsProps({
+      xtype: 'label', style: lstyle, extjsfRawItem: true
+    })
+
+    var lstyle = label.extjsPropsRaw()['style'] || {};
+    if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
+
+    //c: create the items for all the labels
+    var parent = extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}')
+    for(i = 0;(i + 1 < labls.length);i += 2)
+    {
+      //~: properties of the checkbox
+      var cb = ZeT.extend({}, bind.extjsProps())
+      ZeT.extend(cb, { inputId : "#{cc.attrs.coid}-" + i,
+        inputValue: labls[i], checked: !!itmap[labls[i]]
+      })
+
+      delete cb.value //<-- must have it not!
+
+      //~: properties of the label
+      var lb = ZeT.extend({}, label.extjsProps())
+      ZeT.extend(lb, { forId: "#{cc.attrs.coid}-" + i, text: labls[i + 1] })
+
+      //~: add directly to the parent
+      if(lb.labelAlign == 'left')
+      {      parent.addItem(lb); parent.addItem(cb); }
+      else { parent.addItem(cb); parent.addItem(lb); }
+    }
+  })()
+
+    //]]>
+    </script>
+
+  </co:implementation>
+</ui:fragment>

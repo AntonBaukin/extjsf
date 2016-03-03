@@ -1,0 +1,93 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid'
+      required = 'true'
+      type = 'java.lang.String'/>
+
+    <co:attribute name = 'action'
+      method-signature = "java.lang.String action()"/>
+
+    <co:facet name = 'action-params'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-params" style = "display:none">
+      <co:renderFacet name = "action-params"/>
+    </div>
+
+    <h:form id = "#{cc.attrs.coid}" style = "display:none">
+      <h:commandButton id = "submit" action = "#{cc.attrs.action}"/>
+    </h:form>
+
+    <script type = "text/javascript">
+      //<![CDATA[
+
+      (function ()
+      {
+        //~: create delegate
+        var delegate = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+        delegate.goFormAction('#{cc.clientId}-#{cc.attrs.coid}')
+
+        //~: submit handler
+        delegate.handler = function(opts)
+        {
+          if(!opts) opts = {}; else { var o = {}; ZeT.extend(o, opts); opts = o; }
+
+          //~: get the support form
+          var form = Ext.get('#{cc.clientId}-#{cc.attrs.coid}');
+
+          //~: POST url
+          opts.url = form.getAttribute('action');
+          if(!opts.url || !opts.url.length) opts.url = window.location.toString();
+
+          //~: prepare the parameters
+          var prms = delegate.evalPropsNode('#{cc.clientId}-#{cc.attrs.coid}-params') || {};
+          extjsf.WinmainLoader.prototype._form_params(form, prms, true)
+          if(opts.params) ZeT.extend(prms, opts.params)
+          opts.params = prms;
+
+          //~: set the default extjsf domain
+          var domain = opts.params['${rootView.extjsDomainParam}']
+          if(!domain) opts.params['${rootView.extjsDomainParam}'] =
+            domain = '${rootView.extjsDomain}';
+
+          //~: set the default view mode for POST request
+          if(!opts.params['${rootView.viewModeParam}'])
+            opts.params['${rootView.viewModeParam}'] = '${rootView.viewModePostStr}';
+
+          //~: set the default (requested) view id
+          if(!opts.params['${rootView.viewIdParam}'])
+            opts.params['${rootView.viewIdParam}'] = '${rootView.id}';
+
+          //~: resolve delayed parameters
+          ZeT.undelay(prms)
+
+          var usersuc = opts.success;
+          opts.success = function(response)
+          {
+            if(extjsf.responseHandler.call(delegate, domain, response))
+              ZeT.isf(usersuc) && usersuc.apply(this, arguments)
+            else
+              ZeT.isf(opts.failure) && opts.failure.apply(this, arguments)
+          }
+
+          //!: issue the request
+          Ext.Ajax.request(opts)
+        }
+      })()
+
+      //]]>
+    </script>
+
+  </co:implementation>
+</ui:fragment>

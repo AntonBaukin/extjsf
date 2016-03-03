@@ -1,0 +1,96 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
+   xmlns:f  = 'http://java.sun.com/jsf/core'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'value' required = 'true'
+       type = 'java.util.Date'/>
+
+    <co:editableValueHolder name = 'valueInput'
+       targets = '#{cc.clientId}-#{cc.attrs.coid}'/>
+
+    <co:facet name = 'extjs-props'/>
+    <co:facet name = 'label-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <h:inputHidden id = "#{cc.attrs.coid}" value = "#{cc.attrs.value}">
+      <f:converter converterId = "com.tverts:fmt:date2str"/>
+    </h:inputHidden>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-label-props" style = "display:none">
+      <co:renderFacet name = "label-props"/>
+    </div>
+
+    <script type = "text/javascript">
+
+  (function()
+  {
+    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    field.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
+
+    field.extjsProps({labelSeparator: '', width: extjsf.dex(15),
+      maxLength: 10, enforceMaxLength: true, cls: 'x-field-date'
+    })
+
+    field.extjsPropsNode().extjsProps({
+      xtype   : 'datefield',
+      inputId : "#{cc.attrs.coid}",
+      name    : "#{cc.clientId}-#{cc.attrs.coid}",
+      format  : 'd.m.Y', submitFormat: 'd.m.Y'
+    })
+
+    var label = new extjsf.Bind();
+    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
+
+    if(!label.isPropsNode())
+      label = null;
+    else
+    {
+      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      field.extjsProps({hideLabel: true})
+
+      var lstyle = field.extjsPropsRaw()['style'] || {};
+      if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
+
+      //~: label click expand-collapse support
+      field.on('collapse', function() { field.collapseTime = new Date().getTime(); })
+
+      label.on('afterrender', function(l) { l.getEl().addListener('click', function() {
+        if(field.co().isDisabled()) return;
+        var ct = field.collapseTime; ct = new Date().getTime() - ((!ct)?(0):(ct));
+        if(ct > 500) field.co().expand()
+      })})
+
+      label.extjsPropsNode().extjsProps({
+        xtype: 'label', style: lstyle
+      })
+    }
+
+    var form  = extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}');
+
+    if(label) form.addItem(label)
+    form.addItem(field)
+
+  })()
+
+    </script>
+  </co:implementation>
+</ui:fragment>

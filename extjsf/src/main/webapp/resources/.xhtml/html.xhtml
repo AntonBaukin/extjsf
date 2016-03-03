@@ -1,0 +1,87 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'boxClass' default = ''
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'boxStyle' default = ''
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'table' default = 'true'
+       type = 'java.lang.Boolean'/>
+
+    <co:attribute name = 'renderDelay' default = 'false'
+       type = 'java.lang.Boolean'/>
+
+    <co:facet name = 'extjs-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <c:if test = "${cc.attrs.table}">
+      <div style = "display:none">
+        <table id = "#{cc.attrs.coid}-html"
+          class = "x-hide-display extjsf-html-content #{cc.attrs.boxClass}"
+          cellpadding = "0" cellspacing = "0" border = "0"
+          style = "#{cc.attrs.boxStyle}">
+
+          <tbody><tr><td>
+              <co:insertChildren/>
+          </td></tr></tbody>
+        </table>
+      </div>
+    </c:if>
+
+    <c:if test = "${not cc.attrs.table}">
+      <div style = "display:none">
+        <div id = "#{cc.attrs.coid}-html"
+          class = "x-hide-display extjsf-html-content #{cc.attrs.boxClass}"
+          style = "#{cc.attrs.boxStyle}">
+
+          <co:insertChildren/>
+        </div>
+      </div>
+    </c:if>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+      extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+        nodeId("#{cc.clientId}-#{cc.attrs.coid}").
+        extjsProps({xtype: 'component', margin: 0}).extjsPropsNode().
+        extjsProps({html: undefined, contentEl: "#{cc.attrs.coid}-html"})
+
+      if("#{cc.attrs.renderDelay}" == "false")
+        extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', '#{cc.attrs.coid}')
+      else extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}').
+        on('afterrender', function(parent)
+        {
+          var bind = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+
+          //~: create the component
+          bind.co(Ext.ComponentManager.create(bind.extjsProps()))
+
+          //~: append to the parent
+          parent.add(bind.co())
+        })
+
+    //]]>
+    </script>
+  </co:implementation>
+</ui:fragment>

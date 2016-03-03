@@ -1,0 +1,70 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid'
+      required = 'true'
+      type = 'java.lang.String'/>
+
+    <co:attribute name = 'button'
+      type = 'java.lang.String' default = 'undefined'/>
+
+    <co:attribute name = 'action'
+      method-signature = "java.lang.String action()"/>
+
+    <co:facet name = 'action-params'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-params" style = "display:none">
+      <co:renderFacet name = "action-params"/>
+    </div>
+
+    <h:form id = "#{cc.attrs.coid}" style = "display:none">
+      <h:commandButton id = "submit" action = "#{cc.attrs.action}"/>
+    </h:form>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  ZeT.scope(function()
+  {
+    //~: create delegate
+    var delegate = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+    delegate.goFormAction('#{cc.clientId}-#{cc.attrs.coid}')
+
+     //~: submit handler
+    delegate.handler = function(opts)
+    {
+      var params = delegate.evalPropsNode("#{cc.clientId}-#{cc.attrs.coid}-params")
+      var method = params.method; if(ZeT.iss(method)) delete params.method
+      if(ZeT.iss(opts && opts.method)) method = opts.method
+
+      new extjsf.WinmainLoader('${rootView.extjsDomain}').
+        form('#{cc.clientId}-#{cc.attrs.coid}').button(true).
+        addParams({'${rootView.extjsDomainParam}': '${rootView.extjsDomain}',
+          '${rootView.viewModeParam}': '${rootView.viewModeStr}',
+          '${rootView.viewIdParam}': '${rootView.id}'}).
+        addParams(params).addParams((opts && opts.params) || {}).
+        setMethod(method).load()
+    }
+
+    //~: attach to the target button
+    var button = extjsf.bind('#{cc.attrs.button}', '${rootView.extjsDomain}')
+    if(button) button.extjsProps({handler: delegate.handler})
+    if(button && button.co()) button.co().setHandler(delegate.handler)
+
+  })
+
+    //]]>
+    </script>
+  </co:implementation>
+</ui:fragment>

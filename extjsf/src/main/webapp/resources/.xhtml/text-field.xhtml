@@ -1,0 +1,88 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'value' required = 'true'
+       type = 'java.lang.Object'/>
+
+    <co:attribute name = 'readOnly' default = 'false'
+       type = 'java.lang.Boolean'/>
+
+    <co:editableValueHolder name = 'valueInput'
+       targets = 'hidden'/>
+
+    <co:facet name = 'extjs-props'/>
+    <co:facet name = 'label-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <ui:fragment rendered = "#{not cc.attrs.readOnly}">
+      <h:inputHidden id = "hidden" value = "#{cc.attrs.value}"/>
+    </ui:fragment>
+
+    <div id = "#{cc.clientId}-hidden-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-label-props" style = "display:none">
+      <co:renderFacet name = "label-props"/>
+    </div>
+
+    <script type = "text/javascript">
+
+  (function()
+  {
+    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var ronly = ('#{cc.attrs.readOnly}' == 'true');
+
+    field.nodeId("#{cc.clientId}-hidden")
+    field.extjsProps({labelSeparator: '', xtype: 'textfield', margin: 0})
+    field.extjsPropsNode().extjsProps({
+      inputId : "#{cc.attrs.coid}",
+      name    : "#{cc.clientId}-hidden"
+    })
+
+    if(ronly) field.extjsProps({readOnly: true, value: "#{z:jss(cc.attrs.value)}"})
+
+    var label = new extjsf.Bind();
+    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
+
+    if(!label.isPropsNode()) label = null; else
+    {
+      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      field.extjsProps({hideLabel: true})
+
+      //~: set on click field focus
+      label.on('afterrender', function(l) { l.getEl().addListener('click', function(e) {
+        if(ronly) e.stopEvent(); else field.co().focus()
+      })})
+
+      var lstyle = label.extjsPropsRaw()['style'] || {};
+      if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
+
+      label.extjsPropsNode().extjsProps({
+        xtype: 'label', forId: "#{cc.attrs.coid}", style: lstyle
+      })
+    }
+
+    //~: add label and field to the form
+    var form  = extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}');
+    if(label) form.addItem(label)
+    form.addItem(field)
+  })()
+
+    </script>
+  </co:implementation>
+</ui:fragment>

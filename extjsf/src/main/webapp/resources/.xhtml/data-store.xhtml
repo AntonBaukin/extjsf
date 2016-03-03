@@ -1,0 +1,162 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'storeId' required = 'true'
+      type = 'java.lang.String'/>
+
+    <co:attribute name = 'modelView'
+      type = 'com.tverts.faces.ModelView'/>
+
+    <co:attribute name = 'modelProvider'
+      type = 'java.lang.String' default = ''/>
+
+    <co:attribute name = 'modelKey'
+      type = 'java.lang.String' default = ''/>
+
+    <co:attribute name = 'modelRequest'
+      type = 'java.lang.String' default = ''/>
+
+    <co:attribute name = 'dataStart'
+      type = 'java.lang.Integer' default = '0'/>
+
+    <co:attribute name = 'pageSize'
+      type = 'java.lang.Integer' default = '25'/>
+
+    <co:facet name = 'store-props' required = 'true'/>
+    <co:facet name = 'proxy-props' required = 'true'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.storeId}-props" style = "display:none">
+      <co:renderFacet name = "store-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.storeId}-proxy-props" style = "display:none">
+      <co:renderFacet name = "proxy-props"/>
+    </div>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  (function()
+  {
+    //~: configure the store
+    var store  = extjsf.defineBind('#{cc.attrs.storeId}', '${rootView.extjsDomain}');
+    store.nodeId('#{cc.clientId}-#{cc.attrs.storeId}')
+    var offset = parseInt("#{cc.attrs.dataStart}");
+    var pgsize = parseInt("#{cc.attrs.pageSize}");
+
+    store.extjsProps({autoLoad: (offset == 0)}).extjsPropsNode()
+    store.extjsProps({storeId: '#{cc.attrs.storeId}'})
+    if(pgsize > 0) store.extjsProps({pageSize: pgsize})
+
+    //~: configure the proxy
+    var proxy = new extjsf.Bind()
+    proxy.nodeId('#{cc.clientId}-#{cc.attrs.storeId}-proxy')
+
+    proxy.extjsProps({type: 'ajax', url: "${z:url('/model')}"})
+    proxy.extjsPropsNode()
+
+    var props = proxy.extjsPropsRaw()
+    if(props.noproxy)
+      store.extjsProps({ autoLoad: false })
+    else
+    {
+      //~: define model parameter or model provider
+      if(!props.extraParams) props.extraParams = {};
+      else if(ZeT.isf(props.extraParams)) (function ()
+      {
+        var p = {};
+        props.extraParams.call(p, store, proxy)
+        props.extraParams = p;
+      })()
+
+      //~: link the parameters to the store
+      store.proxyParams = props.extraParams;
+
+      //?: has model requested
+      if('true' == "#{not empty cc.attrs.modelRequest}")
+        props.extraParams['model-request'] = '#{cc.attrs.modelRequest}';
+
+      //?: {has no direct model}
+      if(!props.extraParams['model'])
+        //?: {has direct model key}
+        if('true' == "#{not empty cc.attrs.modelKey}")
+          props.extraParams['model'] = '#{cc.attrs.modelKey}';
+        //?: {has model view}
+        else if('true' == "#{not empty cc.attrs.modelView}")
+          props.extraParams['model'] = '#{cc.attrs.modelView.modelKey}';
+
+      //?: {has no direct model provider}
+      if(!props.extraParams['model-provider'])
+        if('true' == "#{not empty cc.attrs.modelProvider}")
+          props.extraParams['model-provider'] = '#{cc.attrs.modelProvider}';
+
+      //!: add proxy to the store
+      store.extjsProps({proxy: props})
+
+      //~: on before store load
+      store.on('beforeload', function(st)
+      {
+        var sortparams = {};
+
+        //?: {has sort applied}
+        if(st.sorters) for(var i = 0;(i < st.sorters.getCount());i++)
+        {
+          var so = st.sorters.getAt(i);
+          if(ZeTS.ises(so._property)) { sortparams = {}; break; }
+
+          sortparams['sortProperty' + i] = so._property;
+          if('DESC' == so._direction) sortparams['sortDesc' + i] = true;
+        }
+
+        //~: process sort parameters of proxy
+        var params = st.getProxy().extraParams;
+
+        for(i = 0;(params['sortProperty' + i]);i++)
+        {
+          delete params['sortProperty' + i]
+          delete params['sortDesc' + i]
+        }
+
+        ZeT.extend(params, sortparams)
+      })
+    }
+
+    //~: delete store on domain delete
+    extjsf.onDomainDelete('${rootView.extjsDomain}', function()
+    {
+      Ext.data.StoreManager.unregister('#{cc.attrs.storeId}')
+    })
+  })()
+
+  Ext.onReady(function()
+  {
+    var store = extjsf.bind('#{cc.attrs.storeId}', '${rootView.extjsDomain}')
+
+    //!: create store component
+    store.co(Ext.create('Ext.data.Store', store.extjsProps()))
+
+    var offset = parseInt("#{cc.attrs.dataStart}")
+    var pgsize = parseInt("#{cc.attrs.pageSize}")
+
+    if((offset > 0) && (pgsize > 0))
+      store.co().loadPage(1 + Math.floor(offset/pgsize))
+  })
+
+    //]]>
+    </script>
+
+    <co:insertChildren/>
+
+  </co:implementation>
+</ui:fragment>

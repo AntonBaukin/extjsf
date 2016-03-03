@@ -1,0 +1,86 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'storeId' required = 'true'
+      type = 'java.lang.String'/>
+
+    <co:attribute name = 'selset' default = 'false'
+      type = 'java.lang.Boolean'/>
+
+    <co:facet name = 'grid-props'/>
+    <co:facet name = 'pager-props'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "grid-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-pager-props" style = "display:none">
+      <co:renderFacet name = "pager-props"/>
+    </div>
+
+    <script type = "text/javascript">
+
+  (function()
+  {
+    //~: configure the grid
+    var grid  = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    grid.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
+
+    grid.extjsProps({ margin: 0 })
+    grid.extjsPropsNode()
+    grid.extjsProps({ xtype: 'grid', store: "#{cc.attrs.storeId}" })
+
+    //~: view configuration
+    var view = grid.extjsPropsRaw().viewConfig;
+    if(!view) grid.extjsPropsRaw().viewConfig = view = {};
+    if(ZeT.isu(view.preserveScrollOnRefresh)) view.preserveScrollOnRefresh = true;
+
+    //~: configure the pager
+    if(grid.extjsPropsRaw()['pager'] === true)
+    {
+      delete grid.extjsPropsRaw()['pager'];
+
+      var pager = new extjsf.Bind();
+      pager.nodeId("#{cc.clientId}-#{cc.attrs.coid}-pager")
+
+      pager.extjsProps({
+        xtype: 'pagingtoolbar',
+        store: "#{cc.attrs.storeId}",
+
+        displayInfo: true,
+        displayMsg: 'Записи {0}:{1} из {2}',
+        emptyMsg: 'Данные не найдены!'
+      })
+
+      pager.extjsPropsNode()
+
+      //~: add pager to the grid
+      grid.extjsProps({bbar: pager.extjsPropsRaw()})
+    }
+
+    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', grid)
+
+    if('true' == "#{cc.attrs.selset}")
+      ReTrade.selset.grid('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+
+  })()
+
+    </script>
+
+    <co:insertChildren/>
+
+  </co:implementation>
+</ui:fragment>

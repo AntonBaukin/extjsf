@@ -1,0 +1,224 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
+   xmlns:ui = 'http://java.sun.com/jsf/facelets'
+   xmlns:co = 'http://java.sun.com/jsf/composite'
+   xmlns:z  = 'uri:tverts.com'>
+
+  <co:interface>
+
+    <co:attribute name = 'coid' required = 'true'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'domainOwner' default = 'true'
+       type = 'java.lang.Boolean'/>
+
+    <co:attribute name = 'winmainName' default = 'winmain'
+       type = 'java.lang.String'/>
+
+    <co:attribute name = 'webLink' default = 'true'
+       type = 'java.lang.Boolean'/>
+
+    <co:facet name = 'extjs-props'/>
+    <co:facet name = 'toolbar-props'/>
+    <co:facet name = 'toolbar'/>
+    <co:facet name = 'status-props'/>
+    <co:facet name = 'status'/>
+
+  </co:interface>
+
+  <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-toolbar-props" style = "display:none">
+      <co:renderFacet name = "toolbar-props"/>
+    </div>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-status-props" style = "display:none">
+      <co:renderFacet name = "status-props"/>
+    </div>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  ZeT.scope(function()
+  {
+    var domain  = '${rootView.extjsDomain}'
+    var winmain = extjsf.bind('#{cc.attrs.winmainName}', domain)
+    ZeT.assertn(winmain && winmain.co(), 'No window [#{cc.attrs.winmainName}] ',
+      ' was found in the domain [${rootView.extjsDomain}]!')
+
+    //~: add domain destructor (on the window close)
+    if('#{cc.attrs.domainOwner}' == 'true')
+    {
+      //~: create and attach remove listener
+      if(!winmain._domain_deleter)
+        winmain._domain_deleter = extjsf.domainDeleter('${rootView.extjsDomain}')
+      winmain.on('beforedestroy', winmain._domain_deleter)
+
+      //~: register this bind by the global name
+      extjsf.defineBind('domain-owner', domain, winmain)
+    }
+
+    //~: create the root panel
+    var panel = extjsf.defineBind('#{cc.attrs.coid}', domain);
+    panel.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
+
+    //~: configure it
+    panel.extjsProps({
+
+      xtype: 'panel',
+      layout: 'border', region: 'center',
+      border: false, preventHeader: true,
+      frame: false, shadow: false,
+      bodyPadding: extjsf.pt(1)
+
+    })
+
+    //~: user-defined properties
+    panel.extjsPropsNode()
+
+    //~: install positioning strategy
+    if(!winmain.WinAlign)
+      new ReTrade.WinAlign({ window: '#{cc.attrs.winmainName}', domain: domain })
+
+    //~: create the toolbar
+    var toolbar = extjsf.defineBind('#{cc.attrs.coid}-toolbar', domain);
+    toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
+    toolbar.extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
+      extjsPropsNode()
+
+    //~: create the status bar
+    var status = extjsf.defineBind('#{cc.attrs.coid}-status', domain);
+    status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
+    status.extjsProps({xtype: 'statusbar', dock: 'bottom', border: false})
+    status.extjsPropsNode()
+  })
+
+    //]]>
+    </script>
+
+
+    <!-- [insert toolbar controls -->
+
+    <co:renderFacet name = "toolbar"/>
+
+    <script type = "text/javascript">
+
+  ZeT.scope(function()
+  {
+    var domain  = '${rootView.extjsDomain}';
+    var panel   = extjsf.bind("#{cc.attrs.coid}", domain);
+    var toolbar = extjsf.bind('#{cc.attrs.coid}-toolbar', domain);
+
+    //HINT: we steal the items from the winmain panel
+    //  and add them to the toolbar!
+
+    toolbar.replaceItems(panel.replaceItems())
+
+  })
+
+    </script>
+
+    <!-- insert toolbar controls] -->
+
+
+    <!-- [insert status bar controls -->
+
+    <co:renderFacet name = "status"/>
+
+    <script type = "text/javascript">
+
+  ZeT.scope(function()
+  {
+    var domain = '${rootView.extjsDomain}';
+    var panel  = extjsf.bind("#{cc.attrs.coid}", domain);
+    var status = extjsf.bind('#{cc.attrs.coid}-status', domain);
+
+    //HINT: we steal the items from the winmain panel
+    //  and add them to the status bar (the same as for the toolbar)!
+
+    status.replaceItems(panel.replaceItems())
+
+  })
+
+    </script>
+
+    <!-- insert status bar controls] -->
+
+
+    <co:insertChildren/>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  ZeT.scope(function()
+  {
+    var domain  = '${rootView.extjsDomain}'
+    var winmain = extjsf.bind('#{cc.attrs.winmainName}', domain)
+    if(!winmain || !winmain.co()) return
+
+    var panel   = extjsf.bind("#{cc.attrs.coid}", domain)
+    var toolbar = extjsf.bind('#{cc.attrs.coid}-toolbar', domain)
+    var status  = extjsf.bind('#{cc.attrs.coid}-status', domain)
+
+    //?: {toolbar has items} add it to the window
+    if(toolbar.hasItems() || toolbar.hasHTML())
+      winmain.co().addDocked(toolbar.extjsProps())
+
+    //?: {status bar has items} add it to the window
+    if(status.hasItems() || status.hasHTML())
+      winmain.co().addDocked(status.extjsProps())
+
+    //!: add the panel to the window
+    winmain.co().add(panel.extjsProps())
+
+    //~: install web link tool
+    ZeT.scope(function()
+    {
+      //?: {link is not allowed}
+      if("#{cc.attrs.webLink}" === 'false')
+      {
+        if(ZeT.isu(winmain.webLink))
+          winmain.webLink = false
+        return
+      }
+
+      //?: {tool is already installed}
+      if(!ZeT.isu(winmain.webLink)) return
+
+      var tool = winmain.webLink = {
+        xtype: 'tool', cls: 'retrade-web-link-tool',
+        tooltipType: 'title', tooltip: 'Создать постоянную ссылку на окно'
+      }
+
+      //~: web link + tool handler
+      tool.handler = ZeT.fbind(retrade_add_user_web_link, this, {
+        link: "#{z:jss(rootView.requestURI)}",
+        entity: "#{rootView.entityKey}",
+        params: "#{z:jss(rootView.requestParams)}",
+        text: winmain.co().title,
+        domain: domain, box: {
+          width: winmain.co().getWidth(),
+          height: winmain.co().getHeight() }
+      })
+
+      //~: insert tool in the window's header
+      var items = winmain.co().getHeader().items
+      for(var i = 0;(i < items.getCount());i++)
+        if(items.get(i).xtype == 'tool')
+          return winmain.co().getHeader().insert(i, tool)
+
+      //~: append a single tool
+      winmain.co().addTool([ tool ])
+    })
+  })
+
+    //]]>
+    </script>
+
+  </co:implementation>
+</ui:fragment>
