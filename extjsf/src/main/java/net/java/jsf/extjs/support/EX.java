@@ -89,8 +89,7 @@ public class EX
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <E extends Throwable> E
-	                        search(Throwable e, Class<E> eclass)
+	public static <E> E     search(Throwable e, Class<E> eclass)
 	{
 		while(e != null)
 			if(eclass.isAssignableFrom(e.getClass()))
