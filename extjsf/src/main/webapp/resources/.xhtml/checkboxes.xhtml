@@ -70,7 +70,7 @@
 
     //HINT: this bind is shared between all the checkboxes!
 
-    var bind = extjsf.domain('${rootView.extjsDomain}').
+    var bind = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind()).
       nodeId('#{cc.clientId}-#{cc.attrs.coid}').
       extjsPropsNode().extjsProps({extjsfRawItem: true}).
@@ -163,7 +163,7 @@
     if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
 
     //c: create the items for all the labels
-    var parent = extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}')
+    var parent = extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}')
     for(i = 0;(i + 1 < labls.length);i += 2)
     {
       //~: properties of the checkbox

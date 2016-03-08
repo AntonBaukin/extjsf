@@ -36,7 +36,7 @@
   (function()
   {
     //~: configure the grid
-    var grid  = extjsf.domain('${rootView.extjsDomain}').
+    var grid  = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     grid.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
@@ -72,10 +72,10 @@
       grid.extjsProps({bbar: pager.extjsPropsRaw()})
     }
 
-    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', grid)
+    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', grid)
 
     if('true' == "#{cc.attrs.selset}")
-      ReTrade.selset.grid('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+      ReTrade.selset.grid('#{cc.attrs.coid}', '${extDom}')
 
   })()
 

@@ -40,7 +40,7 @@
 
   (function()
   {
-    var domain = '${rootView.extjsDomain}'
+    var domain = '${extDom}'
     var bind   = extjsf.domain(domain).
       bind('#{cc.attrs.coid}', new extjsf.Bind()).
       nodeId('#{cc.clientId}-#{cc.attrs.coid}').
@@ -82,7 +82,7 @@
 
   (function()
   {
-    var domain  = '${rootView.extjsDomain}';
+    var domain  = '${extDom}';
     var comp    = extjsf.bind("#{cc.attrs.coid}", domain);
     var toolbar = extjsf.bind('#{cc.attrs.coid}-toolbar', domain);
 
@@ -106,7 +106,7 @@
 
   (function()
   {
-    var domain = '${rootView.extjsDomain}';
+    var domain = '${extDom}';
     var comp   = extjsf.bind("#{cc.attrs.coid}", domain);
     var status = extjsf.bind('#{cc.attrs.coid}-status', domain);
 
@@ -129,7 +129,7 @@
 
   Ext.onReady(function()
   {
-    var domain  = '${rootView.extjsDomain}';
+    var domain  = '${extDom}';
     var parent  = !!'#{cc.parent.attrs.coid}'.length &&
       extjsf.bind('#{cc.parent.attrs.coid}', domain);
     var comp    = extjsf.bind("#{cc.attrs.coid}", domain);

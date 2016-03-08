@@ -32,7 +32,7 @@
 
     <script type = "text/javascript">
 
-  extjsf.domain('${rootView.extjsDomain}').
+  extjsf.domain('${extDom}').
     bind('#{cc.attrs.coid}', new extjsf.Bind()).
     nodeId("#{cc.clientId}-#{cc.attrs.coid}").
     renderTo("#{cc.attrs.renderTo}")
@@ -53,7 +53,7 @@
 
   Ext.onReady(function()
   {
-    var form  = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var form  = extjsf.bind('#{cc.attrs.coid}', '${extDom}');
     form.goFormAction()
 
     var props = form.extjsPropsRaw();
@@ -69,11 +69,11 @@
     form.extjsPropsNode()
     form.extjsProps({ xtype: 'form', id : "#{cc.attrs.coid}" })
 
-    extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+    extjsf.bind('#{cc.attrs.coid}', '${extDom}').
       co(Ext.create('Ext.form.Panel', form.extjsProps()))
   })
 
-  extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', '#{cc.attrs.coid}')
+  extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')
 
     </script>
 

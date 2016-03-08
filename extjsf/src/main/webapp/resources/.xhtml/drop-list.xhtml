@@ -72,7 +72,7 @@
     }
 
     //~: create component bind
-    var bind = extjsf.domain('${rootView.extjsDomain}').
+    var bind = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     bind.nodeId('#{cc.clientId}-hidden');
@@ -117,7 +117,7 @@
 
     if(!label.isPropsNode()) label = null; else
     {
-      extjsf.domain('${rootView.extjsDomain}').bind('#{cc.attrs.coid}-label', label)
+      extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
       bind.extjsProps({hideLabel: true})
 
       //~: label click expand-collapse support
@@ -138,7 +138,7 @@
     }
 
     //~: bind label first
-    if(label) extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', label)
+    if(label) extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', label)
 
     //~: display value substitute
     if("#{cc.attrs.displayValue}".length)
@@ -148,7 +148,7 @@
       })
 
     //~: bind drop-list to the parent
-    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', bind)
+    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', bind)
 
   })()
 

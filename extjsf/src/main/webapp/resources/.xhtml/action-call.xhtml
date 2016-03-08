@@ -35,7 +35,7 @@
       ZeT.scope(function ()
       {
         //~: create delegate
-        var delegate = extjsf.domain('${rootView.extjsDomain}').
+        var delegate = extjsf.domain('${extDom}').
           bind('#{cc.attrs.coid}', new extjsf.Bind())
 
         delegate.goFormAction('#{cc.clientId}-#{cc.attrs.coid}')
@@ -61,7 +61,7 @@
           //~: set the default extjsf domain
           var domain = opts.params['${rootView.extjsDomainParam}']
           if(!domain) opts.params['${rootView.extjsDomainParam}'] =
-            domain = '${rootView.extjsDomain}';
+            domain = '${extDom}';
 
           //~: set the default view mode for POST request
           if(!opts.params['${rootView.viewModeParam}'])

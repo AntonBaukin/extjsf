@@ -23,16 +23,16 @@
     <script type = "text/javascript">
 
   //~: create the toolbar
-  extjsf.domain('${rootView.extjsDomain}').
+  extjsf.domain('${extDom}').
     bind('#{cc.attrs.coid}', new extjsf.Bind()).
     nodeId("#{cc.clientId}-#{cc.attrs.coid}").
     extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
     extjsPropsNode()
 
   //~: add it on the component created
-  extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}').on('added', function(parent)
+  extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').on('added', function(parent)
   {
-    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}').extjsProps())
+    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${extDom}').extjsProps())
   })
 
     </script>

@@ -50,7 +50,7 @@
   (function()
   {
     //~: configure the store
-    var store  = extjsf.domain('${rootView.extjsDomain}').
+    var store  = extjsf.domain('${extDom}').
       bind('#{cc.attrs.storeId}', new extjsf.Bind())
 
     store.nodeId('#{cc.clientId}-#{cc.attrs.storeId}')
@@ -135,7 +135,7 @@
     }
 
     //~: delete store on domain delete
-    extjsf.domain('${rootView.extjsDomain}').onDelete(function()
+    extjsf.domain('${extDom}').onDelete(function()
     {
       Ext.data.StoreManager.unregister('#{cc.attrs.storeId}')
     })
@@ -143,7 +143,7 @@
 
   Ext.onReady(function()
   {
-    var store = extjsf.bind('#{cc.attrs.storeId}', '${rootView.extjsDomain}')
+    var store = extjsf.bind('#{cc.attrs.storeId}', '${extDom}')
 
     //!: create store component
     store.co(Ext.create('Ext.data.Store', store.extjsProps()))

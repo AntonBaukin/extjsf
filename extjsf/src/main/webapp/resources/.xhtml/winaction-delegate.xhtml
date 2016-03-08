@@ -38,7 +38,7 @@
   ZeT.scope(function()
   {
     //~: create delegate
-    var delegate = extjsf.domain('${rootView.extjsDomain}').
+    var delegate = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind())
     delegate.goFormAction('#{cc.clientId}-#{cc.attrs.coid}')
 
@@ -49,9 +49,9 @@
       var method = params.method; if(ZeT.iss(method)) delete params.method
       if(ZeT.iss(opts && opts.method)) method = opts.method
 
-      new extjsf.WinmainLoader('${rootView.extjsDomain}').
+      new extjsf.WinmainLoader('${extDom}').
         form('#{cc.clientId}-#{cc.attrs.coid}').button(true).
-        addParams({'${rootView.extjsDomainParam}': '${rootView.extjsDomain}',
+        addParams({'${rootView.extjsDomainParam}': '${extDom}',
           '${rootView.viewModeParam}': '${rootView.viewModeStr}',
           '${rootView.viewIdParam}': '${rootView.id}'}).
         addParams(params).addParams((opts && opts.params) || {}).
@@ -59,7 +59,7 @@
     }
 
     //~: attach to the target button
-    var button = extjsf.bind('#{cc.attrs.button}', '${rootView.extjsDomain}')
+    var button = extjsf.bind('#{cc.attrs.button}', '${extDom}')
     if(button) button.extjsProps({handler: delegate.handler})
     if(button && button.co()) button.co().setHandler(delegate.handler)
 

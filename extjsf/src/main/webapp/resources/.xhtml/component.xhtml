@@ -47,7 +47,7 @@
 
     ZeT.scope(function()
     {
-      var bind = extjsf.domain('${rootView.extjsDomain}').
+      var bind = extjsf.domain('${extDom}').
         bind('#{cc.attrs.coid}', new extjsf.Bind()).
         nodeId('#{cc.clientId}-#{cc.attrs.coid}').
         extjsProps({xtype: 'panel', id: '#{cc.attrs.coid}'}).
@@ -59,7 +59,7 @@
       //?: {not inserting into target parent}
       else if(ZeTS.ises("#{cc.attrs.parentId}"))
         if(!ZeTS.ises("#{cc.parent.attrs.coid}"))
-          extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', '#{cc.attrs.coid}')
+          extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')
     })
 
     //]]>
@@ -73,7 +73,7 @@
   //?: {render to DOM node}
   if(!ZeTS.ises("#{cc.attrs.renderTo}")) Ext.onReady(function()
   {
-    var bind = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+    var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
 
     //~: create the component
     bind.co(Ext.ComponentManager.create(bind.extjsProps()))
@@ -83,15 +83,15 @@
       bind.renderParent('#{cc.attrs.renderParent}')
     //~: connect destroy listener
     else
-      extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}').
+      extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').
         on('beforedestroy', bind.boundDestroy())
   })
 
   //?: {render to container component}
   else if(!ZeTS.ises("#{cc.attrs.parentId}"))
-    extjsf.bind('#{cc.attrs.parentId}', '${rootView.extjsDomain}').on('added', function(parent)
+    extjsf.bind('#{cc.attrs.parentId}', '${extDom}').on('added', function(parent)
     {
-      var bind = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+      var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
 
       //~: create the component
       bind.co(Ext.ComponentManager.create(bind.extjsProps()))

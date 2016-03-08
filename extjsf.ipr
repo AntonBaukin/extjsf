@@ -21,6 +21,7 @@
     </annotationProcessing>
   </component>
   <component name="Encoding" native2AsciiForPropertiesFiles="true" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/extjsf/src/main/java/net/java/jsf/extjs/faces/ExtJSFDomain.java" charset="windows-1251" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
   <component name="EntryPointsManager">

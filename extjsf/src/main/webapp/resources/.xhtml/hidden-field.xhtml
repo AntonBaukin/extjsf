@@ -36,7 +36,7 @@
 
   (function()
   {
-    var field = extjsf.domain('${rootView.extjsDomain}').
+    var field = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     field.nodeId("#{cc.clientId}-hidden")
@@ -46,7 +46,7 @@
       name    : "#{cc.clientId}-hidden"
     })
 
-    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', field)
+    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', field)
 
   })()
 

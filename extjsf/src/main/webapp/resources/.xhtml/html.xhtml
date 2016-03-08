@@ -62,18 +62,18 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-      extjsf.domain('${rootView.extjsDomain}').
+      extjsf.domain('${extDom}').
         bind('#{cc.attrs.coid}', new extjsf.Bind()).
         nodeId("#{cc.clientId}-#{cc.attrs.coid}").
         extjsProps({xtype: 'component', margin: 0}).extjsPropsNode().
         extjsProps({html: undefined, contentEl: "#{cc.attrs.coid}-html"})
 
       if("#{cc.attrs.renderDelay}" == "false")
-        extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}', '#{cc.attrs.coid}')
-      else extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}').
+        extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')
+      else extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').
         on('afterrender', function(parent)
         {
-          var bind = extjsf.bind('#{cc.attrs.coid}', '${rootView.extjsDomain}')
+          var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
 
           //~: create the component
           bind.co(Ext.ComponentManager.create(bind.extjsProps()))

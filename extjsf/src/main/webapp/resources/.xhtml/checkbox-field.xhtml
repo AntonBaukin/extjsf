@@ -40,7 +40,7 @@
 
   (function()
   {
-    var field = extjsf.domain('${rootView.extjsDomain}').
+    var field = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     field.nodeId("#{cc.clientId}-checkbox")
@@ -62,7 +62,7 @@
 
     if(!label.isPropsNode()) label = null; else
     {
-      extjsf.domain('${rootView.extjsDomain}').bind('#{cc.attrs.coid}-label', label)
+      extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
       field.extjsProps({hideLabel: true})
 
       //~: set for attribute
@@ -79,7 +79,7 @@
       })
     }
 
-    var form  = extjsf.bind('#{cc.parent.attrs.coid}', '${rootView.extjsDomain}');
+    var form  = extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}');
 
     if(!label) { form.addItem(field); return; }
 
