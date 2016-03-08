@@ -26,7 +26,8 @@
 
     <script type = "text/javascript">
 
-  extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+  extjsf.domain('${rootView.extjsDomain}').
+    bind('#{cc.attrs.coid}', new extjsf.Bind()).
     nodeId("#{cc.clientId}-#{cc.attrs.coid}").
     extjsProps({layout: 'fit', renderTo: Ext.getBody()}).
     extjsPropsNode()

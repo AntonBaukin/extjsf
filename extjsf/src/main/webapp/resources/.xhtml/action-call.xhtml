@@ -32,10 +32,12 @@
     <script type = "text/javascript">
       //<![CDATA[
 
-      (function ()
+      ZeT.scope(function ()
       {
         //~: create delegate
-        var delegate = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+        var delegate = extjsf.domain('${rootView.extjsDomain}').
+          bind('#{cc.attrs.coid}', new extjsf.Bind())
+
         delegate.goFormAction('#{cc.clientId}-#{cc.attrs.coid}')
 
         //~: submit handler
@@ -84,7 +86,7 @@
           //!: issue the request
           Ext.Ajax.request(opts)
         }
-      })()
+      })
 
       //]]>
     </script>

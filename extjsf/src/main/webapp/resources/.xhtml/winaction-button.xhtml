@@ -39,7 +39,8 @@
   ZeT.scope(function()
   {
     //~: create button bind
-    var button = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var button = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
     button.nodeId('#{cc.clientId}-#{cc.attrs.coid}')
     button.goFormAction()
 

@@ -43,7 +43,8 @@
 
   (function()
   {
-    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var field = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
     field.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
 
     field.extjsProps({labelSeparator: '', width: extjsf.ex(10),
@@ -62,7 +63,7 @@
 
     if(!label.isPropsNode()) label = null; else
     {
-      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      extjsf.domain('${rootView.extjsDomain}').bind('#{cc.attrs.coid}-label', label)
       field.extjsProps({hideLabel: true})
 
       //~: label click expand-collapse support

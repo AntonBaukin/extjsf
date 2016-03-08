@@ -72,7 +72,9 @@
     }
 
     //~: create component bind
-    var bind = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var bind = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
+
     bind.nodeId('#{cc.clientId}-hidden');
     bind.on('change', on_change)
 
@@ -115,7 +117,7 @@
 
     if(!label.isPropsNode()) label = null; else
     {
-      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      extjsf.domain('${rootView.extjsDomain}').bind('#{cc.attrs.coid}-label', label)
       bind.extjsProps({hideLabel: true})
 
       //~: label click expand-collapse support

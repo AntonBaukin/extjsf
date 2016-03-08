@@ -36,7 +36,8 @@
 
   (function()
   {
-    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var field = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     field.nodeId("#{cc.clientId}-hidden")
     field.extjsPropsNode().extjsProps({

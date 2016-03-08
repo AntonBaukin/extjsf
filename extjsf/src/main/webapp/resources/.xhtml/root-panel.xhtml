@@ -48,7 +48,8 @@
 
   ZeT.scope(function()
   {
-    var panel = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var panel = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     panel.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
     panel.extjsProps({
@@ -118,7 +119,8 @@
     var panel   = extjsf.bind("#{cc.attrs.coid}", domain);
 
     //~: create the toolbar
-    var toolbar = extjsf.defineBind('#{cc.attrs.coid}-toolbar', domain);
+    var toolbar = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}-toolbar', new extjsf.Bind())
     toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
     toolbar.extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
       extjsPropsNode()
@@ -149,7 +151,8 @@
     var panel  = extjsf.bind("#{cc.attrs.coid}", domain);
 
     //~: create the status bar
-    var status = extjsf.defineBind('#{cc.attrs.coid}-status', domain);
+    var status = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}-status', new extjsf.Bind())
     status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
     status.extjsProps({xtype: 'statusbar', dock: 'bottom'}).extjsPropsNode()
 

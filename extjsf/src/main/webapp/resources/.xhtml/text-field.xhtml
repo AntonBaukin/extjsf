@@ -44,8 +44,9 @@
 
   (function()
   {
-    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
-    var ronly = ('#{cc.attrs.readOnly}' == 'true');
+    var field = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
+    var ronly = ('#{cc.attrs.readOnly}' == 'true')
 
     field.nodeId("#{cc.clientId}-hidden")
     field.extjsProps({labelSeparator: '', xtype: 'textfield', margin: 0})
@@ -61,7 +62,7 @@
 
     if(!label.isPropsNode()) label = null; else
     {
-      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      extjsf.domain('${rootView.extjsDomain}').bind('#{cc.attrs.coid}-label', label)
       field.extjsProps({hideLabel: true})
 
       //~: set on click field focus

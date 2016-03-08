@@ -50,7 +50,9 @@
   (function()
   {
     //~: configure the store
-    var store  = extjsf.defineBind('#{cc.attrs.storeId}', '${rootView.extjsDomain}');
+    var store  = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.storeId}', new extjsf.Bind())
+
     store.nodeId('#{cc.clientId}-#{cc.attrs.storeId}')
     var offset = parseInt("#{cc.attrs.dataStart}");
     var pgsize = parseInt("#{cc.attrs.pageSize}");
@@ -133,7 +135,7 @@
     }
 
     //~: delete store on domain delete
-    extjsf.onDomainDelete('${rootView.extjsDomain}', function()
+    extjsf.domain('${rootView.extjsDomain}').onDelete(function()
     {
       Ext.data.StoreManager.unregister('#{cc.attrs.storeId}')
     })

@@ -40,7 +40,9 @@
 
   (function()
   {
-    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
+    var field = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
+
     field.nodeId("#{cc.clientId}-checkbox")
     field.initialChecked = ('true' == Ext.getDom(field.nodeId()).value);
 
@@ -60,7 +62,7 @@
 
     if(!label.isPropsNode()) label = null; else
     {
-      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      extjsf.domain('${rootView.extjsDomain}').bind('#{cc.attrs.coid}-label', label)
       field.extjsProps({hideLabel: true})
 
       //~: set for attribute

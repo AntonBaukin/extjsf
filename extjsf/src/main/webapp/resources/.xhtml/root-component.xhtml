@@ -40,8 +40,9 @@
 
   (function()
   {
-    var domain = '${rootView.extjsDomain}';
-    var bind   = extjsf.defineBind('#{cc.attrs.coid}', domain).
+    var domain = '${rootView.extjsDomain}'
+    var bind   = extjsf.domain(domain).
+      bind('#{cc.attrs.coid}', new extjsf.Bind()).
       nodeId('#{cc.clientId}-#{cc.attrs.coid}').
       extjsProps({xtype: 'panel', id: '#{cc.attrs.coid}'}).
       extjsProps({border: false, frame: false, layout: 'fit'}).
@@ -54,13 +55,16 @@
     if(parent && !render) parent.addItem(bind)
 
     //~: create the toolbar
-    var toolbar = extjsf.defineBind('#{cc.attrs.coid}-toolbar', domain)
+    var toolbar = extjsf.domain(domain).
+      bind('#{cc.attrs.coid}-toolbar', new extjsf.Bind())
+
     toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
     toolbar.extjsProps({ xtype: 'toolbar', dock: 'top', border: false })
     toolbar.extjsPropsNode()
 
     //~: create the status bar
-    var status = extjsf.defineBind('#{cc.attrs.coid}-status', domain)
+    var status = extjsf.domain(domain).
+      bind('#{cc.attrs.coid}-status', new extjsf.Bind())
     status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
     status.extjsProps({xtype: 'statusbar', dock: 'bottom'}).extjsPropsNode()
 
@@ -148,12 +152,13 @@
     if(('#{cc.attrs.domainOwner}' === 'true') && domain.length)
     {
       //~: register domain destroyer
-      if(!comp._domain_deleter)
-        comp._domain_deleter = extjsf.domainDeleter(domain)
-      comp.on('beforedestroy', comp._domain_deleter)
+      if(!comp._domain_deleter) comp._domain_deleter =
+        function()
+        {
+          extjsf.domain(domain).destroy()
+        }
 
-      //~: register this bind by the global name
-      extjsf.defineBind('domain-owner', domain, comp)
+      comp.on('beforedestroy', comp._domain_deleter)
     }
   })
 

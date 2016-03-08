@@ -55,16 +55,17 @@
     if('#{cc.attrs.domainOwner}' == 'true')
     {
       //~: create and attach remove listener
-      if(!winmain._domain_deleter)
-        winmain._domain_deleter = extjsf.domainDeleter('${rootView.extjsDomain}')
-      winmain.on('beforedestroy', winmain._domain_deleter)
+      if(!winmain._domain_deleter) winmain._domain_deleter =
+        function()
+        {
+          extjsf.domain(domain).destroy()
+        }
 
-      //~: register this bind by the global name
-      extjsf.defineBind('domain-owner', domain, winmain)
+      winmain.on('beforedestroy', winmain._domain_deleter)
     }
 
     //~: create the root panel
-    var panel = extjsf.defineBind('#{cc.attrs.coid}', domain);
+    var panel = extjsf.domain(domain).bind('#{cc.attrs.coid}', new extjsf.Bind())
     panel.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
 
     //~: configure it
@@ -86,13 +87,15 @@
       new ReTrade.WinAlign({ window: '#{cc.attrs.winmainName}', domain: domain })
 
     //~: create the toolbar
-    var toolbar = extjsf.defineBind('#{cc.attrs.coid}-toolbar', domain);
+    var toolbar = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}-toolbar', new extjsf.Bind())
     toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
     toolbar.extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
       extjsPropsNode()
 
     //~: create the status bar
-    var status = extjsf.defineBind('#{cc.attrs.coid}-status', domain);
+    var status = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}-status', new extjsf.Bind())
     status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
     status.extjsProps({xtype: 'statusbar', dock: 'bottom', border: false})
     status.extjsPropsNode()

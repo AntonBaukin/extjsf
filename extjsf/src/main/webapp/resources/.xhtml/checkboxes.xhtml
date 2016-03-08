@@ -70,7 +70,8 @@
 
     //HINT: this bind is shared between all the checkboxes!
 
-    var bind = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+    var bind = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind()).
       nodeId('#{cc.clientId}-#{cc.attrs.coid}').
       extjsPropsNode().extjsProps({extjsfRawItem: true}).
       extjsProps({xtype: 'checkboxfield', name: '#{cc.attrs.coid}'})

@@ -23,7 +23,8 @@
     <script type = "text/javascript">
 
   //~: create the toolbar
-  extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+  extjsf.domain('${rootView.extjsDomain}').
+    bind('#{cc.attrs.coid}', new extjsf.Bind()).
     nodeId("#{cc.clientId}-#{cc.attrs.coid}").
     extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
     extjsPropsNode()

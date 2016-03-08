@@ -47,7 +47,8 @@
 
     ZeT.scope(function()
     {
-      var bind = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}').
+      var bind = extjsf.domain('${rootView.extjsDomain}').
+        bind('#{cc.attrs.coid}', new extjsf.Bind()).
         nodeId('#{cc.clientId}-#{cc.attrs.coid}').
         extjsProps({xtype: 'panel', id: '#{cc.attrs.coid}'}).
         extjsPropsNode()

@@ -43,9 +43,10 @@
 
   (function()
   {
-    var field = extjsf.defineBind('#{cc.attrs.coid}', '${rootView.extjsDomain}');
-    field.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
+    var field = extjsf.domain('${rootView.extjsDomain}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind())
 
+    field.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
     field.extjsProps({labelSeparator: '', width: extjsf.dex(15),
       maxLength: 10, enforceMaxLength: true, cls: 'x-field-date'
     })
@@ -64,7 +65,7 @@
       label = null;
     else
     {
-      extjsf.defineBind('#{cc.attrs.coid}-label', '${rootView.extjsDomain}', label)
+      extjsf.domain('${rootView.extjsDomain}').bind('#{cc.attrs.coid}-label', label)
       field.extjsProps({hideLabel: true})
 
       var lstyle = field.extjsPropsRaw()['style'] || {};
