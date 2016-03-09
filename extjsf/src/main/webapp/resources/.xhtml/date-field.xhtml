@@ -47,11 +47,11 @@
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     field.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
-    field.extjsProps({labelSeparator: '', width: extjsf.dex(15),
+    field.props({labelSeparator: '', width: extjsf.dex(15),
       maxLength: 10, enforceMaxLength: true, cls: 'x-field-date'
     })
 
-    field.extjsPropsNode().extjsProps({
+    field.readPropsNode().props({
       xtype   : 'datefield',
       inputId : "#{cc.attrs.coid}",
       name    : "#{cc.clientId}-#{cc.attrs.coid}",
@@ -66,9 +66,9 @@
     else
     {
       extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
-      field.extjsProps({hideLabel: true})
+      field.props({hideLabel: true})
 
-      var lstyle = field.extjsPropsRaw()['style'] || {};
+      var lstyle = field.raw()['style'] || {};
       if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
 
       //~: label click expand-collapse support
@@ -80,7 +80,7 @@
         if(ct > 500) field.co().expand()
       })})
 
-      label.extjsPropsNode().extjsProps({
+      label.readPropsNode().props({
         xtype: 'label', style: lstyle
       })
     }

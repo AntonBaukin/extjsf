@@ -57,20 +57,20 @@
     var offset = parseInt("#{cc.attrs.dataStart}");
     var pgsize = parseInt("#{cc.attrs.pageSize}");
 
-    store.extjsProps({autoLoad: (offset == 0)}).extjsPropsNode()
-    store.extjsProps({storeId: '#{cc.attrs.storeId}'})
-    if(pgsize > 0) store.extjsProps({pageSize: pgsize})
+    store.props({autoLoad: (offset == 0)}).readPropsNode()
+    store.props({storeId: '#{cc.attrs.storeId}'})
+    if(pgsize > 0) store.props({pageSize: pgsize})
 
     //~: configure the proxy
     var proxy = new extjsf.Bind()
     proxy.nodeId('#{cc.clientId}-#{cc.attrs.storeId}-proxy')
 
-    proxy.extjsProps({type: 'ajax', url: "${z:url('/model')}"})
-    proxy.extjsPropsNode()
+    proxy.props({type: 'ajax', url: "${z:url('/model')}"})
+    proxy.readPropsNode()
 
-    var props = proxy.extjsPropsRaw()
+    var props = proxy.raw()
     if(props.noproxy)
-      store.extjsProps({ autoLoad: false })
+      store.props({ autoLoad: false })
     else
     {
       //~: define model parameter or model provider
@@ -104,7 +104,7 @@
           props.extraParams['model-provider'] = '#{cc.attrs.modelProvider}';
 
       //!: add proxy to the store
-      store.extjsProps({proxy: props})
+      store.props({proxy: props})
 
       //~: on before store load
       store.on('beforeload', function(st)
@@ -135,7 +135,7 @@
     }
 
     //~: delete store on domain delete
-    extjsf.domain('${extDom}').onDelete(function()
+    extjsf.domain('${extDom}').onDestroy(function()
     {
       Ext.data.StoreManager.unregister('#{cc.attrs.storeId}')
     })
@@ -146,7 +146,7 @@
     var store = extjsf.bind('#{cc.attrs.storeId}', '${extDom}')
 
     //!: create store component
-    store.co(Ext.create('Ext.data.Store', store.extjsProps()))
+    store.co(Ext.create('Ext.data.Store', store.props()))
 
     var offset = parseInt("#{cc.attrs.dataStart}")
     var pgsize = parseInt("#{cc.attrs.pageSize}")

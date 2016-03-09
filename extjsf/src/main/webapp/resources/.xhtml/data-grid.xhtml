@@ -40,24 +40,24 @@
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     grid.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
-    grid.extjsProps({ margin: 0 })
-    grid.extjsPropsNode()
-    grid.extjsProps({ xtype: 'grid', store: "#{cc.attrs.storeId}" })
+    grid.props({ margin: 0 })
+    grid.readPropsNode()
+    grid.props({ xtype: 'grid', store: "#{cc.attrs.storeId}" })
 
     //~: view configuration
-    var view = grid.extjsPropsRaw().viewConfig;
-    if(!view) grid.extjsPropsRaw().viewConfig = view = {};
+    var view = grid.raw().viewConfig;
+    if(!view) grid.raw().viewConfig = view = {};
     if(ZeT.isu(view.preserveScrollOnRefresh)) view.preserveScrollOnRefresh = true;
 
     //~: configure the pager
-    if(grid.extjsPropsRaw()['pager'] === true)
+    if(grid.raw()['pager'] === true)
     {
-      delete grid.extjsPropsRaw()['pager'];
+      delete grid.raw()['pager'];
 
       var pager = new extjsf.Bind();
       pager.nodeId("#{cc.clientId}-#{cc.attrs.coid}-pager")
 
-      pager.extjsProps({
+      pager.props({
         xtype: 'pagingtoolbar',
         store: "#{cc.attrs.storeId}",
 
@@ -66,10 +66,10 @@
         emptyMsg: 'Данные не найдены!'
       })
 
-      pager.extjsPropsNode()
+      pager.readPropsNode()
 
       //~: add pager to the grid
-      grid.extjsProps({bbar: pager.extjsPropsRaw()})
+      grid.props({bbar: pager.raw()})
     }
 
     extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', grid)

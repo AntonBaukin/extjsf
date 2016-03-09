@@ -8,13 +8,22 @@
 
   <co:interface>
 
-    <co:attribute name = 'coid'
-      required = 'true'
+    <!--
+         WARNING! It's not allowed to nest this component
+         in any component that is a JSF form container,
+         namely, x:form-panel!
+    -->
+
+    <co:attribute name = 'coid' required = 'true'
       type = 'java.lang.String'/>
 
-    <co:attribute name = 'action'
+    <co:attribute name = 'action' required = 'true'
       method-signature = "java.lang.String action()"/>
 
+    <!--
+         Additional parameters of the action that
+         are sent to the server.
+    -->
     <co:facet name = 'action-params'/>
 
   </co:interface>

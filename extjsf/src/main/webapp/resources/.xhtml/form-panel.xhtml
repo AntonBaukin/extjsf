@@ -56,21 +56,21 @@
     var form  = extjsf.bind('#{cc.attrs.coid}', '${extDom}');
     form.goFormAction()
 
-    var props = form.extjsPropsRaw();
+    var props = form.raw();
 
-    if(!props || !props['errorReader']) form.extjsProps({
+    if(!props || !props['errorReader']) form.props({
 
       errorReader: Ext.create('Ext.data.reader.Xml', {
         record: 'field', model: 'retrade.model.FormValidation'
       })
     })
 
-    form.extjsPropsNode({ margin: 0, border: false })
-    form.extjsPropsNode()
-    form.extjsProps({ xtype: 'form', id : "#{cc.attrs.coid}" })
+    form.readPropsNode({ margin: 0, border: false })
+    form.readPropsNode()
+    form.props({ xtype: 'form', id : "#{cc.attrs.coid}" })
 
     extjsf.bind('#{cc.attrs.coid}', '${extDom}').
-      co(Ext.create('Ext.form.Panel', form.extjsProps()))
+      co(Ext.create('Ext.form.Panel', form.props()))
   })
 
   extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')

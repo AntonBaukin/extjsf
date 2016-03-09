@@ -78,18 +78,18 @@
     bind.nodeId('#{cc.clientId}-hidden');
     bind.on('change', on_change)
 
-    bind.extjsProps({xtype: 'combobox'})
-    bind.extjsProps({nodeId: '#{cc.attrs.coid}', name: '#{cc.clientId}-#{cc.attrs.coid}'})
-    bind.extjsProps({displayhidden: 'label', valuehidden: 'key'})
-    bind.extjsPropsNode()
+    bind.props({xtype: 'combobox'})
+    bind.props({nodeId: '#{cc.attrs.coid}', name: '#{cc.clientId}-#{cc.attrs.coid}'})
+    bind.props({displayhidden: 'label', valuehidden: 'key'})
+    bind.readPropsNode()
 
     //?: {external store is provided}
     if("#{cc.attrs.storeId}".length)
     {
-      bind.extjsProps({store: "#{cc.attrs.storeId}"})
+      bind.props({store: "#{cc.attrs.storeId}"})
 
       //~: refresh source on repeated expand
-      var expandTime; if(!bind.extjsPropsRaw().notRefreshOnExpand)
+      var expandTime; if(!bind.raw().notRefreshOnExpand)
         bind.on('expand', function()
       {
         var ts = new Date().getTime()
@@ -109,7 +109,7 @@
         items.push([labls[i], labls[i + 1]])
 
       //~: items as a store
-      bind.extjsProps({store: items, queryMode: 'local'})
+      bind.props({store: items, queryMode: 'local'})
     }
 
     var label = new extjsf.Bind();
@@ -118,7 +118,7 @@
     if(!label.isPropsNode()) label = null; else
     {
       extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
-      bind.extjsProps({hideLabel: true})
+      bind.props({hideLabel: true})
 
       //~: label click expand-collapse support
       bind.on('collapse', function()
@@ -132,7 +132,7 @@
         if(ct > 500) bind.co().expand()
       })})
 
-      label.extjsPropsNode().extjsProps({
+      label.readPropsNode().props({
         xtype: 'label', forId: "#{cc.attrs.coid}"
       })
     }

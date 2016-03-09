@@ -73,8 +73,8 @@
     var bind = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind()).
       nodeId('#{cc.clientId}-#{cc.attrs.coid}').
-      extjsPropsNode().extjsProps({extjsfRawItem: true}).
-      extjsProps({xtype: 'checkboxfield', name: '#{cc.attrs.coid}'})
+      readPropsNode().props({extjsfRawItem: true}).
+      props({xtype: 'checkboxfield', name: '#{cc.attrs.coid}'})
 
 
     //~: on check value change
@@ -155,11 +155,11 @@
     //~: labels phony bind
     var label = new extjsf.Bind()
     label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
-    label.extjsPropsNode().extjsProps({
+    label.readPropsNode().props({
       xtype: 'label', style: lstyle, extjsfRawItem: true
     })
 
-    var lstyle = label.extjsPropsRaw()['style'] || {};
+    var lstyle = label.raw()['style'] || {};
     if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
 
     //c: create the items for all the labels
@@ -167,7 +167,7 @@
     for(i = 0;(i + 1 < labls.length);i += 2)
     {
       //~: properties of the checkbox
-      var cb = ZeT.extend({}, bind.extjsProps())
+      var cb = ZeT.extend({}, bind.props())
       ZeT.extend(cb, { inputId : "#{cc.attrs.coid}-" + i,
         inputValue: labls[i], checked: !!itmap[labls[i]]
       })
@@ -175,7 +175,7 @@
       delete cb.value //<-- must have it not!
 
       //~: properties of the label
-      var lb = ZeT.extend({}, label.extjsProps())
+      var lb = ZeT.extend({}, label.props())
       ZeT.extend(lb, { forId: "#{cc.attrs.coid}-" + i, text: labls[i + 1] })
 
       //~: add directly to the parent

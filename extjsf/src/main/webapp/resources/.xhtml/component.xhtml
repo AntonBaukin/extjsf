@@ -26,8 +26,8 @@
        type = 'java.lang.String'/>
 
     <!--
-        ExtJSF Bind name of the container to append
-        this to as a child. Conflicts with 'renderTo'!
+         ExtJSF Bind name of the container to append
+         this to as a child. Conflicts with 'renderTo'!
     -->
     <co:attribute name = 'parentId' default = ''
        type = 'java.lang.String'/>
@@ -45,22 +45,12 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-    ZeT.scope(function()
-    {
-      var bind = extjsf.domain('${extDom}').
-        bind('#{cc.attrs.coid}', new extjsf.Bind()).
-        nodeId('#{cc.clientId}-#{cc.attrs.coid}').
-        extjsProps({xtype: 'panel', id: '#{cc.attrs.coid}'}).
-        extjsPropsNode()
-
-      //?: {rendering to DOM node}
-      if(!ZeTS.ises("#{cc.attrs.renderTo}"))
-        bind.renderTo("#{cc.attrs.renderTo}")
-      //?: {not inserting into target parent}
-      else if(ZeTS.ises("#{cc.attrs.parentId}"))
-        if(!ZeTS.ises("#{cc.parent.attrs.coid}"))
-          extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')
-    })
+    extjsf.domain('${extDom}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind()).ids('#{cc.clientId}').
+      renderTo('#{cc.attrs.renderTo}', '#{cc.attrs.renderParent}').
+      parent('#{cc.parent.attrs.coid}', '#{cc.attrs.parentId}').
+      props({ xtype: 'panel' }).readPropsNode().
+      install()
 
     //]]>
     </script>
@@ -70,38 +60,9 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-  //?: {render to DOM node}
-  if(!ZeTS.ises("#{cc.attrs.renderTo}")) Ext.onReady(function()
-  {
-    var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
-
-    //~: create the component
-    bind.co(Ext.ComponentManager.create(bind.extjsProps()))
-
-    //?: {has component render parent}
-    if('#{cc.attrs.renderParent}'.length)
-      bind.renderParent('#{cc.attrs.renderParent}')
-    //~: connect destroy listener
-    else
-      extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').
-        on('beforedestroy', bind.boundDestroy())
-  })
-
-  //?: {render to container component}
-  else if(!ZeTS.ises("#{cc.attrs.parentId}"))
-    extjsf.bind('#{cc.attrs.parentId}', '${extDom}').on('added', function(parent)
-    {
-      var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
-
-      //~: create the component
-      bind.co(Ext.ComponentManager.create(bind.extjsProps()))
-
-      //~: append to the parent
-      parent.add(bind.co())
-    })
+    extjsf.bind('#{cc.attrs.coid}', '${extDom}').render()
 
     //]]>
     </script>
-
   </co:implementation>
 </ui:fragment>

@@ -26,13 +26,13 @@
   extjsf.domain('${extDom}').
     bind('#{cc.attrs.coid}', new extjsf.Bind()).
     nodeId("#{cc.clientId}-#{cc.attrs.coid}").
-    extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
-    extjsPropsNode()
+    props({xtype: 'toolbar', dock: 'top', border: false}).
+    readPropsNode()
 
   //~: add it on the component created
   extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').on('added', function(parent)
   {
-    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${extDom}').extjsProps())
+    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${extDom}').props())
   })
 
     </script>

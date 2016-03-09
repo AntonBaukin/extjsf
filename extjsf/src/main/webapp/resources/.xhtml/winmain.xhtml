@@ -69,7 +69,7 @@
     panel.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
 
     //~: configure it
-    panel.extjsProps({
+    panel.props({
 
       xtype: 'panel',
       layout: 'border', region: 'center',
@@ -80,7 +80,7 @@
     })
 
     //~: user-defined properties
-    panel.extjsPropsNode()
+    panel.readPropsNode()
 
     //~: install positioning strategy
     if(!winmain.WinAlign)
@@ -90,15 +90,15 @@
     var toolbar = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}-toolbar', new extjsf.Bind())
     toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
-    toolbar.extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
-      extjsPropsNode()
+    toolbar.props({xtype: 'toolbar', dock: 'top', border: false}).
+      readPropsNode()
 
     //~: create the status bar
     var status = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}-status', new extjsf.Bind())
     status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
-    status.extjsProps({xtype: 'statusbar', dock: 'bottom', border: false})
-    status.extjsPropsNode()
+    status.props({xtype: 'statusbar', dock: 'bottom', border: false})
+    status.readPropsNode()
   })
 
     //]]>
@@ -170,14 +170,14 @@
 
     //?: {toolbar has items} add it to the window
     if(toolbar.hasItems() || toolbar.hasHTML())
-      winmain.co().addDocked(toolbar.extjsProps())
+      winmain.co().addDocked(toolbar.props())
 
     //?: {status bar has items} add it to the window
     if(status.hasItems() || status.hasHTML())
-      winmain.co().addDocked(status.extjsProps())
+      winmain.co().addDocked(status.props())
 
     //!: add the panel to the window
-    winmain.co().add(panel.extjsProps())
+    winmain.co().add(panel.props())
 
     //~: install web link tool
     ZeT.scope(function()

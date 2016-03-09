@@ -19,6 +19,7 @@ testArrays()
 testExtends()
 testClasses()
 testClassDefs()
+testLinkedMap()
 
 
 // +----: ZeT Mini-Core :----------------------------------------+
@@ -964,6 +965,121 @@ function testClassDefs()
 
   var Yaw = ZeT.hiddenInstance('Ya.C', ['+', '-', '?'], YcBody)
   ZeT.assert('a+?-b' == Yaw)
+}
+
+function testLinkedMap()
+{
+  var seed = 2147483647; function rnd(n)
+  {
+    seed = (1664525 * seed + 1013904223) % 4294967296
+    return ZeT.isi(n)?(seed % n):(seed < 2147483648)
+  }
+
+  function check(a, m)
+  {
+    ZeT.assert(a.length === m.size)
+
+    var i = 0; m.each(function(v, k)
+    {
+      ZeT.assert(v == this)
+      ZeT.assert(('$' + a[i]) === k, ' a[ ', i, '] = ', a[i], ' ', k)
+      ZeT.assert(('!' + a[i]) === v)
+      i++
+    })
+
+    ZeT.assert(a.length == i)
+
+    i = a.length - 1; m.reverse(function(v, k)
+    {
+      ZeT.assert(v == this)
+      ZeT.assert(('$' + a[i]) === k)
+      ZeT.assert(('!' + a[i]) === v)
+      i--
+    })
+
+    ZeT.assert(-1 == i)
+  }
+
+  function yes(a, m, k)
+  {
+    ZeT.assert(a.length === m.size)
+    ZeT.assert(a.indexOf(k) >= -1)
+    ZeT.assert(m.contains('$' + k))
+    ZeT.assert(ZeT.isi(m.index('$' + k)))
+    ZeT.assert(('!' + k) === m.get('$' + k))
+  }
+
+  function no(a, m, k)
+  {
+    ZeT.assert(a.length === m.size)
+    ZeT.assert(a.indexOf(k) == -1)
+    ZeT.assert(!m.contains('$' + k))
+    ZeT.assert(ZeT.isu(m.index('$' + k)))
+    ZeT.assert(ZeT.isu(m.get('$' + k)))
+  }
+
+  function put(a, m, k)
+  {
+    no(a, m, k)
+
+    a.push(k)
+    m.put('$' + k, '!' + k)
+
+    yes(a, m, k)
+  }
+
+  function del(a, m, k)
+  {
+    yes(a, m, k)
+
+    a.splice(a.indexOf(k), 1)
+    ZeT.assert(('!' + k) === m.remove('$' + k))
+
+    no(a, m, k)
+  }
+
+  function put2(a, m, k)
+  {
+    yes(a, m, k)
+
+    a.splice(a.indexOf(k), 1)
+    a.push(k)
+
+    ZeT.assert(('!'  + k) === m.put('$' + k, '!?' + k))
+    ZeT.assert(('!?' + k) === m.put('$' + k, '!'  + k))
+
+    yes(a, m, k)
+  }
+
+  for(var test = 0;(test < 10);test++)
+  {
+    var a = [], m = new ZeT.Map()
+    var n = 1 + rnd(25)
+
+    for(var i = 0;(i < n*4);i++) try
+    {
+      var k = rnd(Math.floor(n))
+
+      check(a, m)
+
+      //?: {not contains key}
+      if(a.indexOf(k) == -1)
+        put(a, m, k)
+      //?: {contains, do remove}
+      else if(rnd())
+        del(a, m, k)
+      //?: {contains, repeat put}
+      else
+        put2(a, m, k)
+    }
+    catch(e)
+    {
+      ZeT.log('testLinkedMap() failed at test [',
+        test, '] index [', i, ']: ', a, m)
+
+      throw e
+    }
+  }
 }
 
 //]]>

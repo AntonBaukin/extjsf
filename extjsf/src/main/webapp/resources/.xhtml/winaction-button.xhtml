@@ -45,8 +45,8 @@
     button.goFormAction()
 
     //~: configure the bind
-    button.extjsProps({xtype: 'button'})
-    button.extjsPropsNode()
+    button.props({xtype: 'button'})
+    button.readPropsNode()
 
     //~: submit handler
     function submit_handler()
@@ -64,7 +64,7 @@
     }
 
     button.handler = submit_handler;
-    button.extjsProps({handler: submit_handler})
+    button.props({handler: submit_handler})
 
     extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', button)
   })

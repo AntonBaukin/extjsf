@@ -52,21 +52,21 @@
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     panel.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
-    panel.extjsProps({
+    panel.props({
 
       xtype: 'panel', layout: 'border', region: 'center',
       border: false, frame: false, closable: true,
       minWidth: 256
 
     })
-    panel.extjsPropsNode()
+    panel.readPropsNode()
 
     var position = '#{cc.attrs.position}'
     if(ZeTS.ises(position)) position = 'center'
 
     var wlink; if("#{cc.attrs.webLink}" === 'true') wlink = {
       link: "#{rootView.requestURI}", panel: position,
-      text: panel.extjsPropsRaw().title,
+      text: panel.raw().title,
       domain: '${extDom}'
     }
 
@@ -122,8 +122,8 @@
     var toolbar = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}-toolbar', new extjsf.Bind())
     toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
-    toolbar.extjsProps({xtype: 'toolbar', dock: 'top', border: false}).
-      extjsPropsNode()
+    toolbar.props({xtype: 'toolbar', dock: 'top', border: false}).
+      readPropsNode()
 
     //HINT: we steal the items from the root panel
     //  and add them to the toolbar!
@@ -154,7 +154,7 @@
     var status = extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}-status', new extjsf.Bind())
     status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
-    status.extjsProps({xtype: 'statusbar', dock: 'bottom'}).extjsPropsNode()
+    status.props({xtype: 'statusbar', dock: 'bottom'}).readPropsNode()
 
     //HINT: we steal the items from the root panel
     //  and add them to the toolbar!

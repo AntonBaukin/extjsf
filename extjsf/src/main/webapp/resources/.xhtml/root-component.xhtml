@@ -44,13 +44,13 @@
     var bind   = extjsf.domain(domain).
       bind('#{cc.attrs.coid}', new extjsf.Bind()).
       nodeId('#{cc.clientId}-#{cc.attrs.coid}').
-      extjsProps({xtype: 'panel', id: '#{cc.attrs.coid}'}).
-      extjsProps({border: false, frame: false, layout: 'fit'}).
-      extjsPropsNode()
+      props({xtype: 'panel', id: '#{cc.attrs.coid}'}).
+      props({border: false, frame: false, layout: 'fit'}).
+      readPropsNode()
 
     var parent = !!'#{cc.parent.attrs.coid}'.length &&
       extjsf.bind('#{cc.parent.attrs.coid}', domain)
-    var render = !!bind.extjsPropsRaw()['renderTo']
+    var render = !!bind.raw()['renderTo']
 
     if(parent && !render) parent.addItem(bind)
 
@@ -59,14 +59,14 @@
       bind('#{cc.attrs.coid}-toolbar', new extjsf.Bind())
 
     toolbar.nodeId("#{cc.clientId}-#{cc.attrs.coid}-toolbar")
-    toolbar.extjsProps({ xtype: 'toolbar', dock: 'top', border: false })
-    toolbar.extjsPropsNode()
+    toolbar.props({ xtype: 'toolbar', dock: 'top', border: false })
+    toolbar.readPropsNode()
 
     //~: create the status bar
     var status = extjsf.domain(domain).
       bind('#{cc.attrs.coid}-status', new extjsf.Bind())
     status.nodeId("#{cc.clientId}-#{cc.attrs.coid}-status")
-    status.extjsProps({xtype: 'statusbar', dock: 'bottom'}).extjsPropsNode()
+    status.props({xtype: 'statusbar', dock: 'bottom'}).readPropsNode()
 
   })()
 
@@ -133,21 +133,21 @@
     var parent  = !!'#{cc.parent.attrs.coid}'.length &&
       extjsf.bind('#{cc.parent.attrs.coid}', domain);
     var comp    = extjsf.bind("#{cc.attrs.coid}", domain);
-    var render  = !!comp.extjsPropsRaw()['renderTo'];
+    var render  = !!comp.raw()['renderTo'];
     var toolbar = extjsf.bind('#{cc.attrs.coid}-toolbar', domain);
     var status  = extjsf.bind('#{cc.attrs.coid}-status', domain);
 
     //?: {was not added to the parent} just create the component now
     if(!(parent && !render)) comp.co(
-      Ext.ComponentManager.create(comp.extjsProps()))
+      Ext.ComponentManager.create(comp.props()))
 
     //?: {toolbar has items} add it to the component
     if(toolbar.hasItems() || toolbar.hasHTML())
-      comp.co().addDocked(toolbar.extjsProps())
+      comp.co().addDocked(toolbar.props())
 
     //?: {status bar has items} add it to the component
     if(status.hasItems() || status.hasHTML())
-      comp.co().addDocked(status.extjsProps())
+      comp.co().addDocked(status.props())
 
     if(('#{cc.attrs.domainOwner}' === 'true') && domain.length)
     {

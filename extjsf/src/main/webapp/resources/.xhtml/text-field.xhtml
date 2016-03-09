@@ -49,13 +49,13 @@
     var ronly = ('#{cc.attrs.readOnly}' == 'true')
 
     field.nodeId("#{cc.clientId}-hidden")
-    field.extjsProps({labelSeparator: '', xtype: 'textfield', margin: 0})
-    field.extjsPropsNode().extjsProps({
+    field.props({labelSeparator: '', xtype: 'textfield', margin: 0})
+    field.readPropsNode().props({
       inputId : "#{cc.attrs.coid}",
       name    : "#{cc.clientId}-hidden"
     })
 
-    if(ronly) field.extjsProps({readOnly: true, value: "#{z:jss(cc.attrs.value)}"})
+    if(ronly) field.props({readOnly: true, value: "#{z:jss(cc.attrs.value)}"})
 
     var label = new extjsf.Bind();
     label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
@@ -63,17 +63,17 @@
     if(!label.isPropsNode()) label = null; else
     {
       extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
-      field.extjsProps({hideLabel: true})
+      field.props({hideLabel: true})
 
       //~: set on click field focus
       label.on('afterrender', function(l) { l.getEl().addListener('click', function(e) {
         if(ronly) e.stopEvent(); else field.co().focus()
       })})
 
-      var lstyle = label.extjsPropsRaw()['style'] || {};
+      var lstyle = label.raw()['style'] || {};
       if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
 
-      label.extjsPropsNode().extjsProps({
+      label.readPropsNode().props({
         xtype: 'label', forId: "#{cc.attrs.coid}", style: lstyle
       })
     }

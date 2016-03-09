@@ -29,8 +29,8 @@
   extjsf.domain('${extDom}').
     bind('#{cc.attrs.coid}', new extjsf.Bind()).
     nodeId("#{cc.clientId}-#{cc.attrs.coid}").
-    extjsProps({layout: 'fit', renderTo: Ext.getBody()}).
-    extjsPropsNode()
+    props({layout: 'fit', renderTo: Ext.getBody()}).
+    readPropsNode()
 
   extjsf.bind('#{cc.attrs.coid}', '${extDom}').isViewport = true;
 
@@ -43,9 +43,9 @@
   Ext.onReady(function()
   {
     extjsf.bind('#{cc.attrs.coid}', '${extDom}').
-      extjsPropsNode().
+      readPropsNode().
       co(Ext.create('Ext.container.Viewport',
-        extjsf.bind('#{cc.attrs.coid}', '${extDom}').extjsProps()))
+        extjsf.bind('#{cc.attrs.coid}', '${extDom}').props()))
   })
 
     </script>

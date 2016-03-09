@@ -40,7 +40,7 @@
       bind('#{cc.attrs.coid}', new extjsf.Bind())
 
     field.nodeId("#{cc.clientId}-hidden")
-    field.extjsPropsNode().extjsProps({
+    field.readPropsNode().props({
       xtype   : 'hiddenfield',
       inputId : "#{cc.attrs.coid}",
       name    : "#{cc.clientId}-hidden"

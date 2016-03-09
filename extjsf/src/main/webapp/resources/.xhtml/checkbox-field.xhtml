@@ -46,15 +46,15 @@
     field.nodeId("#{cc.clientId}-checkbox")
     field.initialChecked = ('true' == Ext.getDom(field.nodeId()).value);
 
-    field.extjsProps({labelSeparator: '', xtype: 'checkboxfield'})
-    field.extjsPropsNode().extjsProps({
+    field.props({labelSeparator: '', xtype: 'checkboxfield'})
+    field.readPropsNode().props({
       inputId : "#{cc.attrs.coid}",
       name    : "#{cc.clientId}-checkbox",
       inputValue : 'true', uncheckedValue: 'false'
     })
 
-    if(field.initialChecked) field.extjsProps({ checked : true })
-    else if(field.extjsPropsRaw().checked && !field.initialChecked)
+    if(field.initialChecked) field.props({ checked : true })
+    else if(field.raw().checked && !field.initialChecked)
       Ext.getDom(field.nodeId()).value = 'true';
 
     var label = new extjsf.Bind();
@@ -63,18 +63,18 @@
     if(!label.isPropsNode()) label = null; else
     {
       extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
-      field.extjsProps({hideLabel: true})
+      field.props({hideLabel: true})
 
       //~: set for attribute
       label.on('afterrender', function(l) {
         l.getEl().set({'for': "#{cc.attrs.coid}"})
       })
 
-      var lstyle = field.extjsPropsRaw()['style'] || {};
+      var lstyle = field.raw()['style'] || {};
       if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
       if(!lstyle.cursor) lstyle.cursor = 'pointer';
 
-      label.extjsPropsNode().extjsProps({
+      label.readPropsNode().props({
         xtype: 'label', style: lstyle
       })
     }
@@ -83,8 +83,8 @@
 
     if(!label) { form.addItem(field); return; }
 
-    field.extjsProps({hideLabel: true, hideEmptyLabel: true})
-    if(label.extjsPropsRaw()['labelAlign'] == 'left')
+    field.props({hideLabel: true, hideEmptyLabel: true})
+    if(label.raw()['labelAlign'] == 'left')
     {      form.addItem(label); form.addItem(field); }
     else { form.addItem(field); form.addItem(label); }
 

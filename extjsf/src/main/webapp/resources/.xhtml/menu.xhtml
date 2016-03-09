@@ -27,7 +27,7 @@
     extjsf.domain('${extDom}').
       bind('#{cc.attrs.coid}', new extjsf.Bind()).
       nodeId('#{cc.clientId}-#{cc.attrs.coid}').
-      extjsPropsNode();
+      readPropsNode();
 
     </script>
 
@@ -38,7 +38,7 @@
   Ext.onReady(function()
   {
     extjsf.bind('#{cc.attrs.coid}', '${extDom}').co(Ext.create(
-      'Ext.menu.Menu', extjsf.bind('#{cc.attrs.coid}', '${extDom}').extjsProps()))
+      'Ext.menu.Menu', extjsf.bind('#{cc.attrs.coid}', '${extDom}').props()))
   })
 
     </script>

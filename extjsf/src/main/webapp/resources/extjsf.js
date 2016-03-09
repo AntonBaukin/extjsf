@@ -16,6 +16,7 @@ var extjsf = ZeT.define('extjsf', {})
  */
 extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 {
+	className        : 'extjsf.Domain',
 	extjsfDomain     : true,
 
 	init             : function(name)
@@ -72,8 +73,6 @@ extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 	{
 		ZeT.asserts(name, 'Can not lookup a Bind by ',
 		  'not a string name: ', name)
-
-		ZeT.log('Unbind from [', this.name, '] ', name)
 
 		//~: remove the bind
 		var bind = this.binds.remove(name)
@@ -142,7 +141,7 @@ extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 	 * is being destroyed. Give second argument false
 	 * to remove previously registered callback.
 	 */
-	onDelete         : function(f, remove)
+	onDestroy        : function(f, remove)
 	{
 		ZeT.assertf(f)
 
@@ -181,7 +180,7 @@ ZeT.extend(extjsf,
 		extjsf.domains[name] = domain = new extjsf.Domain(name)
 
 		//!: un-register on the destruction
-		domain.onDelete(function()
+		domain.onDestroy(function()
 		{
 			delete extjsf.domains[name]
 		})
@@ -204,6 +203,217 @@ ZeT.extend(extjsf,
 		return domain.bind(name)
 	}
 })
+
+
+// +----: Bind :-------------------------------------------------+
+
+extjsf.Bind = ZeT.defineClass('extjsf.Bind',
+{
+	className        : 'extjsf.Bind',
+	extjsfBind       : true,
+
+	init             : function()
+	{
+		this._listeners   = {}
+		this._items       = []
+		this._extjs_props = {}
+
+		//WARNING: this prevents recursion in Ext.clone()!
+		this.constructor  = null
+	},
+
+	/**
+	 * Invoked by a Domain when registering Bind.
+	 */
+	defined          : function(domain, name)
+	{
+		ZeT.assert(ZeT.iss(domain))
+		ZeT.asserts(name)
+
+		this.domain = domain
+		this.name   = name
+	},
+
+	/**
+	 * Tells JSF component ID and optional ExtJSF
+	 * component ID that by default is the bind name.
+	 */
+	ids              : function(clientId, coid)
+	{
+		//~: JSF component id
+		this._client_id = ZeT.asserts(clientId)
+
+		//~: unique ExtJSF component id
+		this.coid = !ZeT.ises(coid)?(coid):ZeT.asserts(this.name)
+
+		//~: ExtJS component id
+		this.props({ id: this.coid })
+
+		return this
+	},
+
+	/**
+	 * This call (not required when render-to) tells
+	 * the name of the Bind (co-ids):
+	 *
+	 * 0) of the parent JSF component this one
+	 *    is directly placed in;
+	 *
+	 * 1) the component you want to place this one
+	 *    instead of the default defined in [0].
+	 *
+	 * Second argument allows to implement extension
+	 * points: you place component in node of else
+	 * sub-tree of JSF components tree.
+	 */
+	parent           : function(parent_coid, target_coid)
+	{
+		//~: default parent
+		if(!ZeT.ises(parent_coid))
+			this._parent_coid = parent_coid
+
+		//~: targeted parent
+		if(!ZeT.ises(target_coid))
+			this._target_coid = target_coid
+
+		return this
+	},
+
+	/**
+	 * Tells DOM node ID to render this component to.
+	 * Optional 'parent' arguments tells the name of
+	 * the Bind (of the same domain) to attach this
+	 * component to. This allows to destroy this
+	 * component with the target one.
+	 */
+	renderTo         : function(nodeid, parent)
+	{
+		if(ZeT.ises(nodeid))
+			return this
+
+		//~: render node id
+		this._render_to = ZeTS.trim(nodeid)
+
+		//?: {has render parent}
+		if(!ZeT.ises(parent))
+			this._render_parent = parent
+
+		return this
+	},
+
+	/**
+	 * Couples this Bind (and the future component)
+	 * to the proper container or render place.
+	 *
+	 * Note that this call may be done before
+	 * nested components (if any) are inserted
+	 * as JSF facet and their Binds created!
+	 */
+	install          : function()
+	{
+		//?: {is not rendering to some else place}
+		if(ZeT.ises(this._render_to) && !this._target_coid)
+			this.$install()
+
+		return this
+	},
+
+	/**
+	 * Invoked always after the JSF facets with the
+	 * nested components are rendered, and always
+	 * after the install. Does all required the
+	 * component to work.
+	 *
+	 * Note that at this point ExtJS components
+	 * are still might be not available!
+	 */
+	render           : function()
+	{
+		var self = this
+
+		//?: {render to node}
+		if(!ZeT.ises(this._render_to))
+			Ext.onReady(function()
+			{
+				//~: create the component
+				if(!self.co())
+					self.co(self.$create())
+
+				//?: {has component render parent}
+				if(self._render_parent)
+					self.renderParent()
+				//?: {has default render parent}
+				else if(!self._target_coid)
+					extjsf.bind(self._target_coid, self.domain).
+					  on('beforedestroy', this.boundDestroy())
+			})
+
+		//?: {add to the container component}
+		else if(this._target_coid)
+			extjsf.bind(this._target_coid, this.domain).on('added', function(parent)
+			{
+				//~: create the component
+				if(!self.co())
+					self.co(self.$create())
+
+				//~: append to the parent
+				parent.add(self.co())
+			})
+	},
+
+	/**
+	 * Invokes ZeT.scope() giving the first
+	 * argument this Bind instance.
+	 */
+	scope            : function()
+	{
+		ZeT.assertf(f)
+
+		//~: argument this bind
+		var a = ZeT.a(arguments)
+		a.splice(0, 0, this)
+
+		return ZeT.scope.apply(ZeT, a)
+	},
+
+	/**
+	 * Private. Creates the component.
+	 */
+	$create          : function()
+	{
+		return Ext.ComponentManager.create(this.props())
+	},
+
+	$install         : function()
+	{
+		if(!this._parent_coid)
+			return this
+
+		var d = ZeT.assertn(extjsf.domain(this.domain),
+		  'This Bind is not registered in any Domain!')
+
+		var p = ZeT.assertn(d.bind(this._parent_coid),
+		  'Parent Bind [', this._parent_coid, '] is not',
+		  ' found in the Domain [', this.domain, ']!')
+
+		p.addItem(this) //!: add this bind as a child
+	},
+
+	/**
+	 * Private. Returns ID of DOM node that
+	 * stores the properties of this component.
+	 */
+	$node_id         : function()
+	{
+		if(!ZeT.ises(this._node_id))
+			return this._node_id
+
+		//?: {form from the client id}
+		if(!ZeT.ises(this._client_id))
+			return ZeTS.cat(this._client_id, '-', ZeT.asserts(this.coid))
+	}
+})
+
 
 
 
@@ -594,29 +804,8 @@ ZeT.extend(extjsf,
 
 })
 
-var extjsf$domains = ZeT.define('extjsf$domains', {})
-
-extjsf.Bind = ZeT.defineClass('extjsf.Bind',
+extjsf.Bind.extend(
 {
-	className        : 'extjsf.Bind',
-	extjsfBind       : true,
-
-	init             : function()
-	{
-		this._listeners   = {}
-		this._items       = []
-		this._extjs_props = {}
-
-		//WARNING: this prevents recursion in Ext.clone()!
-		this.constructor  = null
-	},
-
-	defined          : function(domain, name)
-	{
-		this.domain   = domain
-		this.bindName = name
-	},
-
 	co               : function(component)
 	{
 		if(ZeT.isu(component)) return this._component;
@@ -624,14 +813,14 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		return this;
 	},
 
-	extjsPropsRaw    : function()
+	raw    : function()
 	{
 		return this._extjs_props;
 	},
 
-	extjsProps       : function(props)
+	props       : function(props)
 	{
-		if(!props) return this._extjsProps();
+		if(!props) return this.$props();
 
 		if(ZeT.iss(props))
 			props = this._evalProps(props);
@@ -640,17 +829,17 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		return this;
 	},
 
-	extjsPropsNode   : function(node_id)
+	readPropsNode   : function(node_id)
 	{
 		var props = this.evalPropsNode(node_id);
-		if(props) this.extjsProps(props)
+		if(props) this.props(props)
 		return this;
 	},
 
 	getPropsNode     : function(node_id)
 	{
-		if(!node_id && this.nodeId())
-			node_id = this.nodeId() + '-props';
+		if(!node_id && this.$node_id())
+			node_id = this.$node_id() + '-props';
 		return node_id && Ext.getDom(node_id);
 	},
 
@@ -663,20 +852,21 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		return !!(text && text.length);
 	},
 
-	nodeId           : function(page_node_id)
+	nodeId           : function(nodeId)
 	{
-		if(!ZeT.iss(page_node_id)) return this._page_node_id;
-		this._page_node_id = page_node_id;
+		if(!ZeT.iss(nodeId))
+			return this.$node_id()
+		this._node_id = nodeId
 		return this;
 	},
 
 	prependId        : function(local_id)
 	{
-		if(!ZeT.iss(this._page_node_id)) throw 'Can not prepend local ID [' +
+		if(!ZeT.iss(this._node_id)) throw 'Can not prepend local ID [' +
 		  local_id + '] as there is no Node ID bound the ExtJSF component!';
 
 		//NOTE: JSF prepend separator '-' must be configured in web.xml!
-		return this._page_node_id.concat('-', local_id);
+		return this._node_id.concat('-', local_id);
 	},
 
 	value            : function(v)
@@ -707,23 +897,6 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		return this
 	},
 
-	renderTo         : function(node_or_id)
-	{
-		if(ZeT.iss(node_or_id))
-		{
-			this._render_to = ZeTS.trim(node_or_id)
-			return this
-		}
-
-		if(Ext.isElement(node_or_id))
-		{
-			this._render_to = node_or_id
-			return this
-		}
-
-		return this
-	},
-
 	/**
 	 * For the given parent bind id, bind,
 	 * or component updates the component of
@@ -734,17 +907,24 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	 * Note that this also binds the destroy.
 	 * This function may be invoked only once!
 	 */
-	renderParent     : function(parent)
+	renderParent     : function()
 	{
 		//?: {is not rendered to}
 		if(ZeTS.ises(this._render_to))
 			return this
 
 		//~: access the parent bind
-		var p = this._render_parent
-		if(parent) p = extjsf.asbind(parent, this.domain)
-		ZeT.assert(extjsf.isbind(p), 'Not a render parent Bind: ',
-		  parent || this._render_parent)
+		var p; if(ZeT.iss(p = this._render_parent))
+		{
+			p = extjsf.asbind(p, this.domain)
+
+			ZeT.assert(extjsf.isbind(p), 'Bind of the render parent [',
+			  this._render_parent, '] is not found at [', this.domain, ']!')
+
+			this._render_parent = p
+		}
+
+		ZeT.assert(extjsf.isbind(p))
 
 		//?: {invoked more than once}
 		if(this._rendered_parent)
@@ -775,11 +955,11 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		}
 
 		delete this._render_parent
-		this._render_parent(p.co())
+		this.$render_parent(p.co())
 		return this
 	},
 
-	_render_parent   : function(p)
+	$render_parent   : function(p)
 	{
 		var co = this.co()
 
@@ -905,7 +1085,7 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 
 	goFormAction     : function(nodeid, action)
 	{
-		if(ZeTS.ises(nodeid)) nodeid = this.nodeId();
+		if(ZeTS.ises(nodeid)) nodeid = this.$node_id();
 		if(ZeTS.ises(nodeid)) return this;
 
 		var node = Ext.get(nodeid);
@@ -998,7 +1178,7 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 			}
 
 			var item  = {};
-			var props = chs[i]._extjsProps();
+			var props = chs[i].$props();
 			var keysl = ZeT.keys(item).length;
 			item = ZeT.extend(item, props || item);
 
@@ -1009,10 +1189,10 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		return res;
 	},
 
-	_extjsProps      : function()
+	$props      : function()
 	{
 		var res  = this._extjs_props;
-		var node = this.nodeId() && Ext.get(this.nodeId());
+		var node = this.$node_id() && Ext.get(this.$node_id());
 		var self = this;
 
 		//~: get value from the DOM node
@@ -1097,7 +1277,7 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	{
 		opts = opts || {};
 
-		var jsf_form = this.nodeId() && Ext.get(this.nodeId());
+		var jsf_form = this.$node_id() && Ext.get(this.$node_id());
 		var ext_form = this.co() &&
 		  this.co().getForm && this.co().getForm();
 		if(!ext_form) throw 'Can not issue form submit as no form is found!';
@@ -1369,15 +1549,15 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	on_destroy       : function(component)
 	{
 		//?: {is not registered}
-		if(!ZeT.iss(this.bindName)) return
+		if(!ZeT.iss(this.name)) return
 		ZeT.assert(ZeT.iss(this.domain))
 
 		var self = this, domain = extjsf.domain(this.domain)
 		if(domain) ZeT.timeout(2000, function()
 		{
 			//?: {still have this bind registered}
-			var bind = domain.bind(self.bindName)
-			if(bind == self) domain.unbind(self.bindName, false)
+			var bind = domain.bind(self.name)
+			if(bind == self) domain.unbind(self.name, false)
 		})
 	},
 

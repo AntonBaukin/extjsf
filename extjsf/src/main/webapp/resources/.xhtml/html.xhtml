@@ -65,8 +65,8 @@
       extjsf.domain('${extDom}').
         bind('#{cc.attrs.coid}', new extjsf.Bind()).
         nodeId("#{cc.clientId}-#{cc.attrs.coid}").
-        extjsProps({xtype: 'component', margin: 0}).extjsPropsNode().
-        extjsProps({html: undefined, contentEl: "#{cc.attrs.coid}-html"})
+        props({xtype: 'component', margin: 0}).readPropsNode().
+        props({html: undefined, contentEl: "#{cc.attrs.coid}-html"})
 
       if("#{cc.attrs.renderDelay}" == "false")
         extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')
@@ -76,7 +76,7 @@
           var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
 
           //~: create the component
-          bind.co(Ext.ComponentManager.create(bind.extjsProps()))
+          bind.co(Ext.ComponentManager.create(bind.props()))
 
           //~: append to the parent
           parent.add(bind.co())
