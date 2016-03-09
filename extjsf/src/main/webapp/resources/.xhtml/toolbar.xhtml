@@ -32,7 +32,7 @@
   //~: add it on the component created
   extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').on('added', function(parent)
   {
-    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${extDom}').props())
+    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${extDom}').buildProps())
   })
 
     </script>

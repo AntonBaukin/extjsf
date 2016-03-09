@@ -89,7 +89,7 @@
       bind.props({store: "#{cc.attrs.storeId}"})
 
       //~: refresh source on repeated expand
-      var expandTime; if(!bind.raw().notRefreshOnExpand)
+      var expandTime; if(!bind.$raw().notRefreshOnExpand)
         bind.on('expand', function()
       {
         var ts = new Date().getTime()

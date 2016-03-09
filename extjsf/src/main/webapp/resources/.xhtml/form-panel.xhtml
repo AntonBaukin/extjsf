@@ -56,7 +56,7 @@
     var form  = extjsf.bind('#{cc.attrs.coid}', '${extDom}');
     form.goFormAction()
 
-    var props = form.raw();
+    var props = form.$raw();
 
     if(!props || !props['errorReader']) form.props({
 
@@ -65,12 +65,12 @@
       })
     })
 
-    form.readPropsNode({ margin: 0, border: false })
+    form.props({ margin: 0, border: false })
     form.readPropsNode()
     form.props({ xtype: 'form', id : "#{cc.attrs.coid}" })
 
     extjsf.bind('#{cc.attrs.coid}', '${extDom}').
-      co(Ext.create('Ext.form.Panel', form.props()))
+      co(Ext.create('Ext.form.Panel', form.buildProps()))
   })
 
   extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')

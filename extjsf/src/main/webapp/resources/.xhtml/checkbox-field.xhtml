@@ -54,7 +54,7 @@
     })
 
     if(field.initialChecked) field.props({ checked : true })
-    else if(field.raw().checked && !field.initialChecked)
+    else if(field.$raw().checked && !field.initialChecked)
       Ext.getDom(field.nodeId()).value = 'true';
 
     var label = new extjsf.Bind();
@@ -70,7 +70,7 @@
         l.getEl().set({'for': "#{cc.attrs.coid}"})
       })
 
-      var lstyle = field.raw()['style'] || {};
+      var lstyle = field.$raw()['style'] || {};
       if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
       if(!lstyle.cursor) lstyle.cursor = 'pointer';
 
@@ -84,7 +84,7 @@
     if(!label) { form.addItem(field); return; }
 
     field.props({hideLabel: true, hideEmptyLabel: true})
-    if(label.raw()['labelAlign'] == 'left')
+    if(label.$raw()['labelAlign'] == 'left')
     {      form.addItem(label); form.addItem(field); }
     else { form.addItem(field); form.addItem(label); }
 

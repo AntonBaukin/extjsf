@@ -45,14 +45,14 @@
     grid.props({ xtype: 'grid', store: "#{cc.attrs.storeId}" })
 
     //~: view configuration
-    var view = grid.raw().viewConfig;
-    if(!view) grid.raw().viewConfig = view = {};
+    var view = grid.$raw().viewConfig;
+    if(!view) grid.$raw().viewConfig = view = {};
     if(ZeT.isu(view.preserveScrollOnRefresh)) view.preserveScrollOnRefresh = true;
 
     //~: configure the pager
-    if(grid.raw()['pager'] === true)
+    if(grid.$raw()['pager'] === true)
     {
-      delete grid.raw()['pager'];
+      delete grid.$raw()['pager'];
 
       var pager = new extjsf.Bind();
       pager.nodeId("#{cc.clientId}-#{cc.attrs.coid}-pager")
@@ -69,7 +69,7 @@
       pager.readPropsNode()
 
       //~: add pager to the grid
-      grid.props({bbar: pager.raw()})
+      grid.props({bbar: pager.$raw()})
     }
 
     extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', grid)

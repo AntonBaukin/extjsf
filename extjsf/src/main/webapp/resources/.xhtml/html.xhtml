@@ -76,7 +76,7 @@
           var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
 
           //~: create the component
-          bind.co(Ext.ComponentManager.create(bind.props()))
+          bind.co(Ext.ComponentManager.create(bind.buildProps()))
 
           //~: append to the parent
           parent.add(bind.co())

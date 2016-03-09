@@ -76,7 +76,7 @@
         if(ct > 500) field.co().expand()
       })})
 
-      var lstyle = field.raw()['style'] || {};
+      var lstyle = field.$raw()['style'] || {};
       if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
 
       label.readPropsNode().props({

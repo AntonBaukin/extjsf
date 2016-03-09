@@ -50,7 +50,7 @@
 
     var parent = !!'#{cc.parent.attrs.coid}'.length &&
       extjsf.bind('#{cc.parent.attrs.coid}', domain)
-    var render = !!bind.raw()['renderTo']
+    var render = !!bind.$raw()['renderTo']
 
     if(parent && !render) parent.addItem(bind)
 
@@ -133,21 +133,21 @@
     var parent  = !!'#{cc.parent.attrs.coid}'.length &&
       extjsf.bind('#{cc.parent.attrs.coid}', domain);
     var comp    = extjsf.bind("#{cc.attrs.coid}", domain);
-    var render  = !!comp.raw()['renderTo'];
+    var render  = !!comp.$raw()['renderTo'];
     var toolbar = extjsf.bind('#{cc.attrs.coid}-toolbar', domain);
     var status  = extjsf.bind('#{cc.attrs.coid}-status', domain);
 
     //?: {was not added to the parent} just create the component now
     if(!(parent && !render)) comp.co(
-      Ext.ComponentManager.create(comp.props()))
+      Ext.ComponentManager.create(comp.buildProps()))
 
     //?: {toolbar has items} add it to the component
     if(toolbar.hasItems() || toolbar.hasHTML())
-      comp.co().addDocked(toolbar.props())
+      comp.co().addDocked(toolbar.buildProps())
 
     //?: {status bar has items} add it to the component
     if(status.hasItems() || status.hasHTML())
-      comp.co().addDocked(status.props())
+      comp.co().addDocked(status.buildProps())
 
     if(('#{cc.attrs.domainOwner}' === 'true') && domain.length)
     {

@@ -68,7 +68,7 @@
     proxy.props({type: 'ajax', url: "${z:url('/model')}"})
     proxy.readPropsNode()
 
-    var props = proxy.raw()
+    var props = proxy.$raw()
     if(props.noproxy)
       store.props({ autoLoad: false })
     else
@@ -146,7 +146,7 @@
     var store = extjsf.bind('#{cc.attrs.storeId}', '${extDom}')
 
     //!: create store component
-    store.co(Ext.create('Ext.data.Store', store.props()))
+    store.co(Ext.create('Ext.data.Store', store.buildProps()))
 
     var offset = parseInt("#{cc.attrs.dataStart}")
     var pgsize = parseInt("#{cc.attrs.pageSize}")

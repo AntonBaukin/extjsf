@@ -45,7 +45,7 @@
     extjsf.bind('#{cc.attrs.coid}', '${extDom}').
       readPropsNode().
       co(Ext.create('Ext.container.Viewport',
-        extjsf.bind('#{cc.attrs.coid}', '${extDom}').props()))
+        extjsf.bind('#{cc.attrs.coid}', '${extDom}').buildProps()))
   })
 
     </script>

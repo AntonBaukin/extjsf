@@ -159,7 +159,7 @@
       xtype: 'label', style: lstyle, extjsfRawItem: true
     })
 
-    var lstyle = label.raw()['style'] || {};
+    var lstyle = label.$raw()['style'] || {};
     if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
 
     //c: create the items for all the labels
@@ -167,7 +167,7 @@
     for(i = 0;(i + 1 < labls.length);i += 2)
     {
       //~: properties of the checkbox
-      var cb = ZeT.extend({}, bind.props())
+      var cb = ZeT.extend({}, bind.buildProps())
       ZeT.extend(cb, { inputId : "#{cc.attrs.coid}-" + i,
         inputValue: labls[i], checked: !!itmap[labls[i]]
       })
@@ -175,7 +175,7 @@
       delete cb.value //<-- must have it not!
 
       //~: properties of the label
-      var lb = ZeT.extend({}, label.props())
+      var lb = ZeT.extend({}, label.buildProps())
       ZeT.extend(lb, { forId: "#{cc.attrs.coid}-" + i, text: labls[i + 1] })
 
       //~: add directly to the parent

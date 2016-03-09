@@ -170,14 +170,14 @@
 
     //?: {toolbar has items} add it to the window
     if(toolbar.hasItems() || toolbar.hasHTML())
-      winmain.co().addDocked(toolbar.props())
+      winmain.co().addDocked(toolbar.buildProps())
 
     //?: {status bar has items} add it to the window
     if(status.hasItems() || status.hasHTML())
-      winmain.co().addDocked(status.props())
+      winmain.co().addDocked(status.buildProps())
 
     //!: add the panel to the window
-    winmain.co().add(panel.props())
+    winmain.co().add(panel.buildProps())
 
     //~: install web link tool
     ZeT.scope(function()

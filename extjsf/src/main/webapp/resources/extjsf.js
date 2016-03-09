@@ -214,9 +214,9 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 
 	init             : function()
 	{
-		this._listeners   = {}
-		this._items       = []
-		this._extjs_props = {}
+		this._listeners = {}
+		this._items     = []
+		this._props     = {}
 
 		//WARNING: this prevents recursion in Ext.clone()!
 		this.constructor  = null
@@ -249,6 +249,12 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		//~: ExtJS component id
 		this.props({ id: this.coid })
 
+		return this
+	},
+
+	viewId           : function(viewId)
+	{
+		this._view_id = ZeT.asserts(viewId)
 		return this
 	},
 
@@ -377,13 +383,48 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	},
 
 	/**
+	 * Assigns the properties of the component.
+	 */
+	props            : function(props)
+	{
+		if(ZeT.iss(props))
+			props = this._evalProps(props)
+
+		if(ZeT.iso(props))
+			ZeT.extend(this._props, props)
+
+		return this
+	},
+
+	/**
+	 * Reads properties written from the configuration
+	 * facet to the internal properties node.
+	 */
+	readPropsNode    : function()
+	{
+		this.props(this.evalPropsNode())
+		return this
+	},
+
+	/**
+	 * Private. Direct access to the properties.
+	 */
+	$raw             : function()
+	{
+		return this._props
+	},
+
+	/**
 	 * Private. Creates the component.
 	 */
 	$create          : function()
 	{
-		return Ext.ComponentManager.create(this.props())
+		return Ext.ComponentManager.create(this.buildProps())
 	},
 
+	/**
+	 * Private. Internals of install().
+	 */
 	$install         : function()
 	{
 		if(!this._parent_coid)
@@ -414,6 +455,176 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	}
 })
 
+
+// +----: Action Bind :------------------------------------------+
+
+extjsf.ActionBind = ZeT.defineClass('extjsf.ActionBind', extjsf.Bind,
+{
+	postMode         : function(mode)
+	{
+		this._post_mode = ZeT.asserts(mode)
+		return this
+	},
+
+	/**
+	 * Call strategy of the action. Posts the form.
+	 */
+	handler          : function(opts)
+	{
+		//~: copy the options
+		opts = ZeT.extend({}, opts)
+
+		//~: request address
+		opts.url = this.$form_action()
+
+		//~: parameters of the request
+		var params = this.$post_params(opts.params)
+
+		//~: success callback
+		var onsuccess = opts.success
+		opts.success = function(response)
+		{
+			if(extjsf.responseHandler.call(this, this.domain, response))
+				ZeT.isf(onsuccess) && usersuc.apply(this, arguments)
+			else
+				ZeT.isf(opts.failure) && opts.failure.apply(this, arguments)
+		}
+
+		//!: issue the request
+		Ext.Ajax.request(opts)
+	},
+
+	/**
+	 * Takes HTML form related to this Bind and updates
+	 * the action attribute to make it a go-link.
+	 *
+	 * Go links look like '/context/go/.. component ..'
+	 * where the path doesn't end with '.xhtml' suffix.
+	 *
+	 * Using this call assumes that Go-dispatching
+	 * filter is configured on the server side!
+	 */
+	goAction         : function()
+	{
+		//~: action attribute
+		var a = this.$form_action(), p = '', i
+
+		//?: {action already has '/go/'}
+		if(a.indexOf('/go/') != -1)
+			return this
+
+		//~: action prefix
+		if(ZeTS.starts(a, '/'))
+			{ p = '/'; a = a.substring(1) }
+
+		if((i = a.indexOf('/')) != 0)
+		{
+			p += a.substring(0, i + 1)
+			a  = a.substring(i + 1)
+		}
+
+		if(!ZeTS.ends(p, '/')) p += '/'
+
+		//~: strip the suffix
+		if(ZeTS.ends(a, '.xhtml'))
+			a = a.substring(0, a.length - 6);
+
+		//!: update the action attribute
+		this.$form_node().set({ action: p + 'go/' + a })
+
+		return this
+	},
+
+	/**
+	 * Private. Returns Ext.Element of the form node
+	 * found by id based on the $node_id().
+	 */
+	$form_node       : function(optional)
+	{
+		//~: take the basic node
+		var n = this.$node_id()
+		if(ZeT.ises(n))
+			if(optional === true) return; else
+				throw ZeT.ass('Bind form id is not provided!')
+
+		//~: take the node
+		var e = Ext.get(n)
+		if(!e) if(optional === true) return; else
+			throw ZeT.ass('Bind form DOM node [', n , '] is not found!')
+
+		//?: {not a form}
+		var tag = ZeT.asserts(ZeT.get(e, 'dom', 'tagName'))
+		ZeT.assert(tag.toLowerCase() == 'form',
+		  'DOM node by id [', n, '] is not a form!')
+
+		return e
+	},
+
+	$form_action     : function()
+	{
+		var f = this.$form_node()
+		return ZeT.asserts(f.getAttribute('action'),
+		  'ExtJSF form [', f.id, '] has no action attribute!')
+	},
+
+	/**
+	 * Private. Collects parameters from the form. Optional
+	 * argument allows to specify form action button to include
+	 * into the result. (To invoke the action.)
+	 */
+	$form_params     : function(button)
+	{
+		var res = {}
+
+		//~: select the form inputs
+		$form_node().select('input').each(function(item)
+		{
+			var n = item.getAttribute('name'); if(!n) return
+			var v = item.getAttribute('value') || '';
+
+			//?: {this field is a submit button} skip it
+			if(item.getAttribute('type') == 'submit')
+				if(!(button === n) && !(button === true))
+					return
+
+			res[n] = v
+		})
+
+		return res
+	},
+
+	/**
+	 * Private. Collects parameters for POST request.
+	 */
+	$post_params     : function(added)
+	{
+		//~: request parameters
+		var params = ZeT.extend({}, this.$raw())
+
+		//~: collect parameters from the form
+		ZeT.extend(params, this.$form_params())
+
+		//~: parameters from the options
+		ZeT.extend(params, added)
+
+		//~: resolve delayed parameters
+		ZeT.undelay(params)
+
+		//~: default ExtJSF domain
+		if(!ZeT.iss(params.extjs_domain))
+			params.extjs_domain = this.domain
+
+		//~: default view mode
+		if(!ZeT.iss(params.mode))
+			params.mode = this._post_mode
+
+		//~: default view id
+		if(!ZeT.iss(params.view))
+			params.view = this._view_id
+
+		return params
+	}
+})
 
 
 
@@ -813,29 +1024,6 @@ extjsf.Bind.extend(
 		return this;
 	},
 
-	raw    : function()
-	{
-		return this._extjs_props;
-	},
-
-	props       : function(props)
-	{
-		if(!props) return this.$props();
-
-		if(ZeT.iss(props))
-			props = this._evalProps(props);
-
-		ZeT.extend(this._extjs_props, props)
-		return this;
-	},
-
-	readPropsNode   : function(node_id)
-	{
-		var props = this.evalPropsNode(node_id);
-		if(props) this.props(props)
-		return this;
-	},
-
 	getPropsNode     : function(node_id)
 	{
 		if(!node_id && this.$node_id())
@@ -872,7 +1060,7 @@ extjsf.Bind.extend(
 	value            : function(v)
 	{
 		var c = this.co();
-		var p = this._extjs_props;
+		var p = this._props;
 
 		if(ZeT.isu(v) || (v === null))
 			return (c && ZeT.isf(c.getValue))?(c.getValue()):(p.value);
@@ -886,7 +1074,7 @@ extjsf.Bind.extend(
 	visible          : function(v)
 	{
 		var c = this.co()
-		var p = this._extjs_props
+		var p = this._props
 
 		if(ZeT.isu(v) || (v === null))
 			return (!c || !ZeT.isf(c.isVisible))?(undefined):(c.isVisible())
@@ -1079,7 +1267,7 @@ extjsf.Bind.extend(
 
 	hasHTML          : function()
 	{
-		var html = this._extjs_props['html'];
+		var html = this._props['html'];
 		return ZeT.iss(html) || ZeT.isDelayed(html);
 	},
 
@@ -1152,8 +1340,8 @@ extjsf.Bind.extend(
 		if(!c) ZeT.each(this._items, function(i)
 		{
 			ZeT.assert(i.extjsfBind === true)
-			if(!ZeT.iss(i._extjs_props.extjsfBlock)) return
-			i._extjs_props.hidden = (i._extjs_props.extjsfBlock != block)
+			if(!ZeT.iss(i._props.extjsfBlock)) return
+			i._props.hidden = (i._props.extjsfBlock != block)
 		})
 	},
 
@@ -1178,7 +1366,7 @@ extjsf.Bind.extend(
 			}
 
 			var item  = {};
-			var props = chs[i].$props();
+			var props = chs[i].buildProps()
 			var keysl = ZeT.keys(item).length;
 			item = ZeT.extend(item, props || item);
 
@@ -1189,9 +1377,9 @@ extjsf.Bind.extend(
 		return res;
 	},
 
-	$props      : function()
+	buildProps       : function()
 	{
-		var res  = this._extjs_props;
+		var res  = this._props;
 		var node = this.$node_id() && Ext.get(this.$node_id());
 		var self = this;
 

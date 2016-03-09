@@ -70,7 +70,7 @@
         if(ronly) e.stopEvent(); else field.co().focus()
       })})
 
-      var lstyle = label.raw()['style'] || {};
+      var lstyle = label.$raw()['style'] || {};
       if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
 
       label.readPropsNode().props({
