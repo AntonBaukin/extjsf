@@ -8,29 +8,52 @@
 
   <co:interface>
 
+    <!--
+         Page (not domain!) unique bind name of the component.
+         Is also a global key in Ext.data.StoreManager.
+    -->
     <co:attribute name = 'storeId' required = 'true'
       type = 'java.lang.String'/>
 
+    <!--
+         Assign the model to provide data for this store.
+    -->
     <co:attribute name = 'modelView'
       type = 'com.tverts.faces.ModelView'/>
 
+    <!--
+         To provide data for the model instead of taking
+         them from the Model View, set the name of Spring
+         bean that implements Model Provider interface.
+    -->
     <co:attribute name = 'modelProvider'
-      type = 'java.lang.String' default = ''/>
+      type = 'java.lang.String'/>
 
     <co:attribute name = 'modelKey'
-      type = 'java.lang.String' default = ''/>
+      type = 'java.lang.String'/>
 
+    <!--
+         If single Model Data Provider instance generates
+         data of more than one distinct type, send this key
+         as the HTTP request parameter.
+    -->
     <co:attribute name = 'modelRequest'
-      type = 'java.lang.String' default = ''/>
+      type = 'java.lang.String'/>
 
-    <co:attribute name = 'dataStart'
-      type = 'java.lang.Integer' default = '0'/>
+    <!--
+         Specify the page size of the data returned.
+         Zero values tells to use the server default
+         for this Data Provider. Data Provider may
+         also ignore this value or constrict it.
+    -->
 
-    <co:attribute name = 'pageSize'
-      type = 'java.lang.Integer' default = '25'/>
+    <co:facet name = 'store-props'/>
 
-    <co:facet name = 'store-props' required = 'true'/>
-    <co:facet name = 'proxy-props' required = 'true'/>
+    <!--
+         Parameters of the Proxy created for this store.
+         Leave this facet empty to use in-memory data proxy.
+    -->
+    <co:facet name = 'proxy-props'/>
 
   </co:interface>
 
@@ -47,118 +70,35 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-  (function()
-  {
-    //~: configure the store
-    var store  = extjsf.domain('${extDom}').
-      bind('#{cc.attrs.storeId}', new extjsf.Bind())
-
-    store.nodeId('#{cc.clientId}-#{cc.attrs.storeId}')
-    var offset = parseInt("#{cc.attrs.dataStart}");
-    var pgsize = parseInt("#{cc.attrs.pageSize}");
-
-    store.props({autoLoad: (offset == 0)}).readPropsNode()
-    store.props({storeId: '#{cc.attrs.storeId}'})
-    if(pgsize > 0) store.props({pageSize: pgsize})
-
-    //~: configure the proxy
-    var proxy = new extjsf.Bind()
-    proxy.nodeId('#{cc.clientId}-#{cc.attrs.storeId}-proxy')
-
-    proxy.props({type: 'ajax', url: "${z:url('/model')}"})
-    proxy.readPropsNode()
-
-    var props = proxy.$raw()
-    if(props.noproxy)
-      store.props({ autoLoad: false })
-    else
-    {
-      //~: define model parameter or model provider
-      if(!props.extraParams) props.extraParams = {};
-      else if(ZeT.isf(props.extraParams)) (function ()
-      {
-        var p = {};
-        props.extraParams.call(p, store, proxy)
-        props.extraParams = p;
-      })()
-
-      //~: link the parameters to the store
-      store.proxyParams = props.extraParams;
-
-      //?: has model requested
-      if('true' == "#{not empty cc.attrs.modelRequest}")
-        props.extraParams['model-request'] = '#{cc.attrs.modelRequest}';
-
-      //?: {has no direct model}
-      if(!props.extraParams['model'])
-        //?: {has direct model key}
-        if('true' == "#{not empty cc.attrs.modelKey}")
-          props.extraParams['model'] = '#{cc.attrs.modelKey}';
-        //?: {has model view}
-        else if('true' == "#{not empty cc.attrs.modelView}")
-          props.extraParams['model'] = '#{cc.attrs.modelView.modelKey}';
-
-      //?: {has no direct model provider}
-      if(!props.extraParams['model-provider'])
-        if('true' == "#{not empty cc.attrs.modelProvider}")
-          props.extraParams['model-provider'] = '#{cc.attrs.modelProvider}';
-
-      //!: add proxy to the store
-      store.props({proxy: props})
-
-      //~: on before store load
-      store.on('beforeload', function(st)
-      {
-        var sortparams = {};
-
-        //?: {has sort applied}
-        if(st.sorters) for(var i = 0;(i < st.sorters.getCount());i++)
+    extjsf.domain('${extDom}').
+      bind('#{cc.attrs.storeId}', new extjsf.StoreBind()).
+      ids('#{cc.clientId}').props({ autoLoad: true }).
+      readPropsNode().props({ storeId: '#{cc.attrs.storeId}' }).
+        nest('proxy', function(proxy, store)
         {
-          var so = st.sorters.getAt(i);
-          if(ZeTS.ises(so._property)) { sortparams = {}; break; }
+          var keys = ZeT.keys(proxy.$raw())
+          proxy.readPropsNode()
 
-          sortparams['sortProperty' + i] = so._property;
-          if('DESC' == so._direction) sortparams['sortDesc' + i] = true;
-        }
+          //?: {empty proxy}
+          if(ZeT.keys(proxy.$raw()).length == keys.length)
+          {
+            store.props({ autoLoad: false })
+            return false
+          }
 
-        //~: process sort parameters of proxy
-        var params = st.getProxy().extraParams;
+          store.proxy = proxy
 
-        for(i = 0;(params['sortProperty' + i]);i++)
-        {
-          delete params['sortProperty' + i]
-          delete params['sortDesc' + i]
-        }
-
-        ZeT.extend(params, sortparams)
-      })
-    }
-
-    //~: delete store on domain delete
-    extjsf.domain('${extDom}').onDestroy(function()
-    {
-      Ext.data.StoreManager.unregister('#{cc.attrs.storeId}')
-    })
-  })()
-
-  Ext.onReady(function()
-  {
-    var store = extjsf.bind('#{cc.attrs.storeId}', '${extDom}')
-
-    //!: create store component
-    store.co(Ext.create('Ext.data.Store', store.buildProps()))
-
-    var offset = parseInt("#{cc.attrs.dataStart}")
-    var pgsize = parseInt("#{cc.attrs.pageSize}")
-
-    if((offset > 0) && (pgsize > 0))
-      store.co().loadPage(1 + Math.floor(offset/pgsize))
-  })
+          proxy.props({ type: 'ajax', url: "${z:url('/model')}" })
+          proxy.props('extra', {
+            key      : '#{cc.attrs.modelKey}',
+            viewKey  : '#{cc.attrs.modelView.modelKey}',
+            provider : '#{cc.attrs.modelProvider}',
+            request  : '#{cc.attrs.modelRequest}'
+          })
+        }).
+      install()
 
     //]]>
     </script>
-
-    <co:insertChildren/>
-
   </co:implementation>
 </ui:fragment>

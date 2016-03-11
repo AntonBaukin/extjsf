@@ -7,6 +7,9 @@
 
   <co:interface>
 
+    <!--
+         Domain unique bind name of the component.
+    -->
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
@@ -46,8 +49,7 @@
     //<![CDATA[
 
     extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind()).
-      ids('#{cc.clientId}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind()).ids('#{cc.clientId}').
       renderTo('#{cc.attrs.renderTo}', '#{cc.attrs.renderParent}').
       parent('#{cc.parent.attrs.coid}', '#{cc.attrs.parentId}').
       props({ xtype: 'panel' }).readPropsNode().
