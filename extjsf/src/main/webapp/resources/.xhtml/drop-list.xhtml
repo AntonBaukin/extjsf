@@ -78,9 +78,9 @@
     bind.nodeId('#{cc.clientId}-hidden');
     bind.on('change', on_change)
 
-    bind.props({xtype: 'combobox'})
-    bind.props({nodeId: '#{cc.attrs.coid}', name: '#{cc.clientId}-#{cc.attrs.coid}'})
-    bind.props({displayhidden: 'label', valuehidden: 'key'})
+    bind.props({ xtype: 'combobox', pickerWidthAuto: true })
+    bind.props({ nodeId: '#{cc.attrs.coid}', name: '#{cc.clientId}-#{cc.attrs.coid}' })
+    bind.props({ displayhidden: 'label', valuehidden: 'key' })
     bind.readPropsNode()
 
     //?: {external store is provided}

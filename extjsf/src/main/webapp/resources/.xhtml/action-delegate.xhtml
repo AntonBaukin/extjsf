@@ -17,7 +17,7 @@
     <co:attribute name = 'coid' required = 'true'
       type = 'java.lang.String'/>
 
-    <co:attribute name = 'action' required = 'true'
+    <co:attribute name = 'action'
       method-signature = "java.lang.String action()"/>
 
     <!--
@@ -29,7 +29,8 @@
 
     <!--
          Additional parameters of the action that
-         are sent to the server.
+         are sent to the server. To make GET request
+         add parameter { method: 'GET' }.
     -->
     <co:facet name = 'action-params'/>
 
@@ -49,11 +50,10 @@
     //<![CDATA[
 
       extjsf.domain('${extDom}').
-        bind('#{cc.attrs.coid}', new extjsf.ActionBind()).
+        bind('#{cc.attrs.coid}', new extjsf.LoadActionBind()).
+        ids('#{cc.clientId}').goAction().viewId('${rootView.id}').
         props('params', { model: "#{cc.attrs.modelView.modelKeys}" }).
-        ids('#{cc.clientId}').readPropsNode('params').
-        goAction().postMode('${rootView.viewModePostStr}').
-        viewId('${rootView.id}')
+        readPropsNode('params').postMode('${rootView.viewModeStr}')
 
     //]]>
     </script>

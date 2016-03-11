@@ -61,7 +61,7 @@
           extjsf.domain(domain).destroy()
         }
 
-      winmain.on('beforedestroy', winmain._domain_deleter)
+      winmain.on('destroy', winmain._domain_deleter)
     }
 
     //~: create the root panel

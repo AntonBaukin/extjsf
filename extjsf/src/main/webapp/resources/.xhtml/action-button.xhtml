@@ -17,7 +17,7 @@
     <co:attribute name = 'coid' required = 'true'
       type = 'java.lang.String'/>
 
-    <co:attribute name = 'action' required = 'true'
+    <co:attribute name = 'action'
       method-signature = "java.lang.String action()"/>
 
     <!--
@@ -27,15 +27,22 @@
     <co:attribute name = 'modelView'
       type = 'com.tverts.faces.ModelViewBase'/>
 
+    <co:facet name = 'extjs-props'/>
+
     <!--
          Additional parameters of the action that
-         are sent to the server.
+         are sent to the server. To make GET request
+         add parameter { method: 'GET' }.
     -->
     <co:facet name = 'action-params'/>
 
   </co:interface>
 
   <co:implementation>
+
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
+      <co:renderFacet name = "extjs-props"/>
+    </div>
 
     <div id = "#{cc.clientId}-#{cc.attrs.coid}-params" style = "display:none">
       <co:renderFacet name = "action-params"/>
@@ -49,11 +56,13 @@
     //<![CDATA[
 
       extjsf.domain('${extDom}').
-        bind('#{cc.attrs.coid}', new extjsf.ActionBind()).
+        bind('#{cc.attrs.coid}', new extjsf.LoadActionBind()).
+        ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+        goAction().props({ xtype: 'button' }).viewId('${rootView.id}').
         props('params', { model: "#{cc.attrs.modelView.modelKeys}" }).
-        ids('#{cc.clientId}').readPropsNode('params').
-        goAction().postMode('${rootView.viewModePostStr}').
-        viewId('${rootView.id}')
+        readPropsNode().readPropsNode('params').
+        postMode('${rootView.viewModeStr}').
+        install()
 
     //]]>
     </script>
