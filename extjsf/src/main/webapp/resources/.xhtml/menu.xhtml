@@ -35,11 +35,12 @@
 
     <script type = "text/javascript">
 
-  Ext.onReady(function()
-  {
-    extjsf.bind('#{cc.attrs.coid}', '${extDom}').co(Ext.create(
-      'Ext.menu.Menu', extjsf.bind('#{cc.attrs.coid}', '${extDom}').buildProps()))
-  })
+      extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').on('added', function(p)
+      {
+        var m = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
+        m.co(Ext.create('Ext.menu.Menu', m.buildProps()))
+        m.co().fireEvent('added', m.co(), p)
+      })
 
     </script>
   </co:implementation>

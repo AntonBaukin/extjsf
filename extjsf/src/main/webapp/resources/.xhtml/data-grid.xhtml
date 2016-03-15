@@ -10,6 +10,9 @@
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
+    <!--
+         Name of the Store Bind this grid it attached to.
+    -->
     <co:attribute name = 'storeId' required = 'true'
       type = 'java.lang.String'/>
 
@@ -17,6 +20,11 @@
       type = 'java.lang.Boolean'/>
 
     <co:facet name = 'grid-props'/>
+
+    <!--
+         Additional properties of the pager sub-component.
+         Effective only when grid's 'pager' is true.
+    -->
     <co:facet name = 'pager-props'/>
 
   </co:interface>
@@ -32,56 +40,32 @@
     </div>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-  (function()
-  {
-    //~: configure the grid
-    var grid  = extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind())
+    extjsf.domain('${extDom}').
+      bind('#{cc.attrs.coid}', new extjsf.Bind()).
+      ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+      props({ margin: 0 }).readPropsNode().
+      props({ xtype: 'grid', store: "#{cc.attrs.storeId}" }).
+        nest('pager', function(pager, grid)
+        {
+          if(grid.$raw().pager !== true) return false
+          delete grid.$raw().pager
 
-    grid.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
-    grid.props({ margin: 0 })
-    grid.readPropsNode()
-    grid.props({ xtype: 'grid', store: "#{cc.attrs.storeId}" })
+          pager.props({ xtype: 'pagingtoolbar', displayInfo: true,
+            store: "#{cc.attrs.storeId}", emptyMsg: 'Данные не найдены!',
+            displayMsg: 'Записи {0}:{1} из {2}' }).readPropsNode()
 
-    //~: view configuration
-    var view = grid.$raw().viewConfig;
-    if(!view) grid.$raw().viewConfig = view = {};
-    if(ZeT.isu(view.preserveScrollOnRefresh)) view.preserveScrollOnRefresh = true;
+          grid.props({ bbar: pager.$raw() })
+        }).
+        scope(function(grid)
+        {
+          grid.$raw().viewConfig = ZeT.extend(
+            { preserveScrollOnRefresh: true }, grid.$raw().viewConfig)
+        }).
+      install()
 
-    //~: configure the pager
-    if(grid.$raw()['pager'] === true)
-    {
-      delete grid.$raw()['pager'];
-
-      var pager = new extjsf.Bind();
-      pager.nodeId("#{cc.clientId}-#{cc.attrs.coid}-pager")
-
-      pager.props({
-        xtype: 'pagingtoolbar',
-        store: "#{cc.attrs.storeId}",
-
-        displayInfo: true,
-        displayMsg: 'Записи {0}:{1} из {2}',
-        emptyMsg: 'Данные не найдены!'
-      })
-
-      pager.readPropsNode()
-
-      //~: add pager to the grid
-      grid.props({bbar: pager.$raw()})
-    }
-
-    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', grid)
-
-    if('true' == "#{cc.attrs.selset}")
-      ReTrade.selset.grid('#{cc.attrs.coid}', '${extDom}')
-
-  })()
-
+    //]]>
     </script>
-
-    <co:insertChildren/>
-
   </co:implementation>
 </ui:fragment>

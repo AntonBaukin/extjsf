@@ -9,18 +9,37 @@
 
   <co:interface>
 
+    <!--
+         Name of the component Bind. Element id in
+         the DOM tree has '-hetml' suffix.
+    -->
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
+    <!--
+         CSS classes of the root container tag (div
+         or table cell) where all nested HTML content
+         elements is added.
+    -->
     <co:attribute name = 'boxClass' default = ''
        type = 'java.lang.String'/>
 
     <co:attribute name = 'boxStyle' default = ''
        type = 'java.lang.String'/>
 
+    <!--
+         Tells whether to place HTML content into
+         a table's cell (default), or in a div.
+    -->
     <co:attribute name = 'table' default = 'true'
        type = 'java.lang.Boolean'/>
 
+    <!--
+         If set to true, tells to include the resulting
+         HTML content only after the component is inserted
+         into DOM tree. This allows to call scripts of the
+         content that do require the nodes.
+    -->
     <co:attribute name = 'renderDelay' default = 'false'
        type = 'java.lang.Boolean'/>
 
@@ -42,7 +61,7 @@
           style = "#{cc.attrs.boxStyle}">
 
           <tbody><tr><td>
-              <co:insertChildren/>
+            <co:insertChildren/>
           </td></tr></tbody>
         </table>
       </div>
@@ -63,24 +82,15 @@
     //<![CDATA[
 
       extjsf.domain('${extDom}').
-        bind('#{cc.attrs.coid}', new extjsf.Bind()).
-        nodeId("#{cc.clientId}-#{cc.attrs.coid}").
-        props({xtype: 'component', margin: 0}).readPropsNode().
-        props({html: undefined, contentEl: "#{cc.attrs.coid}-html"})
-
-      if("#{cc.attrs.renderDelay}" == "false")
-        extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')
-      else extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').
-        on('afterrender', function(parent)
+        bind('#{cc.attrs.coid}', new extjsf.Bind()).ids('#{cc.clientId}').
+        parent('#{cc.parent.attrs.coid}').scope(function(bind)
         {
-          var bind = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
-
-          //~: create the component
-          bind.co(Ext.ComponentManager.create(bind.buildProps()))
-
-          //~: append to the parent
-          parent.add(bind.co())
-        })
+          if("#{cc.attrs.renderDelay}" == 'true')
+            bind.parent('', '#{cc.parent.attrs.coid}', 'afterrender')
+        }).
+        props({ xtype: 'component', margin: 0 }).readPropsNode().
+        props({ html: undefined, contentEl: "#{cc.attrs.coid}-html" }).
+        install().ready()
 
     //]]>
     </script>

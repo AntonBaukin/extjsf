@@ -21,9 +21,11 @@
        type = 'java.lang.String'/>
 
     <!--
+         Works only with renderTo attribute.
          Defines ExtJSF Bind id to nest the component
-         as a child. Note that that the component must
-         not actually render (or display) it's children.
+         as a child. Note that the parent component must
+         not actually render (or display) it's children,
+         or be permanently hidden.
     -->
     <co:attribute name = 'renderParent' default = ''
        type = 'java.lang.String'/>
@@ -31,6 +33,7 @@
     <!--
          ExtJSF Bind name of the container to append
          this to as a child. Conflicts with 'renderTo'!
+         Overwrites the default nesting of the components.
     -->
     <co:attribute name = 'parentId' default = ''
        type = 'java.lang.String'/>
@@ -48,12 +51,12 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-    extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind()).ids('#{cc.clientId}').
-      renderTo('#{cc.attrs.renderTo}', '#{cc.attrs.renderParent}').
-      parent('#{cc.parent.attrs.coid}', '#{cc.attrs.parentId}').
-      props({ xtype: 'panel' }).readPropsNode().
-      install()
+      extjsf.domain('${extDom}').
+        bind('#{cc.attrs.coid}', new extjsf.Bind()).ids('#{cc.clientId}').
+        renderTo('#{cc.attrs.renderTo}', '#{cc.attrs.renderParent}').
+        parent('#{cc.parent.attrs.coid}', '#{cc.attrs.parentId}').
+        props({ xtype: 'panel' }).readPropsNode().
+        install()
 
     //]]>
     </script>
@@ -63,7 +66,7 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-    extjsf.bind('#{cc.attrs.coid}', '${extDom}').render()
+      extjsf.bind('#{cc.attrs.coid}', '${extDom}').ready()
 
     //]]>
     </script>

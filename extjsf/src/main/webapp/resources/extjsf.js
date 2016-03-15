@@ -67,7 +67,7 @@ extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 	 * clears it's registration. If second argument
 	 * is not false, destroys the Bind. Note that
 	 * destruction of a Bind does not mean it's
-	 * ExtJS component is being destroyed!
+	 * Ext JS component is being destroyed!
 	 */
 	unbind           : function(bind, destroy)
 	{
@@ -233,6 +233,35 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	},
 
 	/**
+	 * Has three forms of a call:
+	 *
+	 * · returns the Ext JS component bound;
+	 *
+	 * · assigns the component if current
+	 *   is not defined;
+	 *
+	 * · when true, installs the component
+	 *   on the first demand.
+	 *
+	 * Always returns a component, or undefined.
+	 */
+	co               : function()
+	{
+		if(!arguments.length)
+			return this._component
+		ZeT.assert(arguments.length == 1)
+
+		var co = arguments[0]
+
+		if(!ZeT.isb(co)) //?: {a component-like}
+			this._component = ZeT.assertn(co)
+		else if(!this._component && (co === true))
+			this._component = this.$create()
+
+		return this._component
+	},
+
+	/**
 	 * Invoked by a Domain when registering Bind.
 	 */
 	defined          : function(domain, name)
@@ -257,7 +286,7 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		this.coid = !ZeT.ises(coid)?(coid):
 		  ZeT.asserts(this.name)
 
-		//~: ExtJS component id
+		//~: Ext JS component id
 		this.props({ id: this.coid })
 
 		return this
@@ -282,37 +311,53 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	 * Second argument allows to implement extension
 	 * points: you place component in node of else
 	 * sub-tree of JSF components tree.
+	 *
+	 * Third optional argument (defaults to 'added')
+	 * tells the target event name when to add.
+	 * Works only in [1] case.
 	 */
-	parent           : function(parent_coid, target_coid)
+	parent           : function(parent_coid, target_coid, when)
 	{
 		//~: default parent
+		delete this._parent_coid
 		if(!ZeT.ises(parent_coid))
 			this._parent_coid = parent_coid
 
 		//~: targeted parent
+		delete this._target_coid
 		if(!ZeT.ises(target_coid))
 			this._target_coid = target_coid
+
+		//~: add-when event name
+		delete this._add_when
+		if(this._target_coid && !ZeT.ises(when))
+			this._add_when = when
 
 		return this
 	},
 
 	/**
 	 * Tells DOM node ID to render this component to.
-	 * Optional 'parent' arguments tells the name of
+	 * Optional parent arguments tells the name of
 	 * the Bind (of the same domain) to attach this
 	 * component to. This allows to destroy this
 	 * component with the target one.
+	 *
+	 * Note that when rendering components to the
+	 * HTML content nested in Ext JS menus, parent
+	 * argument is essential, or menu would be closed
+	 * before click event over the component reaches it!
 	 */
 	renderTo         : function(nodeid, parent)
 	{
-		if(ZeT.ises(nodeid))
-			return this
-
 		//~: render node id
-		this._render_to = ZeTS.trim(nodeid)
+		delete this._render_to
+		if(!ZeT.ises(nodeid = ZeTS.trim(nodeid)))
+			this._render_to = nodeid
 
 		//?: {has render parent}
-		if(!ZeT.ises(parent))
+		delete this._render_parent
+		if(this._render_to && !ZeT.ises(parent))
 			this._render_parent = parent
 
 		return this
@@ -328,13 +373,43 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	 */
 	install          : function()
 	{
-		//?: {is not rendering to some else place}
-		if(ZeT.ises(this._render_to) && !this._target_coid)
+		//?: {default add item}
+		if(this.$is_install())
 			this.$install()
 
 		return this
 	},
 
+	/**
+	 * Invoked always after the JSF facets with the
+	 * nested components are rendered, and always
+	 * after the install. Does all required the
+	 * component to work.
+	 *
+	 * Note that at this point Ext JS components
+	 * are still might be not available!
+	 */
+	ready            : function()
+	{
+		//?: {installed or added} do nothing
+		if(this._installed_to || this._added_to)
+			return this
+
+		//?: {add to targeted parent}
+		if(this._target_coid)
+			this.$add_to()
+
+		//?: {rendering to a node}
+		else if(this._render_to)
+			this.$render_to()
+
+		return this
+	},
+
+	/**
+	 * Invoked (mostly by a Domain) to destroy
+	 * this Bind and the component it refers to.
+	 */
 	destroy          : function(opts)
 	{
 		//?: {skip this component}
@@ -346,62 +421,19 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	},
 
 	/**
-	 * Invoked always after the JSF facets with the
-	 * nested components are rendered, and always
-	 * after the install. Does all required the
-	 * component to work.
-	 *
-	 * Note that at this point ExtJS components
-	 * are still might be not available!
-	 */
-	render           : function()
-	{
-		var self = this
-
-		//?: {render to node}
-		if(!ZeT.ises(this._render_to))
-			Ext.onReady(function()
-			{
-				//~: create the component
-				if(!self.co())
-					self.co(self.$create())
-
-				//?: {has component render parent}
-				if(self._render_parent)
-					self.renderParent()
-				//?: {has default render parent}
-				else if(!self._target_coid)
-					extjsf.bind(self._target_coid, self.domain).
-					  on('beforedestroy', this.boundDestroy())
-			})
-
-		//?: {add to the container component}
-		else if(this._target_coid)
-			extjsf.bind(this._target_coid, this.domain).
-			  on('added', function(parent)
-			{
-				//~: create the component
-				if(!self.co())
-					self.co(self.$create())
-
-				//~: append to the parent
-				parent.add(self.co())
-			})
-	},
-
-	/**
 	 * Invokes ZeT.scope() giving the first
 	 * argument this Bind instance.
 	 */
 	scope            : function()
 	{
-		ZeT.assertf(f)
+		ZeT.assertf(arguments[arguments.length - 1])
 
 		//~: argument this bind
 		var a = ZeT.a(arguments)
 		a.splice(0, 0, this)
 
-		return ZeT.scope.apply(ZeT, a)
+		ZeT.scope.apply(ZeT, a)
+		return this
 	},
 
 	/**
@@ -537,22 +569,153 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		}
 	},
 
+	$is_install      : function()
+	{
+		//?: {is not rendering to some else place}
+		return !!this._parent_coid &&
+		  !this._render_to && !this._target_coid
+	},
+
 	/**
-	 * Private. Internals of install().
+	 * Private. Internals of install(). Add the properties
+	 * of this Bind to be in the list of child items of
+	 * the properties of the parent Bind. Works only when
+	 * the parent component is not yet instantiated.
+	 *
+	 * This is the most common method of building a tree
+	 * of components. It conflicts with render-to.
 	 */
 	$install         : function()
 	{
-		if(!this._parent_coid)
-			return this
+		//?: {allowed to install}
+		ZeT.assert(this._parent_coid && !this._added_to
+		  && !this._installed_to && !this._rendered_to)
 
+		//~: the domain
 		var d = ZeT.assertn(extjsf.domain(this.domain),
 		  'This Bind is not registered in any Domain!')
 
+		//~: default parent bind
 		var p = ZeT.assertn(d.bind(this._parent_coid),
 		  'Parent Bind [', this._parent_coid, '] is not',
 		  ' found in the Domain [', this.domain, ']!')
 
 		p.addItem(this) //!: add this bind as a child
+		this._installed_to = ZeT.ises(p.coid)?(p):(p.coid)
+	},
+
+	$add_to          : function()
+	{
+		//?: {allowed to add}
+		ZeT.assert(this._target_coid && !this._added_to
+		  && !this._installed_to && !this._rendered_to)
+
+		//~: take the parent bind
+		var p = ZeT.assertn(
+		  extjsf.bind(this._target_coid, this.domain),
+		  'Not found target Bind [', this._target_coid,
+		  '] in domain [', this.domain, ']!')
+
+		this._added_to = this._target_coid
+		this.$do_add(p) //!: do add
+	},
+
+	$do_add           : function(p)
+	{
+		var self = this
+
+		function doadd(x)
+		{
+			if(!x && (x.isComponent !== true)) x = p.co()
+			ZeT.assert(x && (x.isComponent === true))
+			x.add(self.co(true))
+		}
+
+		//?: {use defined event name}
+		if(this._add_when)
+			p.on(this._add_when, doadd)
+		else if(p.co()) //?: {parent already exists}
+			p.co().add(this.co(true))
+		//~: delay the addition
+		else p.on('added', doadd)
+	},
+
+	/**
+	 * Private. Invoked when the component is rendered
+	 * into a DOM node, but not installed into the parent
+	 * container as a regular child. Allows to control
+	 * the destruction of the component and helps with
+	 * tricky handling of click events.
+	 */
+	$render_to       : function()
+	{
+		//?: {allowed to install}
+		ZeT.assert(this._render_to && !this._added_to
+		  && !this._installed_to && !this._rendered_to)
+
+		this._rendered_to = true
+
+		//?: {no bound parent}
+		if(!this._render_parent)
+			return this.$do_render(this._parent_coid &&
+			  extjsf.bind(this._parent_coid, this.domain))
+
+		var p = ZeT.assertn(
+		  extjsf.bind(this._render_parent, this.domain),
+		  'Bind of the render parent [', this._render_parent,
+		  '] is not found at domain [', this.domain, ']!'
+		)
+
+		//~: bind the destroy
+		p.on('beforedestroy', this.boundDestroy())
+
+		//~: access the parent bind
+		this.$do_render(p, this.$render_parent)
+	},
+
+	$do_render       : function(p, callback)
+	{
+		if(!extjsf.isbind(p)) return
+
+		function doit(pco)
+		{
+			//~: create the component
+			this.co(true)
+
+			//~: invoke the callback
+			if(callback) callback.call(this, pco)
+		}
+
+		//?: {parent is rendered, node exists}
+		if(p.co() && (p.co().rendered || Ext.getDom(this._render_to)))
+			return doit.call(this, p.co())
+
+		p.on('render', ZeT.fbind(doit, this))
+	},
+
+	$render_parent   : function(p)
+	{
+		var co = ZeT.assertn(this.co())
+
+		//--> up()
+		//  used when component is rendered in menu,
+		//  or client event will close the menu before
+		//  clicking the component!
+		var up = co.up; co.up = function(selector)
+		{
+			//~: invoke original up()
+			var r = up.apply(co, arguments)
+			if(r) return r
+
+			//?: {is that component}
+			if(p === selector)
+				return p
+			else if(ZeT.iss(selector) && p.is(selector))
+				return p
+
+			//~: invoke the render-parent
+			return p.up.apply(p, arguments)
+		}
 	},
 
 	/**
@@ -859,7 +1022,9 @@ extjsf.ActionBind = ZeT.defineClass(
 extjsf.LoadActionBind = ZeT.defineClass(
   'extjsf.LoadActionBind', extjsf.ActionBind,
 {
-	$handler        : function(opts)
+	className        : 'extjsf.LoadActionBind',
+
+	$handler         : function(opts)
 	{
 		//~: collect the parameters (omitting the form)
 		var params = this.$post_params(
@@ -883,6 +1048,8 @@ extjsf.LoadActionBind = ZeT.defineClass(
 extjsf.StoreBind = ZeT.defineClass(
   'extjsf.StoreBind', extjsf.Bind,
 {
+	className        : 'extjsf.StoreBind',
+
 	install          : function()
 	{
 		this.$install()
@@ -890,9 +1057,7 @@ extjsf.StoreBind = ZeT.defineClass(
 		//~: create the component
 		var self = this; Ext.onReady(function()
 		{
-			//~: create the component
-			if(!self.co())
-				self.co(self.$create())
+			self.co(true) //~: create the component
 
 			//~: set the proxy
 			if(self.proxy)
@@ -1030,7 +1195,7 @@ ZeT.extend(extjsf,
 	//=    Components Binding    =//
 
 	/**
-	 * Tries to get the ExtJS component from
+	 * Tries to get the Ext JS component from
 	 * the arguments given.
 	 *
 	 * If arg[0] is a string, it defines the
@@ -1409,13 +1574,6 @@ ZeT.extend(extjsf,
 
 extjsf.Bind.extend(
 {
-	co               : function(component)
-	{
-		if(ZeT.isu(component)) return this._component;
-		this._component = component;
-		return this;
-	},
-
 	getPropsNode     : function(node_id)
 	{
 		if(!node_id && this.$node_id())
@@ -1475,94 +1633,6 @@ extjsf.Bind.extend(
 			if(ZeT.isf(c.setVisible)) c.setVisible(!!v)
 
 		return this
-	},
-
-	/**
-	 * For the given parent bind id, bind,
-	 * or component updates the component of
-	 * this bind (or will update) to behave
-	 * as it is nested in that parent, but
-	 * rendered somewhere else.
-	 *
-	 * Note that this also binds the destroy.
-	 * This function may be invoked only once!
-	 */
-	renderParent     : function()
-	{
-		//?: {is not rendered to}
-		if(ZeTS.ises(this._render_to))
-			return this
-
-		//~: access the parent bind
-		var p; if(ZeT.iss(p = this._render_parent))
-		{
-			p = extjsf.asbind(p, this.domain)
-
-			ZeT.assert(extjsf.isbind(p), 'Bind of the render parent [',
-			  this._render_parent, '] is not found at [', this.domain, ']!')
-
-			this._render_parent = p
-		}
-
-		ZeT.assert(extjsf.isbind(p))
-
-		//?: {invoked more than once}
-		if(this._rendered_parent)
-			ZeT.assert(p === this._render_parent)
-		this._render_parent = p
-		this._rendered_parent = true
-
-		//?: {destroy is not connected yet}
-		if(!this._render_parent_destroy)
-		{
-			this._render_parent_destroy = true
-			p.on('beforedestroy', this.boundDestroy())
-		}
-
-		//?: {has no own component yet}
-		if(!this.co()) //<-- invoked later
-			return this
-
-		//?: {has no parent component yet}
-		if(!p.co())    //<-- invoked later
-		{
-			var self = this; p.on('added', function()
-			{
-				self.renderParent()
-			})
-
-			return this
-		}
-
-		delete this._render_parent
-		this.$render_parent(p.co())
-		return this
-	},
-
-	$render_parent   : function(p)
-	{
-		var co = this.co()
-
-		//--> up()
-		//  used when component is rendered in menu,
-		//  or client event will close the menu before
-		//  clicking the component!
-		var up = co.up
-		co.up = function(selector)
-		{
-			//~: invoke original up()
-			var r = up.apply(co, arguments)
-			if(r) return r
-
-			//?: {is that component}
-			if(p === selector)
-				return p
-			else if(ZeT.iss(selector) && p.is(selector))
-				return p
-
-			//~: invoke the render-parent
-			return p.up.apply(p, arguments)
-		}
 	},
 
 	clearComponent   : function(opts)
@@ -1906,8 +1976,8 @@ extjsf.Bind.extend(
 	 *  · data    the data returned from the server.
 	 *    (XML Document in the most cases.)
 	 *
-	 *  · action  ExtJS action;
-	 *  · form    ExtJS form.
+	 *  · action  Ext JS action;
+	 *  · form    Ext JS form.
 	 */
 	success          : function(func)
 	{
@@ -1925,7 +1995,7 @@ extjsf.Bind.extend(
 
 	_validate        : function(opts, form, action)
 	{
-		if(!action.result) throw 'ExtJS submit action returns no response!';
+		if(!action.result) throw 'Ext JS submit action returns no response!';
 
 		var success = true;
 
@@ -2084,14 +2154,10 @@ extjsf.Bind.extend(
 		return this
 	},
 
-	on_create        : function(component)
+	on_create        : function(co)
 	{
-		this._component = component
-		component.extjsfBind = this
-
-		//?: {has render parent}
-		if(this._render_parent)
-			this.renderParent()
+		this._component = co
+		co.extjsfBind = this
 	},
 
 	/**
@@ -2099,7 +2165,7 @@ extjsf.Bind.extend(
 	 * cases: when component is solely destroyed, or
 	 * it's being destroyed with the Domain.
 	 */
-	on_destroy       : function(component)
+	on_destroy       : function()
 	{
 		delete this._component
 
