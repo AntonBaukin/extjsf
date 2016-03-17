@@ -7,6 +7,9 @@
 
   <co:interface>
 
+    <!--
+         Domain unique bind name of the menu sub-component.
+    -->
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
@@ -21,27 +24,29 @@
     </div>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-  extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').menu =
+      extjsf.domain('${extDom}').
+        bind('#{cc.attrs.coid}', new extjsf.Bind()).
+        ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+        readPropsNode().props({ xtype: 'menu' })
 
-    extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind()).
-      nodeId('#{cc.clientId}-#{cc.attrs.coid}').
-      readPropsNode();
-
+    //]]>
     </script>
 
     <co:insertChildren/>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-      extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').on('added', function(p)
-      {
-        var m = extjsf.bind('#{cc.attrs.coid}', '${extDom}')
-        m.co(Ext.create('Ext.menu.Menu', m.buildProps()))
-        m.co().fireEvent('added', m.co(), p)
-      })
+      extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').when(
+        extjsf.bind('#{cc.attrs.coid}', '${extDom}'),
+        function(parent, menu) {
+          if(ZeT.isf(parent.co().setMenu)) parent.co().setMenu(menu.co(true))
+          menu.co(true).fireEvent('added', menu.co(true), parent.co())
+        })
 
+    //]]>
     </script>
   </co:implementation>
 </ui:fragment>

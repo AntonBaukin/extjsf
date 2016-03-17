@@ -21,23 +21,30 @@
     </div>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-  //~: create the toolbar
-  extjsf.domain('${extDom}').
-    bind('#{cc.attrs.coid}', new extjsf.Bind()).
-    nodeId("#{cc.clientId}-#{cc.attrs.coid}").
-    props({xtype: 'toolbar', dock: 'top', border: false}).
-    readPropsNode()
+      extjsf.domain('${extDom}').
+        bind('#{cc.attrs.coid}', new extjsf.Bind()).
+        ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+        props({ xtype: 'toolbar', dock: 'top', border: false }).
+        readPropsNode()
 
-  //~: add it on the component created
-  extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').on('added', function(parent)
-  {
-    parent.addDocked(extjsf.bind('#{cc.attrs.coid}', '${extDom}').buildProps())
-  })
-
+    //]]>
     </script>
 
     <co:insertChildren/>
 
-  </co:implementation>
+    <script type = "text/javascript">
+    //<![CDATA[
+
+      extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').when(
+        extjsf.bind('#{cc.attrs.coid}', '${extDom}'),
+        function(parent, toolbar) {
+          parent.co().addDocked(toolbar.co(true))
+          toolbar.co().fireEvent('added', toolbar.co(), parent.co())
+        })
+
+    //]]>
+    </script>
+   </co:implementation>
 </ui:fragment>

@@ -11,14 +11,30 @@
 
   <co:interface>
 
-    <co:attribute name = 'modelView' required = 'true'
-       type = 'com.tverts.faces.ModelViewBase'/>
+    <!--
+         WARNING! It's not allowed to nest this component
+         in any component that is a JSF form container.
+         Either, nested components may not contain forms,
+         i.e., it's not allowed to nest x:action-call,
+         x:action-button, x:action-delegate, or h:form.
 
+         Note that you may nest regular JSF components.
+         Hidden fields and command buttons are useful.
+    -->
+
+
+    <!--
+         Domain unique bind name of the form component.
+    -->
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
-    <co:attribute name = 'renderTo' default = ''
-       type = 'java.lang.String'/>
+    <!--
+         JSF back bean that handles command actions
+         of the buttons included into the form.
+    -->
+    <co:attribute name = 'modelView' required = 'true'
+       type = 'com.tverts.faces.ModelViewBase'/>
 
     <co:facet name = 'extjs-props'/>
 
@@ -31,51 +47,41 @@
     </div>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-  extjsf.domain('${extDom}').
-    bind('#{cc.attrs.coid}', new extjsf.Bind()).
-    nodeId("#{cc.clientId}-#{cc.attrs.coid}").
-    renderTo("#{cc.attrs.renderTo}")
+      extjsf.domain('${extDom}').
+        bind('#{cc.attrs.coid}', new extjsf.FormBind()).
+        ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+        props({ margin: 0, border: false }).readPropsNode().
+        props({ xtype: 'form' }).viewId('${rootView.id}').
+        postMode('${rootView.viewModePostStr}').scope(function(form)
+        {
+          if(form.$raw().errorReader) return
+          form.$raw().errorReader = Ext.create('Ext.data.reader.Xml',
+            { record: 'field', model: 'extjsf.model.FormValidation' })
+        })
 
+    //]]>
     </script>
-
 
     <h:form id = "#{cc.attrs.coid}">
 
-      <input type="hidden" name = "model" value = "#{cc.attrs.modelView.modelKeys}"/>
-      <input type="hidden" name = "view"  value = "#{cc.attrs.modelView.id}"/>
+      <input type = "hidden" name = "model"
+        value = "#{cc.attrs.modelView.modelKeys}"/>
+
+      <input type = "hidden" name = "view"
+        value = "#{cc.attrs.modelView.id}"/>
 
       <co:insertChildren/>
+
     </h:form>
 
-
     <script type = "text/javascript">
+    //<![CDATA[
 
-  Ext.onReady(function()
-  {
-    var form  = extjsf.bind('#{cc.attrs.coid}', '${extDom}');
-    form.goFormAction()
+      extjsf.bind('#{cc.attrs.coid}', '${extDom}').goAction().install()
 
-    var props = form.$raw();
-
-    if(!props || !props['errorReader']) form.props({
-
-      errorReader: Ext.create('Ext.data.reader.Xml', {
-        record: 'field', model: 'retrade.model.FormValidation'
-      })
-    })
-
-    form.props({ margin: 0, border: false })
-    form.readPropsNode()
-    form.props({ xtype: 'form', id : "#{cc.attrs.coid}" })
-
-    extjsf.bind('#{cc.attrs.coid}', '${extDom}').
-      co(Ext.create('Ext.form.Panel', form.buildProps()))
-  })
-
-  extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', '#{cc.attrs.coid}')
-
+    //]]>
     </script>
-
   </co:implementation>
 </ui:fragment>

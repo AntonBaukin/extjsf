@@ -169,6 +169,7 @@
       //~: properties of the checkbox
       var cb = ZeT.extend({}, bind.buildProps())
       ZeT.extend(cb, { inputId : "#{cc.attrs.coid}-" + i,
+        id: "#{cc.attrs.coid}-" + i,
         inputValue: labls[i], checked: !!itmap[labls[i]]
       })
 
@@ -176,7 +177,8 @@
 
       //~: properties of the label
       var lb = ZeT.extend({}, label.buildProps())
-      ZeT.extend(lb, { forId: "#{cc.attrs.coid}-" + i, text: labls[i + 1] })
+      ZeT.extend(lb, { forId: "#{cc.attrs.coid}-" + i,
+        id: "#{cc.attrs.coid}-label-" + i, text: labls[i + 1] })
 
       //~: add directly to the parent
       if(lb.labelAlign == 'left')

@@ -76,11 +76,8 @@
       readPropsNode().props({ storeId: '#{cc.attrs.storeId}' }).
         nest('proxy', function(proxy, store)
         {
-          var keys = ZeT.keys(proxy.$raw())
-          proxy.readPropsNode()
-
           //?: {empty proxy}
-          if(ZeT.keys(proxy.$raw()).length == keys.length)
+          if(!proxy.readPropsNode(true))
           {
             store.props({ autoLoad: false })
             return false

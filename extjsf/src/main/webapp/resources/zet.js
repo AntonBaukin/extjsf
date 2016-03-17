@@ -951,8 +951,10 @@ ZeT.extend(ZeT,
 	/**
 	 * Works as ZeT.fbind(), but takes additional
 	 * arguments as a copy of array-like object given.
+	 * If the arguments are restricted, no more from
+	 * the call instance are added.
 	 */
-	fbinda           : function(f, that, args)
+	fbinda           : function(f, that, args, restrict)
 	{
 		//?: {has function and the context}
 		ZeT.assertf(f)
@@ -963,7 +965,11 @@ ZeT.extend(ZeT,
 
 		return function()
 		{
-			var a = ZeTA.concat(ZeTA.copy(args), arguments)
+			var a = ZeTA.copy(args)
+
+			if(restrict !== true)
+				a = ZeTA.concat(a, arguments)
+
 			return f.apply(that, a)
 		}
 	},
@@ -1032,8 +1038,8 @@ ZeT.extend(ZeT,
 	 */
 	xeval            : function(script)
 	{
-		if(ZeT.ises(script)) return undefined
-		return eval('((function(){'.concat(script, '})())'))
+		return ZeT.ises(script)?(undefined):
+		  eval('((function(){'.concat(script, '})());'))
 	},
 
 	/**
