@@ -7,34 +7,43 @@
    xmlns:h  = 'http://java.sun.com/jsf/html'
    xmlns:z  = 'uri:tverts.com'>
 
-  <!--
-
-    Note that this component inserts the checkboxes
-    created right into the parent component. This
-    allows to mix checkboxes with other things in
-    the same layout.
-
-  -->
-
-
   <co:interface>
 
+    <!--
+         Name of the root Bind. Note that this
+         Bind has no Ext JS component assigned.
+         For each checkbox nested Bind is created
+         havind 'i' suffux (starting from 0),
+         along with 'i-label' labels.
+    -->
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
+    <!--
+         Set of the keys of the checked items.
+    -->
     <co:attribute name = 'value' required = 'true'
        type = 'java.util.Set'/>
 
+    <!--
+         Maps the keys to the labels of the checkboxes.
+         Use Linked Map to preserve the desired order.
+    -->
     <co:attribute name = 'labels' required = 'true'
        type = 'java.util.Map'/>
 
-    <co:attribute name = 'allowNone' default = 'true'
-       type = 'java.lang.Boolean'/>
+    <!--
+         Configuration properties shared for each
+         checkbox. Special properties are:
 
-    <co:attribute name = 'onlyOne' default = 'false'
-       type = 'java.lang.Boolean'/>
+         0) allowNone when set false tells that the
+            last checked box may not be unchecked;
 
+         1) onlyOne when set true tells to work
+            as group of radio checks.
+    -->
     <co:facet name = 'check-props'/>
+
     <co:facet name = 'label-props'/>
 
   </co:interface>
@@ -49,12 +58,11 @@
       <co:renderFacet name = "check-props"/>
     </div>
 
-    <div id = "#{cc.clientId}-#{cc.attrs.coid}-label-props" style = "display:none">
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-label" style = "display:none">
       <co:renderFacet name = "label-props"/>
     </div>
 
     <div id = "#{cc.clientId}-#{cc.attrs.coid}-labels" style = "display:none">
-
       <h:outputText escape = "true" value = "#{cc.attrs.labels}">
         <f:converter converterId = "com.tverts:fmt:special:json-strings-map-list"/>
       </h:outputText>
@@ -63,132 +71,14 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-  (function()
-  {
-    var none = ("#{cc.attrs.allowNone}" == 'true')
-    var one  = ("#{cc.attrs.onlyOne}" == 'true')
-
-    //HINT: this bind is shared between all the checkboxes!
-
-    var bind = extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind()).
-      nodeId('#{cc.clientId}-#{cc.attrs.coid}').
-      readPropsNode().props({extjsfRawItem: true}).
-      props({xtype: 'checkboxfield', name: '#{cc.attrs.coid}'})
-
-
-    //~: on check value change
-    bind.on('change', function(cb)
-    {
-      var n = Ext.getDom(bind.nodeId())
-      var v = (n.value.length)?(n.value.split(',')):[]
-      var i = v.indexOf(cb.inputValue)
-      if(i != -1) v.splice(i, 1)
-
-      if(cb.getValue()) v.push(cb.inputValue)
-      n.value = v.join(',')
-
-      //?: {has no value}
-      if(!none && (n.value == '')) {
-        n.value = cb.inputValue
-        cb.setValue(true)
-      }
-
-      //?: {one & checkbox checked}
-      if(one && cb.getValue())
-      {
-        n.value = cb.inputValue
-        ZeT.each(bind.checkboxes, function(x)
-        {
-          if(x != cb) x.setValue(false)
-        })
-      }
-    })
-
-    //~: set special create component listener
-    bind.checkboxes = []; bind.on_create = function(cb)
-    {
-      for(var i = 0;(i < bind.checkboxes.length);i++)
-        if(bind.checkboxes[i].inputValue == cb.inputValue) return
-      bind.checkboxes.push(cb)
-    }
-
-    //~: checkBoxes()
-    bind.checkBoxes = function(v)
-    {
-      var i, x = {}
-      var a = bind.checkboxes
-
-      if(v === 'all') for(i = 0;(i < a.length);i++)
-        x[a[i].inputValue] = true
-
-      if(ZeT.isa(v)) for(i = 0;(i < v.length);i++)
-        if(ZeT.iss(v[i])) x[v[i]] = true
-
-      var got = false
-      for(i = 0;(i < a.length);i++)
-        if(x[a[i].inputValue]) { got = true; break; }
-
-      ZeT.assert( !got && !none,
-        'Can not uncheck all ExtJSF checkboxes, ',
-        'it is forbidden for bind #{cc.attrs.coid}!')
-
-      var xv, xvs = []
-      for(i = 0;(i < a.length);i++)
-        if(!x[xv = a[i].inputValue]) a[i].setValue(false)
-        else { a[i].setValue(true); xvs.push(xv); }
-
-      Ext.getDom(bind.nodeId()).value = xvs.join(',')
-    }
-
-    //~: decode the items (codes) checked
-    var items = Ext.getDom('#{cc.clientId}-#{cc.attrs.coid}').value.split(',')
-    var itmap = {}
-
-    for(var i = 0;(i < items.length);i++)
-      itmap[items[i]] = true
-
-    //~: evaluate label mapping      !: it is array
-    var labls = Ext.getDom(bind.nodeId() + '-labels').innerHTML
-    labls = eval('('.concat(labls, ')'))
-
-    //~: labels phony bind
-    var label = new extjsf.Bind()
-    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
-    label.readPropsNode().props({
-      xtype: 'label', style: lstyle, extjsfRawItem: true
-    })
-
-    var lstyle = label.$raw()['style'] || {};
-    if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
-
-    //c: create the items for all the labels
-    var parent = extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}')
-    for(i = 0;(i + 1 < labls.length);i += 2)
-    {
-      //~: properties of the checkbox
-      var cb = ZeT.extend({}, bind.buildProps())
-      ZeT.extend(cb, { inputId : "#{cc.attrs.coid}-" + i,
-        id: "#{cc.attrs.coid}-" + i,
-        inputValue: labls[i], checked: !!itmap[labls[i]]
-      })
-
-      delete cb.value //<-- must have it not!
-
-      //~: properties of the label
-      var lb = ZeT.extend({}, label.buildProps())
-      ZeT.extend(lb, { forId: "#{cc.attrs.coid}-" + i,
-        id: "#{cc.attrs.coid}-label-" + i, text: labls[i + 1] })
-
-      //~: add directly to the parent
-      if(lb.labelAlign == 'left')
-      {      parent.addItem(lb); parent.addItem(cb); }
-      else { parent.addItem(cb); parent.addItem(lb); }
-    }
-  })()
+      extjsf.domain('${extDom}').
+        bind('#{cc.attrs.coid}', new extjsf.CheckboxesBind()).
+        ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+        props({ xtype: 'checkboxfield', uncheckedValue: '' }).
+        readPropsNode().props('label', { labelAlign: 'right' }).
+        readPropsNode('label').install()
 
     //]]>
     </script>
-
   </co:implementation>
 </ui:fragment>

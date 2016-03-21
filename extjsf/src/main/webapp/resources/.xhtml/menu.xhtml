@@ -42,6 +42,7 @@
       extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}').when(
         extjsf.bind('#{cc.attrs.coid}', '${extDom}'),
         function(parent, menu) {
+          parent.menu = menu
           if(ZeT.isf(parent.co().setMenu)) parent.co().setMenu(menu.co(true))
           menu.co(true).fireEvent('added', menu.co(true), parent.co())
         })

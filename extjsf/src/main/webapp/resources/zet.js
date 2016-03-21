@@ -553,7 +553,20 @@ var ZeTS = ZeT.define('ZeT.S',
 		return (ZeT.iss(s) && s.length)?(s.charAt(0)):(undefined)
 	},
 
-	starts           : Lo.startsWith,
+	/**
+	 * The first arguments is a string to inspect.
+	 * The following (one or more) is the argument
+	 * strings: function returns true when inspected
+	 * string starts with any of the arguments.
+	 */
+	starts           : function(s)
+	{
+		if(!ZeT.iss(s)) return undefined
+		for(var i = 1;(i < arguments.length);i++)
+			if(Lo.startsWith(s, arguments[i]))
+				return true
+		return false
+	},
 
 	ends             : Lo.endsWith,
 
@@ -699,25 +712,17 @@ var ZeTA = ZeT.define('ZeT.A',
 	},
 
 	/**
-	 * Has two forms of invocation:
-	 *
-	 * 0    target array;
-	 * 1..  items or arrays to remove.
-	 *
-	 * this target array;
-	 * 0..  items or arrays to remove.
-	 *
 	 * Removes the items from the target array.
 	 * If item is itself an array, recursively
 	 * invokes this function.
 	 *
-	 * Items are checked agains map-key equality
-	 * (put it to map, then check it is there).
+	 * Items are checked with indexOf() equality
+	 * (put it to array, then check it is there).
 	 * Undefined and null items are supported.
 	 *
 	 * Returns the target array.
 	 */
-	remove           : ZeT.scope(function()
+	remove           : ZeT.scope(function(/* array, item, ... */)
 	{
 		var u = {}, n = {}
 
@@ -727,7 +732,7 @@ var ZeTA = ZeT.define('ZeT.A',
 			if(a === null) return m[n] = true
 
 			if(!ZeT.isax(a))
-				return m[a] = true
+				return m.push(a)
 
 			for(var i = 0;(i < a.length);i++)
 				collect(m, a[i])
@@ -737,22 +742,16 @@ var ZeTA = ZeT.define('ZeT.A',
 		{
 			if(ZeT.isu(x)) x = u
 			if(x === null) x = n
-			return (m[x] === true)
+			return (m.indexOf(x) >= 0)
 		}
 
-		return function()
+		return function(a)
 		{
-			var a, m = {}, i = 1, r = []
-
-			//~: select the variant
-			if(!ZeT.isa(this)) a = arguments[0]
-			else { a = this; i = 0 }
+			var m = [], r = []
 
 			//~: collect the keys
-			for(;(i < arguments.length);i++)
+			for(var i = 1;(i < arguments.length);i++)
 				collect(m, arguments[i])
-
-			//console.log(m)
 
 			//~: scan for ranged splicing
 			for(i = 0;(i < a.length);i++)
@@ -1413,6 +1412,11 @@ ZeT.Class = ZeT.define('ZeT.Class', function()
 		return Class
 	}
 
+	function isStaticMember(x)
+	{
+		return !ZeT.isf(x) || (x.ZeT$Class === true)
+	}
+
 	//:: Class.extend()
 	Class.extend = function(body)
 	{
@@ -1425,7 +1429,7 @@ ZeT.Class = ZeT.define('ZeT.Class', function()
 			for(var i = 0;(i < ks.length);i++)
 			{
 				k = ks[i]; v = b[k]
-				if(!ZeT.isf(v)) p[k] = v; else
+				if(isStaticMember(v)) p[k] = v; else
 					Class.addMethod(k, v)
 			}
 		}

@@ -12,43 +12,65 @@
     <co:attribute name = 'coid' required = 'true'
       type = 'java.lang.Object'/>
 
+    <!--
+         Current value of the field, key in the store.
+    -->
     <co:attribute name = 'value' required = 'true'
       type = 'java.lang.Object'/>
 
     <!--
-      Use this attribute to temporary assign
-      the same visible value while the store
-      is loading. This eliminates temporary
-      displaying the store key instead of
-      the associated item title.
+         Use this attribute to temporary assign the same
+         visible value while the store is loading. This
+         eliminates temporary displaying the store key
+         instead of the associated item title.
     -->
     <co:attribute name = 'displayValue' default = ""
       type = 'java.lang.String'/>
 
-    <co:attribute name = 'labels'
-      type = 'java.util.Map'/>
-
+    <!--
+         In the most cases drop list takes data from
+         a Store. Assign it's Bind name (coid) here.
+    -->
     <co:attribute name = 'storeId'
       type = 'java.lang.String'/>
 
-    <co:editableValueHolder name = 'valueInput'
-      targets = 'hidden'/>
+    <!--
+         When list has a fixed number of data pairs
+         (key, display text) instead of using a Store,
+         you may provide the values via a map.
+         Conflicts with storeId attribute!
+    -->
+    <co:attribute name = 'labels'
+      type = 'java.util.Map'/>
 
+    <!--
+         JSF extension point of the field.
+    -->
+    <co:editableValueHolder name = 'valueInput'
+      targets = '#{cc.attrs.coid}-field'/>
+
+    <!--
+         Properties of the drop list component.
+
+         Property notRefreshOnExpand set to true
+         tells not to reload the store (of storeId)
+         on each repeated drop.
+    -->
     <co:facet name = 'drop-props'/>
+
     <co:facet name = 'label-props'/>
 
   </co:interface>
 
   <co:implementation>
 
-    <h:inputHidden id = "hidden" value = "#{cc.attrs.value}"/>
+    <h:inputHidden id = "#{cc.attrs.coid}-field" value = "#{cc.attrs.value}"/>
 
-    <div id = "#{cc.clientId}-hidden-props" style = "display:none">
+    <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
       <co:renderFacet name = "drop-props"/>
     </div>
 
     <div id = "#{cc.clientId}-#{cc.attrs.coid}-labels" style = "display:none">
-
       <h:outputText escape = "true" value = "#{cc.attrs.labels}">
         <f:converter converterId = "com.tverts:fmt:special:json-strings-map-list"/>
       </h:outputText>
@@ -61,99 +83,18 @@
     <script type = "text/javascript">
     //<![CDATA[
 
-  (function()
-  {
-    //~: on change
-    function on_change(f, key)
-    {
-      var n = Ext.getDom('#{cc.clientId}-hidden');
-      if(!ZeT.iss(key) || !key.length) n.value = '';
-      else n.value = key;
-    }
-
-    //~: create component bind
-    var bind = extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind())
-
-    bind.nodeId('#{cc.clientId}-hidden');
-    bind.on('change', on_change)
-
-    bind.props({ xtype: 'combobox', pickerWidthAuto: true })
-    bind.props({ nodeId: '#{cc.attrs.coid}', name: '#{cc.clientId}-#{cc.attrs.coid}' })
-    bind.props({ displayhidden: 'label', valuehidden: 'key' })
-    bind.readPropsNode()
-
-    //?: {external store is provided}
-    if("#{cc.attrs.storeId}".length)
-    {
-      bind.props({store: "#{cc.attrs.storeId}"})
-
-      //~: refresh source on repeated expand
-      var expandTime; if(!bind.$raw().notRefreshOnExpand)
-        bind.on('expand', function()
-      {
-        var ts = new Date().getTime()
-        if(expandTime && (ts - expandTime < 2000))
-          bind.co().getStore().reload()
-        expandTime = ts
-      })
-    }
-    //~: evaluate label mapping      !: it is array
-    else {
-
-      var labls = Ext.getDom("#{cc.clientId}-#{cc.attrs.coid}-labels").innerHTML;
-      labls = eval('('.concat(labls, ')'));
-
-      var items = [];
-      for(var i = 0;(i + 1 < labls.length);i += 2)
-        items.push([labls[i], labls[i + 1]])
-
-      //~: items as a store
-      bind.props({store: items, queryMode: 'local'})
-    }
-
-    var label = new extjsf.Bind();
-    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
-
-    if(!label.isPropsNode()) label = null; else
-    {
-      extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
-      bind.props({hideLabel: true})
-
-      //~: label click expand-collapse support
-      bind.on('collapse', function()
-      { bind.collapseTime = new Date().getTime(); })
-
-      label.on('afterrender', function(l) { l.getEl().addListener('click', function()
-      {
-        var drop = bind.co()
-        if(drop.isDisabled() || drop.readOnly) return
-        var ct = bind.collapseTime; ct = new Date().getTime() - ((!ct)?(0):(ct))
-        if(ct > 500) bind.co().expand()
-      })})
-
-      label.readPropsNode().props({
-        xtype: 'label', forId: "#{cc.attrs.coid}"
-      })
-    }
-
-    //~: bind label first
-    if(label) extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', label)
-
-    //~: display value substitute
-    if("#{cc.attrs.displayValue}".length)
-      bind.on('afterrender', function(f)
-      {
-        if(f.inputEl) $(f.inputEl.dom).val("#{cc.attrs.displayValue}")
-      })
-
-    //~: bind drop-list to the parent
-    extjsf.bindAddItem('#{cc.parent.attrs.coid}', '${extDom}', bind)
-
-  })()
+      extjsf.domain('${extDom}').
+        bind('#{cc.attrs.coid}', new extjsf.DropFieldBind()).
+        ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+        props({ displayhidden: 'label', valuehidden: 'key' }).
+        props({ xtype: 'combobox', pickerWidthAuto: true }).
+        scope("#{cc.attrs.storeId}", "#{cc.attrs.displayValue}",
+          function(drop, s, v) {
+            if(!ZeT.ises(s)) drop.props({ store: s })
+            if(!ZeT.ises(v)) drop.props({ displayValue: v })
+        }).readPropsNode().buildLabel().install()
 
     //]]>
     </script>
-
   </co:implementation>
 </ui:fragment>

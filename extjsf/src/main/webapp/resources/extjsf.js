@@ -559,6 +559,31 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	},
 
 	/**
+	 * Same as props(), but takes only the properties
+	 * that are not already defined for the component.
+	 */
+	merge            : function(/* [ suffix, ] props */)
+	{
+		var s = 'props', p = arguments[0]
+
+		//?: {suffix is specified}
+		if(arguments.length != 1)
+		{
+			ZeT.assert(arguments.length == 2)
+			s = p; p = arguments[1]
+		}
+
+		ZeT.asserts(s)
+		ZeT.assert(ZeT.iso(p))
+
+		//~: accumulate the properties
+		this._props[s] =
+			ZeT.deepExtend(this._props[s], p)
+
+		return this
+	},
+
+	/**
 	 * Reads properties written from the configuration
 	 * facet to the internal properties node. Optional
 	 * suffix (default is 'props') allows to select DOM
@@ -796,15 +821,8 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	 */
 	$eval_props_node : function(suffix)
 	{
-		//~: lookup the node
-		var n = ZeT.assertn(this.$props_node(suffix),
-		  'No properties node for suffix [', suffix,
-		  '] is found for Bind [', this.name,
-		  '] and node id [', this.$node_id(), ']!'
-		)
-
 		//~: text content of the node
-		var x = ZeTX.text(n)
+		var x = ZeTX.text(this.$props_node(suffix))
 
 		//~: evaluate the result
 		return ZeTS.ises(x)?{}:this.$eval_props(x)
@@ -831,7 +849,7 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 
 		if(!ZeTS.starts(props, '('))
 		{
-			if(!ZeTS.starts(props, '{'))
+			if(!ZeTS.starts(props, '{', '['))
 				props = ZeTS.cat('{', props, '}')
 
 			props = ZeTS.cat('(', props, ')')
@@ -843,7 +861,7 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		}
 		catch(e)
 		{
-			throw EX.ass('Illegal properties of Bind [',
+			throw ZeT.ass('Illegal properties of Bind [',
 			  this.name, ']: \n', props, '\n', e)
 		}
 	},
@@ -1407,9 +1425,10 @@ extjsf.FieldBind = ZeT.defineClass(
 	 * ('label' suffix) to add it before or after
 	 * the field component during the install.
 	 */
-	buildLabel       : function()
+	buildLabel       : function(always)
 	{
-		return this.nest('label', this.$build_label)
+		return this.nest('label',
+		  ZeT.fbindu(this.$build_label, this, 1, always))
 	},
 
 	install          : function()
@@ -1431,13 +1450,17 @@ extjsf.FieldBind = ZeT.defineClass(
 		return this
 	},
 
-	$build_label     : function(label)
+	$build_label     : function(label, always)
 	{
+		//~: take properties from the field bind
+		label.props(this.$raw('label') || {})
+
+		//~: label defaults
 		label.props({ xtype: 'label',
 		  forId: this.$node_id() })
 
 		//?: {empty label}
-		if(!label.readPropsNode(true))
+		if(!label.readPropsNode(true) && !always)
 			return false
 
 		//~: save label to install
@@ -1460,20 +1483,11 @@ extjsf.FieldBind = ZeT.defineClass(
 		var self = this
 
 		//~: click on the label
-		this.label.co().getEl().
-		  addListener('click', function(e)
-		{
-			var el = self.label.co().getEl()
+		this.label.co().getEl().addListener('click',
+		  ZeT.fbind(this.$label_click, this))
 
-			if(self.co().readOnly)
-				e.stopEvent()
-			else
-				self.co().focus()
-		})
-
-		//~: mouse entered (set cursor)
-		var cursor; this.label.co().getEl().
-		  addListener('mouseenter', function(e)
+		//~: label cursor
+		var cursor; function setCursor()
 		{
 			var el = self.label.co().getEl()
 
@@ -1484,12 +1498,230 @@ extjsf.FieldBind = ZeT.defineClass(
 			}
 			else if(cursor)
 				el.setStyle('cursor', cursor)
-		})
+		}
+
+		//~: set cursor now
+		setCursor()
+
+		//~: mouse entered (set cursor)
+		this.label.co().getEl().
+		  addListener('mouseenter', setCursor)
+	},
+
+	$label_click     : function(e)
+	{
+		var el = this.label.co().getEl()
+
+		if(this.co().readOnly)
+			e.stopEvent()
+		else
+			this.$field_focus()
+	},
+
+	$field_focus     : function()
+	{
+		//?: {field has picker} expand it
+		if(ZeT.isf(this.co().getPicker))
+			if(this.co().getPicker())
+				return this.co().expand()
+
+		this.co().focus()
 	},
 
 	$field_name      : function()
 	{
 		return this.$node_id('field')
+	}
+})
+
+
+// +----: Drop Field Bind :-------------------------------------+
+
+extjsf.DropFieldBind = ZeT.defineClass(
+  'extjsf.DropFieldBind', extjsf.FieldBind,
+{
+	className        : 'extjsf.DropFieldBind',
+
+	$install         : function()
+	{
+		//~: refresh on double-expand
+		this.$expand_refresh()
+
+		//~: label inline store
+		if(ZeT.isx(this.$raw().store))
+			this.$labels_store()
+
+		//~: set display value
+		this.$display_value()
+
+		this.$applySuper(arguments)
+	},
+
+	$labels_store    : function()
+	{
+		var labels = this.$eval_props_node('labels')
+		if(!ZeT.isa(labels)) return
+
+		//~: convert 2-array to pairs
+		for(var ls = [], i = 0;(i+1 < labels.length);i += 2)
+			ls.push([ labels[i], labels[i+1] ])
+
+		//!: set the inline store
+		this.props({ store: ls, queryMode: 'local' })
+	},
+
+	/**
+	 * Private. Directly assigns initial display
+	 * value to the input node of the drop list.
+	 */
+	$display_value   : function()
+	{
+		var dv = this.$raw().displayValue
+		delete this.$raw().displayValue
+
+		if(!ZeT.isu(dv)) this.on('afterrender', function(f)
+		{
+			f.inputEl.set({ value: dv })
+		})
+	},
+
+	$refresh_delay   : 2000,
+
+	$expand_refresh  : function()
+	{
+		var nrone = this.$raw().notRefreshOnExpand
+		delete this.$raw().notRefreshOnExpand
+		if(nrone) return
+
+		var et; this.on('expand', function()
+		{
+			var ts = new Date().getTime()
+			if(et && (ts - et < this.$refresh_delay))
+				bind.co().getStore().reload()
+			et = ts
+		})
+	}
+})
+
+
+// +----: Checkboxes Bind :-------------------------------------+
+
+extjsf.CheckboxesBind = ZeT.defineClass(
+  'extjsf.CheckboxesBind', extjsf.Bind,
+{
+	className        : 'extjsf.CheckboxesBind',
+
+	install          : function()
+	{
+		var self    = this, i = 0
+		var checked = this.$read_checked()
+		var labels  = this.$read_labels()
+
+		//c: nest each checkbox
+		labels.each(function(label, key)
+		{
+			self.$nest_check(i++, key, label,
+			  checked.contains(key))
+		})
+	},
+
+	$nest_check      : function(i, key, label, checked)
+	{
+		var self = this, bind = this.$check_bind.create()
+		this.nest(''+i, bind, function()
+		{
+			self.$init_check(bind, i, key, label, checked)
+
+			if(!self.checks) self.checks = []
+			self.checks.push(bind)
+		})
+	},
+
+	$check_bind      : extjsf.FieldBind,
+
+	$init_check      : function(check, i, key, label, checked)
+	{
+		//~: clone the properties
+		check.merge(ZeT.deepClone(this.$raw()))
+		check.props('label', ZeT.deepClone(this.$raw('label')))
+
+		//~: check box label
+		check.props({ inputValue: key, checked: checked })
+		delete check.$raw().value //<-- must have it not!
+
+		//~: label text
+		check.props('label', { text: label })
+
+		//~: check handler
+		check.on('change',
+		  ZeT.fbind(this.$check_changed, this, check))
+
+		//~: install the check box
+		check.buildLabel(true).install()
+	},
+
+	$read_checked    : function()
+	{
+		var f = ZeT.assertn(Ext.get(this.$node_id()))
+		var r = new ZeT.Map(), v = f.getValue()
+		if(ZeT.ises(v)) return r
+
+		ZeT.each(v.split(','), function(s)
+		{
+			if(!ZeT.ises(s = ZeTS.trim(s))) r.put(s)
+		})
+
+		return r
+	},
+
+	$read_labels     : function()
+	{
+		var  r = new ZeT.Map()
+		var ls = this.$eval_props_node('labels')
+		if(!ZeT.isa(ls)) return r
+
+		//~: insert 2-array into the map
+		for(var i = 0;(i+1 < ls.length);i += 2)
+			r.put(ls[i], ls[i+1])
+
+		return r
+	},
+
+	$check_changed   : function(check)
+	{
+		if(this._checking) return
+		this._checking = check
+
+		var x = check.$raw().inputValue
+		var f = Ext.get(this.$node_id())
+		var v = ZeT.ises(f.getValue())?[]:
+		  f.getValue().split(',')
+
+		//~: remove or add the value
+		if(!check.value()) ZeTA.remove(v, x)
+		else if(v.indexOf(x) < 0) v.push(x)
+
+		//~: assign to the hidden field
+		v = this.$set_checked(check, v)
+		if(ZeT.isu(v)) v = [x]
+		f.set({ value: v.join(',') })
+
+		delete this._checking
+	},
+
+	$set_checked     : function(check, v)
+	{
+		//?: {unchecked all}
+		if(!v.length && (check.$raw().allowNone === false))
+			check.co().setValue(true)
+		//?: {checked two of a radio}
+		else if((v.length > 1) && check.$raw().onlyOne)
+			ZeT.each(this.checks, function(c)
+			{
+				if((c != check) && c.value()) c.value(false)
+			})
+		else
+			return v
 	}
 })
 

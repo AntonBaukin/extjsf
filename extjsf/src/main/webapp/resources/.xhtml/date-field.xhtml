@@ -14,20 +14,27 @@
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
+    <!--
+         Date value of the field.
+    -->
     <co:attribute name = 'value' required = 'true'
        type = 'java.util.Date'/>
 
+    <!--
+         JSF extension point of the field.
+    -->
     <co:editableValueHolder name = 'valueInput'
-       targets = '#{cc.clientId}-#{cc.attrs.coid}'/>
+       targets = '#{cc.attrs.coid}-field'/>
 
     <co:facet name = 'extjs-props'/>
+
     <co:facet name = 'label-props'/>
 
   </co:interface>
 
   <co:implementation>
 
-    <h:inputHidden id = "#{cc.attrs.coid}" value = "#{cc.attrs.value}">
+    <h:inputHidden id = "#{cc.attrs.coid}-field" value = "#{cc.attrs.value}">
       <f:converter converterId = "com.tverts:fmt:date2str"/>
     </h:inputHidden>
 
@@ -40,58 +47,18 @@
     </div>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-  (function()
-  {
-    var field = extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind())
+      extjsf.domain('${extDom}').
+        bind('#{cc.attrs.coid}', new extjsf.FieldBind()).
+        ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+        props({ format: 'd.m.Y', submitFormat: 'd.m.Y' }).
+        props({ maxLength: 10, enforceMaxLength: true }).
+        props({ width: extjsf.dex(15), cls: 'x-field-date' }).
+        props({ xtype: 'datefield' }).readPropsNode().
+        buildLabel().install()
 
-    field.nodeId("#{cc.clientId}-#{cc.attrs.coid}")
-    field.props({labelSeparator: '', width: extjsf.dex(15),
-      maxLength: 10, enforceMaxLength: true, cls: 'x-field-date'
-    })
-
-    field.readPropsNode().props({
-      xtype   : 'datefield',
-      inputId : "#{cc.attrs.coid}",
-      name    : "#{cc.clientId}-#{cc.attrs.coid}",
-      format  : 'd.m.Y', submitFormat: 'd.m.Y'
-    })
-
-    var label = new extjsf.Bind();
-    label.nodeId("#{cc.clientId}-#{cc.attrs.coid}-label")
-
-    if(!label.isPropsNode())
-      label = null;
-    else
-    {
-      extjsf.domain('${extDom}').bind('#{cc.attrs.coid}-label', label)
-      field.props({hideLabel: true})
-
-      var lstyle = field.$raw()['style'] || {};
-      if(!lstyle.whiteSpace) lstyle.whiteSpace = 'nowrap';
-
-      //~: label click expand-collapse support
-      field.on('collapse', function() { field.collapseTime = new Date().getTime(); })
-
-      label.on('afterrender', function(l) { l.getEl().addListener('click', function() {
-        if(field.co().isDisabled()) return;
-        var ct = field.collapseTime; ct = new Date().getTime() - ((!ct)?(0):(ct));
-        if(ct > 500) field.co().expand()
-      })})
-
-      label.readPropsNode().props({
-        xtype: 'label', style: lstyle
-      })
-    }
-
-    var form  = extjsf.bind('#{cc.parent.attrs.coid}', '${extDom}');
-
-    if(label) form.addItem(label)
-    form.addItem(field)
-
-  })()
-
+    //]]>
     </script>
   </co:implementation>
 </ui:fragment>
