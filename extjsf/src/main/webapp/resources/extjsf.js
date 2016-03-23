@@ -607,6 +607,32 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 	},
 
 	/**
+	 * Answers whether this Bind has child Binds,
+	 * or has own properties written in facets,
+	 * or has 'html' property. All three boolean
+	 * flags are optional.
+	 */
+	isEmpty          : function(props, items, html)
+	{
+		if((props !== false) && this.getPropsNode())
+			return false
+
+		if((items !== false) && this._items.length)
+			return false
+
+		if(html === false)
+			return true
+
+		html = this.$raw().html
+
+		//?: {html is delayed} resolve now
+		if(ZeT.isDelayed(html))
+			this.$raw().html = html = html()
+
+		return ZeT.ises(html)
+	},
+
+	/**
 	 * Private. Direct access to the properties.
 	 */
 	$raw             : function(suffix)
@@ -1017,6 +1043,25 @@ extjsf.Bind.extend(
 			  this.scope, this, arguments, true))
 
 		return this
+	},
+
+	/**
+	 * Tells of sets the component visibility.
+	 * Also works when component is not yet created.
+	 */
+	visible          : function(v)
+	{
+		var co = this.co()
+		var  p = this.$raw()
+
+		if(ZeT.isu(v)) //?: {check visibility}
+			return (co)?(co.isVisible()):!ZeT.isu(p.hidden)?
+			  (!p.hidden):(ZeT.isu(p.visible) || !!p.visible)
+
+		if(co) co.setVisible(!!v)
+		else p.hidden = !v
+
+		return this
 	}
 })
 
@@ -1071,6 +1116,10 @@ extjsf.Bind.extend(
 		ZeT.asserts(ename)
 		ZeT.assertf(f)
 
+		//?: {it's on-bind} !: +side-effect
+		if(f == this.$on_bind(ename))
+			return
+
 		var l = this.$on_list(ename)
 		var i = l.indexOf(f)
 
@@ -1093,9 +1142,6 @@ extjsf.Bind.extend(
 	 */
 	$on_list         : function(ename)
 	{
-		//~: side-effect
-		this.$on_bind(ename)
-
 		var list = this._listeners[ename]
 
 		//?: {event is registered}
@@ -1156,22 +1202,6 @@ extjsf.Bind.extend(
 	},
 
 	/**
-	 * Private. Takes the external map of the listeners
-	 * (applied via the configuration facets) and merges
-	 * it with the listeners added via the Bind interface.
-	 *
-	 * Note that following calls with the same collection
-	 * of listeners (same functions) has no effect.
-	 */
-	$merge_listeners : function(external)
-	{
-		if(ZeT.isox(external))
-			this.on(external)
-
-		return this.$listeners()
-	},
-
-	/**
 	 * Private. Bound wrapper over the nested listeners.
 	 * Invokes them and returns the first defined result.
 	 */
@@ -1212,6 +1242,81 @@ extjsf.Bind.extend(
 		}
 
 		return re
+	}
+})
+
+
+// +----: Bind [ children ] :------------------------------------+
+
+extjsf.Bind.extend(
+{
+	addItem          : function(bind)
+	{
+		if(ZeT.iss(bind)) bind = extjsf.bind(bind);
+		if(bind) this._items.push(bind)
+		return this;
+	},
+
+	buildProps       : function()
+	{
+		var res = this.$raw()
+
+		//=: render to
+		if(this._render_to)
+			res.renderTo = this._render_to
+
+		//~: create child items
+		if(!res.items)
+		{
+			var items = this.$items_build()
+
+			if(ZeT.isa(items) && items.length)
+				res.items = items
+		}
+
+		//~: resolve delayed properties
+		ZeT.undelay(res)
+
+		//~: merge the listeners
+		if(ZeT.isox(res.listeners))
+			this.on(res.listeners)
+		res.listeners = this.$listeners()
+
+		//~: the handler
+		if(ZeT.isf(this.handler))
+			res.handler = this.handler
+
+		return res
+	},
+
+	$items_replace   : function(items)
+	{
+		var result = this._items
+
+		ZeT.assert(ZeT.isx(items) || ZeT.isa(items))
+		this._items = ZeT.isa(items)?(items):[]
+
+		return result
+	},
+
+	/**
+	 * Private. Builds properties objects for each
+	 * child item of this Bind.
+	 */
+	$items_build     : function()
+	{
+		var result = []
+
+		ZeT.each(this._items, function(item)
+		{
+			//?: {has component factory (also, a Bind)}
+			if(ZeT.isf(item.co) && item.co())
+				return result.push(item.co())
+
+			result.push(item.buildProps())
+		})
+
+		return result
 	}
 })
 
@@ -1815,6 +1920,24 @@ extjsf.FieldBind = ZeT.defineClass(
 
 		//~: install label after
 		if(x) this.label.install()
+
+		return this
+	},
+
+	/**
+	 * Returns the value set for the field.
+	 * Also works when component is not yet created.
+	 */
+	value            : function(v)
+	{
+		var co = this.co()
+		var  p = this.$raw()
+
+		if(!arguments.length) //?: {get field value}
+			return (co)?(co.getValue()):(p.value)
+
+		if(co) co.setValue(v)
+		else p.value = v
 
 		return this
 	},
@@ -2699,58 +2822,6 @@ ZeT.extend(extjsf,
 
 extjsf.Bind.extend(
 {
-	getPropsNode     : function(node_id)
-	{
-		if(!node_id && this.$node_id())
-			node_id = this.$node_id() + '-props';
-		return node_id && Ext.getDom(node_id);
-	},
-
-	isPropsNode      : function(node_id)
-	{
-		var node = this.getPropsNode(node_id);
-		var text = node && node.innerHTML;
-
-		if(ZeT.iss(text)) text = ZeTS.trim(text);
-		return !!(text && text.length);
-	},
-
-	nodeId           : function(nodeId)
-	{
-		if(!ZeT.iss(nodeId))
-			return this.$node_id()
-		this._node_id = nodeId
-		return this;
-	},
-
-	value            : function(v)
-	{
-		var c = this.co()
-		var p = this.$raw()
-
-		if(ZeT.isu(v) || (v === null))
-			return (c && ZeT.isf(c.getValue))?(c.getValue()):(p.value);
-
-		if(c && ZeT.isf(c.setValue)) c.setValue(v)
-		else p.value = v;
-
-		return this;
-	},
-
-	visible          : function(v)
-	{
-		var c = this.co()
-		var p = this.$raw()
-
-		if(ZeT.isu(v) || (v === null))
-			return (!c || !ZeT.isf(c.isVisible))?(undefined):(c.isVisible())
-
-		if(!c) p.hidden = !v; else
-			if(ZeT.isf(c.setVisible)) c.setVisible(!!v)
-
-		return this
-	},
-
 	clearComponent   : function(opts)
 	{
 		var c = this.co(); if(!c) return this;
@@ -2771,43 +2842,6 @@ extjsf.Bind.extend(
 		}
 
 		return this;
-	},
-
-
-	//=     Form Components      =//
-
-	/**
-	 * Converts the children binds to the items
-	 * (descriptors) of child components in Ext JS.
-	 */
-	extjsItems       : function()
-	{
-		return this._children(this._items);
-	},
-
-	addItem          : function(bind)
-	{
-		if(ZeT.iss(bind)) bind = extjsf.bind(bind);
-		if(bind) this._items.push(bind)
-		return this;
-	},
-
-	replaceItems     : function(items)
-	{
-		var old = this._items;
-		this._items = ZeT.isa(items)?(items):[];
-		return old;
-	},
-
-	hasItems         : function()
-	{
-		return !!this._items.length;
-	},
-
-	hasHTML          : function()
-	{
-		var html = this.$raw['html']
-		return ZeT.iss(html) || ZeT.isDelayed(html)
 	},
 
 	toggleReadWrite  : function(isread)
@@ -2850,95 +2884,6 @@ extjsf.Bind.extend(
 			if(!ZeT.iss(i._props.extjsfBlock)) return
 			i._props.hidden = (i._props.extjsfBlock != block)
 		})
-	},
-
-	_children        : function(chs)
-	{
-		var res = [];
-
-		var x = false;
-
-		for(var i = 0;(i < chs.length);i++)
-		{
-			if(chs[i].extjsfRawItem)
-			{
-				res.push(chs[i])
-				continue;
-			}
-
-			if(ZeT.isf(chs[i].co) && chs[i].co())
-			{
-				res.push(chs[i].co())
-				continue;
-			}
-
-			var item  = {};
-			var props = chs[i].buildProps()
-			var keysl = ZeT.keys(item).length;
-			item = ZeT.extend(item, props || item);
-
-			//!: add the item as the child
-			res.push(ZeT.extend(item, props || item))
-		}
-
-		return res;
-	},
-
-	buildProps       : function()
-	{
-		var res  = this.$raw()
-		var self = this
-
-		//~: get value from the DOM node
-		var node = this.$node_id() && Ext.get(this.$node_id())
-		if(!res.value && node) //!: deprecated
-		{
-			var value = node.getAttribute('value');
-			if(value && value.length)
-				res.value = value;
-		}
-
-		//~: assign render to
-		if(this._render_to)
-			res.renderTo = this._render_to;
-
-		//~: created children (definitions)
-		if(!res.items)
-		{
-			var items = this.extjsItems();
-
-			if(ZeT.isa(items) && items.length)
-				res.items = items;
-		}
-
-		if(res.items) for(var i = 0;(i < res.items.length);i++)
-			if(res.items[i].extjsfRawItem)
-				delete res.items[i].extjsfRawItem
-
-		//~: resolve delayed properties
-		ZeT.undelay(res)
-
-		//~: merge the listeners
-		res.listeners = this.$merge_listeners(res.listeners)
-
-		//~: the handler
-		if(ZeT.isf(this.handler))
-			res.handler = ZeT.assertf(this.handler)
-
-		//?: {is data store bound}
-		if(this.store) if(!this.store.createStore)
-			res.store = this.store;
-		else
-		{
-			this.store.createStore = undefined;
-			this.store = res.store =
-			  Ext.create('Ext.data.Store', this.store);
-		}
-
-		//!: extjsf Bind reference
-		res.extjsfBind = this;
-
-		return res;
 	}
 })
 
@@ -3078,27 +3023,8 @@ extjsf.WinmainLoader = ZeT.defineClass('extjsf.WinmainLoader',
 })
 
 
-ZeT.init('extjsf: data models', function()
+extjsf.support = ZeT.singleInstance('extjsf.support',
 {
-	Ext.syncRequire('Ext.data.Model')
-
-	//~: data model for simple drop-lists
-	Ext.define('extjsf.model.BasicDropList', {
-	  extend: 'Ext.data.Model',
-
-	  idProperty: 'key',
-
-	  fields: [
-
-	    {name: 'key',   type: 'string'},
-	    {name: 'label', type: 'string'}
-	  ]
-	})
-})
-
-
-extjsf.support = ZeT.singleInstance('extjsf.support', {
-
 	gridColumns            : function(grid, visible)
 	{
 		if(grid.extjsfBind === true) grid = grid.co();

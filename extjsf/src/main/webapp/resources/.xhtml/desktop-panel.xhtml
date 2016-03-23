@@ -99,7 +99,7 @@
             tb.props({ xtype: 'toolbar', dock: 'top', border: false }).readPropsNode()
           }).
           nest('status', function(sb) {
-            sb.props({ xtype: 'statusbar', dock: 'bottom', border: false }).readPropsNode()
+            sb.props({ xtype: 'panel', dock: 'bottom', border: false }).readPropsNode()
           }).
         scope(function(panel) {
 
@@ -126,7 +126,7 @@
     //<![CDATA[
 
       extjsf.bind("#{cc.attrs.coid}", '${extDom}').scope(
-        function(p){ p.rootPanelController.topbarItems(p.replaceItems()) })
+        function(p){ p.rootPanelController.topbarItems(p.$items_replace()) })
 
     //]]>
     </script>
@@ -143,7 +143,7 @@
 
       extjsf.bind("#{cc.attrs.coid}", '${extDom}').scope(
         extjsf.bind('#{cc.attrs.coid}-toolbar', '${extDom}'),
-        function(p, tb){ tb.replaceItems(p.replaceItems()) })
+        function(p, tb){ tb.$items_replace(p.$items_replace()) })
 
     //]]>
     </script>
@@ -160,7 +160,7 @@
 
       extjsf.bind("#{cc.attrs.coid}", '${extDom}').scope(
         extjsf.bind('#{cc.attrs.coid}-status', '${extDom}'),
-        function(p, sb){ sb.replaceItems(p.replaceItems()) })
+        function(p, sb){ sb.$items_replace(p.$items_replace()) })
 
     //]]>
     </script>
@@ -180,13 +180,11 @@
         extjsf.bind('#{cc.attrs.coid}-status', '${extDom}'),
         function(p, tb, sb)
         {
-          if(!tb.getPropsNode() || tb.hasItems() || tb.hasHTML())
+          if(tb.isEmpty()) tb.destroy(); else
             p.rootPanelController.toolbar(tb)
-          else tb.destroy()
 
-          if(!sb.getPropsNode() || sb.hasItems() || sb.hasHTML())
+          if(sb.isEmpty()) sb.destroy(); else
             p.rootPanelController.statusbar(sb)
-          else sb.destroy()
 
           p.rootPanelController.insert()
         })
