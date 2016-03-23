@@ -1095,7 +1095,7 @@ ZeT.extend(ZeT,
 	}),
 
 	/**
-	 * Invokes the factin given over each not
+	 * Invokes the function given over each not
 	 * undefined item of the array-like object.
 	 * Returns array of not undefined results.
 	 *

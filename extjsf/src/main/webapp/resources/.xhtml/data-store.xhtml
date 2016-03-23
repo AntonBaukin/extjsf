@@ -72,8 +72,9 @@
 
     extjsf.domain('${extDom}').
       bind('#{cc.attrs.storeId}', new extjsf.StoreBind()).
-      ids('#{cc.clientId}').props({ autoLoad: true }).
-      readPropsNode().props({ storeId: '#{cc.attrs.storeId}' }).
+      ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
+      props({ autoLoad: true }).readPropsNode().
+      props({ storeId: '#{cc.attrs.storeId}' }).
         nest('proxy', function(proxy, store)
         {
           //?: {empty proxy}

@@ -11,6 +11,12 @@
 
   <co:interface>
 
+    <!--
+         Viewport is root container that renders it's
+         children directly to the body of the page.
+         It's domain is of the default empty string.
+    -->
+
     <co:attribute name = 'coid' required = 'true'
        type = 'java.lang.String'/>
 
@@ -25,29 +31,28 @@
     </div>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-  extjsf.domain('${extDom}').
-    bind('#{cc.attrs.coid}', new extjsf.Bind()).
-    nodeId("#{cc.clientId}-#{cc.attrs.coid}").
-    props({layout: 'fit', renderTo: Ext.getBody()}).
-    readPropsNode()
+      extjsf.domain('').bind('#{cc.attrs.coid}', new extjsf.RootBind()).
+        ids('#{cc.clientId}').props({ xtype: 'viewport' }).
+        props({ layout: 'fit', renderTo: Ext.getBody() }).
+        readPropsNode()
 
-  extjsf.bind('#{cc.attrs.coid}', '${extDom}').isViewport = true;
-
+    //]]>
     </script>
 
     <co:insertChildren/>
 
     <script type = "text/javascript">
+    //<![CDATA[
 
-  Ext.onReady(function()
-  {
-    extjsf.bind('#{cc.attrs.coid}', '${extDom}').
-      readPropsNode().
-      co(Ext.create('Ext.container.Viewport',
-        extjsf.bind('#{cc.attrs.coid}', '${extDom}').buildProps()))
-  })
+      Ext.onReady(function()
+      {
+        //~: create the root component
+        extjsf.bind('#{cc.attrs.coid}', '${extDom}').co(true)
+      })
 
+    //]]>
     </script>
   </co:implementation>
 </ui:fragment>

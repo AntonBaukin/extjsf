@@ -57,11 +57,15 @@
             displayMsg: 'Записи {0}:{1} из {2}' }).readPropsNode()
 
           grid.props({ bbar: pager.$raw() })
+          grid.on('destroy', pager.boundDestroy())
         }).
         scope(function(grid)
         {
           grid.$raw().viewConfig = ZeT.extend(
             { preserveScrollOnRefresh: true }, grid.$raw().viewConfig)
+
+          if('true' == "#{cc.attrs.selset}")
+            ReTrade.selset.grid('#{cc.attrs.coid}', '${extDom}')
         }).
       install()
 
