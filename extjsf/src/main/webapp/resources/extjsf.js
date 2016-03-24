@@ -25,6 +25,8 @@ extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 		ZeT.assert(ZeT.iss(name))
 		this.name = name
 
+		//ZeT.log('+@[', name, ']')
+
 		//=: domain binds
 		this.binds = new ZeT.Map()
 
@@ -132,7 +134,7 @@ extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 		//~: collect the binds
 		this.binds.reverse(function(b){ binds.push(b) })
 
-		//ZeT.log('Destroy @[', this.name,
+		//ZeT.log('-@[', this.name,
 		//  ']: ', ZeT.map(binds, 'name'))
 
 		//~: and destroy them
@@ -181,6 +183,8 @@ extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 })
 
 
+// +----: ExtJSF Utilities :-------------------------------------+
+
 ZeT.extend(extjsf,
 {
 	/**
@@ -215,18 +219,182 @@ ZeT.extend(extjsf,
 	},
 
 	/**
-	 * Returns Bind registered in the Domain.
+	 * Creates unique name to create a Domain
+	 * based on the definitive string given.
+	 *
+	 * If domain name starts with 'global:',
+	 * of has ':global:' infix, resulting name
+	 * has no counter (:xyz) appended. This is
+	 * applyed not to open several windows for
+	 * the same object (database key).
 	 */
-	bind             : function(name, domain)
+	nameDomain       : function(name)
 	{
-		if(ZeT.iss(domain))
-			domain = extjsf.domain(domain)
+		ZeT.assert(ZeT.iss(name))
 
-		//?: {domain is not found}
-		if(ZeT.isu(domain)) return
+		//?: {domain ends with number}
+		if(name.match(/:\d+$/))
+			return name
 
-		ZeT.assert(domain.extjsfDomain === true)
-		return domain.bind(name)
+		if(ZeTS.starts(name, ':'))
+			name = name.substring(1)
+
+		ZeT.asserts(name)
+
+		name = 'domain:' + name
+
+		//?: {is not global name} increment suffix
+		if(name.indexOf(':global:') == -1)
+		{
+			if(!extjsf._temp_domain_id)
+				extjsf._temp_domain_id = 0
+
+			if(!ZeTS.ends(name, ':'))
+				name = name + ':'
+			name += extjsf._temp_domain_id++
+		}
+		else if(ZeTS.ends(name, ':'))
+			name = name.substring(0, name.length - 1)
+
+		return name
+	},
+
+	isdomain         : function(d)
+	{
+		return !!d && (d.extjsfDomain === true)
+	},
+
+	/**
+	 * Tells whether the argument given
+	 * is an Ext JS Component.
+	 */
+	isco             : function(co)
+	{
+		return !!co && (co.isComponent === true)
+	},
+
+	/**
+	 * Tries to guess Bind instance from the arguments.
+	 * Supports name + domain pair, direct Bind instance,
+	 * and a bound Component as the arguments.
+	 */
+	bind             : function(/* name, domain | bind | co */)
+	{
+		var a0 = arguments[0], a1
+
+		if(ZeT.iss(a0))
+		{
+			a1 = arguments[1]
+			if(ZeT.iss(a1))
+			{
+				a1 = extjsf.domain(a1)
+				if(!a1) return
+			}
+
+			ZeT.assert(extjsf.isdomain(a1))
+			return a1.bind(a0)
+		}
+
+		if(extjsf.isbind(a0))
+			return a0
+
+		//?: {is a Component}
+		if(extjsf.isco(a0))
+			if(extjsf.isbind(a0.extjsfBind))
+				return a0.extjsfBind
+	},
+
+	isbind           : function(bind)
+	{
+		return !!bind && (bind.extjsfBind === true)
+	},
+
+	/**
+	 * Tries to get the Ext JS component from
+	 * the arguments given. See bind().
+	 */
+	co               : function()
+	{
+		var bind, a0 = arguments[0]
+
+		//?: {has nothing}
+		if(ZeT.isx(a0))
+			return undefined
+
+		//?: {is a Component}
+		if(extjsf.isco(a0))
+			return a0
+
+		//?: {refers a Component}
+		if(extjsf.isco(a0.component))
+			return a0.component
+
+		//~: access the bind
+		a0 = extjsf.bind.apply(extjsf, arguments)
+
+		//?: {is a bind}
+		if(extjsf.isbind(a0))
+			return a0.co()
+	},
+
+	/**
+	 * If last argument is a function, assignes
+	 * it as a handler to the Bind found via
+	 * the leading arguments, see extjsf.bind().
+	 * If component exists, assigns it too.
+	 *
+	 * If no function is given, returns currently
+	 * assigned handler.
+	 */
+	handler          : function()
+	{
+		//~: take the handler
+		ZeT.assert(arguments.length)
+		var h = arguments[arguments.length - 1]
+		if(!ZeT.isf(h)) h = null
+
+		//~: search for the bind and component
+		var co, b = extjsf.bind.apply(extjsf, arguments)
+		if(b) co = b.co(); else
+		{
+			//~: search for the component
+			co = extjsf.co.apply(extjsf, arguments)
+
+			//?: {no bind, no component}
+			if(!co) if(!ZeT.isf(h)) return; else throw ZeT.ass(
+			  'Not found component to assign the handler!')
+		}
+
+		if(ZeT.isf(h)) //?: {assign handler}
+		{
+			if(co)
+			{
+				ZeT.assertf(co.setHandler)
+				co.setHandler(h)
+			}
+
+			if(b) b.handler = h
+
+			return b || co
+		}
+		else
+		{
+			if(co && ZeT.isf(h = co.handler)) return h
+			if( b && ZeT.isf(h =  b.handler)) return h
+		}
+	},
+
+	/**
+	 * Wraps Ext.create() with ZeT.delay().
+	 */
+	delayCreate      : function(extClass, opts)
+	{
+		Ext.require(extClass)
+
+		return ZeT.delay(function()
+		{
+			return Ext.create(extClass, opts)
+		})
 	}
 })
 
@@ -1464,7 +1632,7 @@ extjsf.ActionBind = ZeT.defineClass(
 		var onsuccess = opts.success
 		opts.success = function(response)
 		{
-			if(extjsf.responseHandler.call(self, self.domain, response))
+			if(self.$handle_response(self.domain, response))
 				ZeT.isf(onsuccess) && onsuccess.apply(self, arguments)
 			else
 				ZeT.isf(opts.failure) && opts.failure.apply(self, arguments)
@@ -1564,6 +1732,77 @@ extjsf.ActionBind = ZeT.defineClass(
 			params.mode = this._post_mode
 
 		return params
+	},
+
+	/**
+	 * Handles the results of POST calls resulting the
+	 * 'http://extjs.jsf.java.net/response' XMLs.
+	 *
+	 * Returns true when the validation is correct.
+	 */
+	$handle_response : function(domain, res)
+	{
+		var xml = ZeT.assertn(res && res.responseXML,
+		  'Form [', this.name, '] got POST response not a XML!')
+
+		//~: process validated fields
+		var val = ZeTX.node(xml, 'validation')
+		var scr, fds = val && ZeTX.nodes(val, 'field')
+		if(fds) for(var i = 0;(i < fds.length);i++)
+		{
+			var target = ZeTX.attr(fds[i], 'target')
+			var field  = extjsf.co(target, domain)
+
+			if(field && field.isFormField)
+			{
+				var error = ZeTS.trim(ZeTX.text(
+				  ZeTX.node(fds[i], 'error')))
+				if(error.length) field.markInvalid(error)
+			}
+
+			scr = ZeTX.node(fds[i], 'script')
+			if(scr) try
+			{
+				ZeT.xeval(ZeTX.text(scr))
+			}
+			catch(e)
+			{
+				ZeT.log('Error in evaluation script for field [',
+				  target, ']: \n', ZeTX.text(scr))
+
+				throw e
+			}
+		}
+
+		//~: validation script
+		scr = val && ZeTX.node(val, 'script')
+		if(scr) try
+		{
+			ZeT.xeval(ZeTX.text(scr))
+		}
+		catch(e)
+		{
+			ZeT.log('Error in evaluation block script: \n',
+			  ZeTX.text(scr))
+
+			throw e
+		}
+
+		//~: process additional scripts
+		var scrs = ZeTX.nodes(ZeTX.node(xml, 'scripts'), 'script')
+		if(scrs) for(var si = 0;(si < scrs.length);si++) try
+		{
+			ZeT.xeval(ZeTX.text(scrs[si]))
+		}
+		catch(e)
+		{
+			ZeT.log('Error in evaluation response script: \n',
+			  ZeTX.text(scrs[si]))
+
+			throw e
+		}
+
+		return !val || (ZeTX.attr(val, 'success') == 'true')
 	}
 })
 
@@ -2424,283 +2663,6 @@ extjsf.StoreBind = ZeT.defineClass(
 
 ZeT.extend(extjsf,
 {
-	//=    Components Binding    =//
-
-	/**
-	 * Tries to get the Ext JS component from
-	 * the arguments given.
-	 *
-	 * If arg[0] is a string, it defines the
-	 * bind name, and optional arg[1] defines
-	 * the domain. (Defaults to ''.)
-	 *
-	 * Second variant, arg[0] is a bind.
-	 *
-	 * Third variant, arg[0] is an options
-	 * object with 'name' and optional 'domain',
-	 * or 'bind' fields.
-	 *
-	 * Last, arg[0] may be a Component instance,
-	 * or has 'component' field.
-	 */
-	co               : function()
-	{
-		var bind, arg = arguments[0]
-		if(!arg) return undefined
-
-		if(arg.isComponent === true) return arg
-		if(arg.component && arg.component.isComponent === true)
-			return arg.component
-
-		if(ZeT.iss(arg))
-		{
-			bind = extjsf.bind(arg, arguments[1])
-			return bind && bind.co()
-		}
-
-		if(arg.extjsfBind) return arg.co()
-
-		if(ZeT.iss(arg.name))
-		{
-			bind = extjsf.bind(arg.name, arg.domain)
-			return bind && bind.co()
-		}
-
-		if(arg.bind && arg.bind.extjsfBind)
-			return arg.bind.co()
-
-		return undefined
-	},
-
-	isbind           : function(bind)
-	{
-		return !!bind && (bind.extjsfBind === true)
-	},
-
-	asbind           : function(borc)
-	{
-		if(!borc) return undefined
-
-		//?: {is a string}
-		if(ZeT.iss(borc))
-		{
-			var domain = arguments[1]
-			ZeT.assert(ZeT.iss(domain))
-			return extjsf.bind(borc, domain)
-		}
-
-		//?: {is a component}
-		if(borc.isComponent && borc.extjsfBind)
-			borc = borc.extjsfBind
-
-		//?: {is a bind}
-		if(borc.extjsfBind === true)
-			return borc
-
-		return undefined
-	},
-
-	/**
-	 * Here the bind is not defined, but added as
-	 * an item to the bind defined by name (and
-	 * domain) pair. The bind argument may be
-	 * the bind string key registered in the same
-	 * domain.
-	 */
-	bindAddItem      : function()
-	{
-		var name = arguments[0];
-		var domn = arguments[1];
-		var addb = arguments[2];
-
-		if(!ZeT.iss(domn)) domn = '';
-
-		if(!addb)
-		{
-			addb = arguments[1];
-			domn = '';
-		}
-
-		var bind = this.bind(name, domn);
-		if(!bind || !ZeT.isf(bind.addItem))
-			return this;
-
-		if(ZeT.iss(addb))
-			addb = extjsf.bind(addb, domn);
-
-		if(addb) bind.addItem(addb)
-		return this;
-	},
-
-	tempDomain       : function(prefix)
-	{
-		if(!ZeT.iss(prefix)) prefix = ''
-		prefix = 'tmp:' + prefix
-
-		if(!this._temp_domain_id)
-			this._temp_domain_id = 0
-		prefix += this._temp_domain_id
-		this._temp_domain_id++
-		return prefix
-	},
-
-	globalDomain     : function(suffix)
-	{
-		return ZeTS.ises(suffix)?('Global'):('Global:' + suffix)
-	},
-
-	genViewId        : function()
-	{
-		if(ZeT.isu(extjsf._gen_view_id))
-			extjsf._gen_view_id = 0;
-		return 'extjsf_view_' + (new Date().getTime()) + '_' +
-		  extjsf._gen_view_id++;
-	},
-
-	/**
-	 * Assigns handler function of a Bind and
-	 * the component bound. The arguments one
-	 * of two variants:
-	 *
-	 *  · name, domain, [ handler ];
-	 *
-	 *  · bind or component, [ handler ].
-	 *
-	 * If handler function is not given, returns
-	 * the function assigned to bind-component.
-	 */
-	handler          : function()
-	{
-		//~: search for the bind
-		var b = extjsf.asbind.apply(ZeT, arguments)
-		if(!b) return undefined
-
-		//~: handler
-		var h = ZeT.isf(arguments[2])?(arguments[2]):
-		  ZeT.isf(arguments[1])?(arguments[1]):(null)
-
-		//?: {assign the handler}
-		if(b && ZeT.isf(h))
-		{
-			b.handler = ZeT.fbind(h, b)
-
-			if(b.co() && ZeT.isf(b.co().setHandler))
-				b.co().setHandler(b.handler)
-
-			return this
-		}
-
-		if(ZeT.isf(b.handler))
-			return b.handler
-
-		//?: {handler in the component}
-		if(b.co() && ZeT.isf(b.co().handler))
-			return b.handler = b.co().handler
-	},
-
-	/**
-	 * Same as handler(), but returns Ext.emptyFn
-	 * function if component has it not assigned.
-	 */
-	xhandler         : function()
-	{
-		return extjsf.handler.
-		  apply(extjsf, arguments) || Ext.emptyFn
-	},
-
-	handlerCaller    : function(name, domain)
-	{
-		return function()
-		{
-			var f = extjsf.handler(name, domain);
-			if(ZeT.isf(f)) f.apply(this, arguments)
-		}
-	},
-
-	delayCreate      : function(extClass, opts)
-	{
-		Ext.require(extClass)
-
-		return ZeT.delay(function()
-		{
-			return Ext.create(extClass, opts);
-		});
-	},
-
-	catchError       : function(e, that, args)
-	{
-		ZeT.log('Caught unhandled exception: ', e, that, args)
-	},
-
-	//=     Ajax Processing      =//
-
-	/**
-	 * Handles the results of POST calls resulting the
-	 * 'http://extjs.jsf.java.net/response' XMLs.
-	 *
-	 * Returns true when the validation is correct.
-	 */
-	responseHandler   : function(domain, response)
-	{
-		var xml = response && response.responseXML;
-		if(!xml) throw 'AJAX Response Handler got no result XML!';
-
-		//~: process validated fields
-		var val = ZeTX.node(xml, 'validation');
-		var scr, fds = val && ZeTX.nodes(val, 'field');
-		if(fds) for(var i = 0;(i < fds.length);i++)
-		{
-			var target = ZeTX.attr(fds[i], 'target');
-			var field  = extjsf.co(target, domain);
-
-			if(field && field.isFormField)
-			{
-				var error = ZeTS.trim(ZeTX.text(ZeTX.node(fds[i], 'error')))
-				if(error.length) field.markInvalid(error)
-			}
-
-			scr = ZeTX.node(fds[i], 'script');
-			if(scr) try
-			{
-				ZeT.xeval(ZeTX.text(scr))
-			}
-			catch(e)
-			{
-				ZeT.log('error in validation script for field [',
-				  target, ']: \n', ZeTX.text(scr)
-				)
-				throw e;
-			}
-		}
-
-		//~: validation script
-		scr = val && ZeTX.node(val, 'script');
-		if(scr) try
-		{
-			ZeT.xeval(ZeTX.text(scr))
-		}
-		catch(e)
-		{
-			ZeT.log('error in validation block script: \n', ZeTX.text(scr))
-			throw e;
-		}
-
-		//~: process additional scripts
-		var scrs = ZeTX.nodes(ZeTX.node(xml, 'scripts'), 'script');
-		if(scrs) for(var si = 0;(si < scrs.length);si++) try
-		{
-			ZeT.xeval(ZeTX.text(scrs[si]))
-		}
-		catch(e)
-		{
-			ZeT.log('error in response script: \n', ZeTX.text(scrs[si]))
-			throw e;
-		}
-
-		return !val || (ZeTX.attr(val, 'success') == 'true');
-	},
-
-
 	//=       CSS  Support       =//
 
 	/**
@@ -3084,7 +3046,7 @@ extjsf.support = ZeT.singleInstance('extjsf.support',
 	 */
 	moveGridSelected       : function(up, grid, delay_fn, fn)
 	{
-		var b = extjsf.asbind(grid), g = extjsf.co(grid);
+		var b = extjsf.bind(grid), g = extjsf.co(grid);
 
 		//~: selected items
 		var s = g.getSelectionModel().getSelection();
