@@ -2044,17 +2044,34 @@ ZeT.extend(ZeT,
 
 var ZeTX = ZeT.define('ZeT.X',
 {
-	nodes            : function(xml, name)
+	isnode           : function(node)
 	{
-		if(!xml) return xml
-		if(!ZeT.isf(xml.getElementsByTagName)) return undefined
-		return xml.getElementsByTagName(name) || []
+		return !!node && ZeT.isf(node.getElementsByTagName)
 	},
 
-	node             : function(xml, name)
+	/**
+	 * Returns direct children of the XML node given.
+	 */
+	nodes            : function(node, name)
 	{
-		if(!xml) return xml
-		var res = ZeTX.nodes(xml, name)
+		//?: {can't search}
+		if(!ZeTX.isnode(node)) return undefined
+
+		var res = [], nodes = node.getElementsByTagName(name)
+		if(nodes) for(var i = 0;(i < nodes.length);i++)
+			if(nodes[i].parentNode == node)
+				res.push(nodes[i])
+
+		return res
+	},
+
+	/**
+	 * Returns first direct child of the XML node given.
+	 */
+	node             : function(node, name)
+	{
+		if(!node) return ubdefined
+		var res = ZeTX.nodes(node, name)
 		return (res && res.length)?(res[0]):(null)
 	},
 

@@ -273,6 +273,11 @@ ZeT.extend(extjsf,
 		return !!co && (co.isComponent === true)
 	},
 
+	isbind           : function(bind)
+	{
+		return !!bind && (bind.extjsfBind === true)
+	},
+
 	/**
 	 * Tries to guess Bind instance from the arguments.
 	 * Supports name + domain pair, direct Bind instance,
@@ -302,11 +307,19 @@ ZeT.extend(extjsf,
 		if(extjsf.isco(a0))
 			if(extjsf.isbind(a0.extjsfBind))
 				return a0.extjsfBind
-	},
 
-	isbind           : function(bind)
-	{
-		return !!bind && (bind.extjsfBind === true)
+		//?: {is options with name: and domain: )}
+		if(ZeT.isox(a0) && !ZeT.ises(a0.name))
+		{
+			if(ZeT.iss(a0.domain))
+			{
+				a1 = extjsf.domain(a0.domain)
+				if(!a1) return
+			}
+
+			ZeT.assert(extjsf.isdomain(a1))
+			return a1.bind(a0.name)
+		}
 	},
 
 	/**
@@ -326,7 +339,7 @@ ZeT.extend(extjsf,
 			return a0
 
 		//?: {refers a Component}
-		if(extjsf.isco(a0.component))
+		if(ZeT.isox(a0) && extjsf.isco(a0.component))
 			return a0.component
 
 		//~: access the bind
@@ -395,6 +408,140 @@ ZeT.extend(extjsf,
 		{
 			return Ext.create(extClass, opts)
 		})
+	},
+
+	/**
+	 * Takes float or integer number of 'ex' units
+	 * and returns the float or integer number of
+	 * pixels they take. Optional second argument
+	 * tells the number of pixels to add.
+	 */
+	ex               : function(v, vpx)
+	{
+		return extjsf.$css_v('ex', v, vpx)
+	},
+
+	/**
+	 * Takes float or integer number of 'pt' units
+	 * (points), then works as ex().
+	 */
+	pt               : function(v, vpx)
+	{
+		return extjsf.$css_v('pt', v, vpx)
+	},
+
+	/**
+	 * Returns string that encodes 2, 3, or 4
+	 * numbers into margin-padding code that
+	 * Ext JS supports. (It's the same as
+	 * in CSS, but in pizels without 'px'.)
+	 *
+	 * All four numbers stand for: top, right,
+	 * bottom, left. Three numbers (x, y, z):
+	 * x-top, y-right, z-bottom, y-left. And
+	 * two numbers (x, y): x-top, y-right,
+	 * x-bottom, y-left.
+	 *
+	 * Samples. pts(1, 2, 3, 4) is '1 2 3 4'.
+	 * pts(1, 2, 3) is '1 2 3 2'. pts(1, 2)
+	 * is '1 2 1 2'.
+	 */
+	pts              : function()
+	{
+		return extjsf.$css_vs('pt', arguments)
+	},
+
+	$css_v           : function(unit, v, vpx)
+	{
+		if((v == 0) && !vpx) return 0
+
+		ZeT.assert(ZeT.isn(v))
+		ZeT.assert(ZeT.isx(vpx) || ZeT.isn(vpx))
+
+		var r = v * extjsf.$css_size(unit) * 0.001
+		if(vpx) r += vpx
+
+		//?: {need integer result}
+		if(ZeT.isi(v) && (ZeT.isx(vpx) || ZeT.isi(vpx)))
+			r = Math.round(r)
+
+		return r
+	},
+
+	$css_vs          : ZeT.scope(function(/* unit, a */)
+	{
+		function sv(s, v)
+		{
+			if(v == 0) return 0
+			ZeT.assert(ZeT.isn(v))
+			var r = v * s * 0.001
+			return ZeT.isi(v)?Math.round(r):(r)
+		}
+
+		return function(unit, a)
+		{
+			var s = extjsf.$css_size(unit)
+
+			switch(a.length)
+			{
+				case 4: return ZeTS.catsep(' ',
+				  sv(s, a[0]), sv(s, a[1]),
+				  sv(s, a[2]), sv(s, a[3])
+				)
+
+				case 3:
+				{
+					var sv1 = sv(s, a[1])
+
+					return ZeTS.catsep(' ',
+					  sv(s, a[0]), sv1,
+					  sv(s, a[2]), sv1
+					)
+				}
+
+				case 2:
+				{
+					var sv0 = sv(s, a[0])
+					var sv1 = sv(s, a[1])
+
+					return ZeTS.catsep(' ', sv0, sv1, sv0, sv1)
+				}
+			}
+		}
+	}),
+
+	/**
+	 * Returns float value with size in pixels
+	 * of 1000 given units named as in CSS.
+	 */
+	$css_size        : function(unit)
+	{
+		//~: cache map
+		var m = extjsf._css_size
+		if(!m) extjsf._css_size = m = {}
+
+		//~: lookup in the cache
+		var v; if(v = m[unit]) return v
+
+		//~: create invisible node
+		var d = document.createElement('div')
+		ZeT.extend(d.style, { visibility: 'hidden',
+		  width: '1000' + unit, height: '1px'
+		})
+
+		ZeT.assertn(document.body,
+		  'Document is not yet ready to find CSS size!')
+
+		//~: append, get the size, remove
+		document.body.appendChild(d)
+		m[unit] = v = d.offsetWidth
+		document.body.removeChild(d)
+
+		//~: inspect the result
+		ZeT.assert(ZeT.isn(v) && (v > 0),
+		  'Can\'t find pixel size of CSS unit [', unit, ']!')
+
+		return v
 	}
 })
 
@@ -1506,6 +1653,9 @@ extjsf.RootBind = ZeT.defineClass(
 	 */
 	domainOwner      : function(isowner)
 	{
+		if(!arguments.length)
+			return (this._domain_owner !== false)
+
 		ZeT.assert(ZeT.isb(isowner))
 		ZeT.assert(ZeT.iss(this.domain))
 		this._domain_owner = isowner
@@ -1565,6 +1715,35 @@ extjsf.ActionBind = ZeT.defineClass(
 		this.handler = ZeT.fbind(this.$handler, this)
 	},
 
+	/**
+	 * Register the callback on successfull submit.
+	 * Callback is invoked as:
+	 *
+	 *   cb.call(bind, submit opts, data, [action, form])
+	 *
+	 * Data is object returned from the server (XML
+	 * document for body-post response format.)
+	 */
+	success          : function(cb)
+	{
+		if(!ZeT.isf(cb))
+			return this._on_success
+		this._on_success = cb
+		return this
+	},
+
+	/**
+	 * Register the callback on failed submit,
+	 * or the validation failure.
+	 */
+	failure          : function(cb)
+	{
+		if(!ZeT.isf(cb))
+			return this._on_failure
+		this._on_failure = cb
+		return this
+	},
+
 	postMode         : function(mode)
 	{
 		this._post_mode = ZeT.asserts(mode)
@@ -1617,8 +1796,6 @@ extjsf.ActionBind = ZeT.defineClass(
 	 */
 	$handler         : function(opts)
 	{
-		var self = this
-
 		//~: copy the options
 		opts = ZeT.extend({}, opts)
 
@@ -1629,13 +1806,23 @@ extjsf.ActionBind = ZeT.defineClass(
 		opts.params = this.$post_params(opts.params, true, true)
 
 		//~: success callback
-		var onsuccess = opts.success
+		var self = this, ons = opts.success, onf = opts.failure
 		opts.success = function(response)
 		{
-			if(self.$handle_response(self.domain, response))
-				ZeT.isf(onsuccess) && onsuccess.apply(self, arguments)
+			opts.success = ons
+
+			//?: {response validation succeeded}
+			if(self.$handle_response(response))
+				self.$call_success(opts, response)
 			else
-				ZeT.isf(opts.failure) && opts.failure.apply(self, arguments)
+				self.$call_failure(opts, response)
+		}
+
+		//~: failure callback
+		opts.failure = function(response)
+		{
+			opts.failure = onf
+			self.$call_failure(opts, response)
 		}
 
 		//!: issue the request
@@ -1687,7 +1874,7 @@ extjsf.ActionBind = ZeT.defineClass(
 		this.$form_node().select('input').each(function(item)
 		{
 			var n = item.getAttribute('name'); if(!n) return
-			var v = item.getAttribute('value') || '';
+			var v = item.getAttribute('value') || ''
 
 			//?: {this field is a submit button} skip it
 			if(item.getAttribute('type') == 'submit')
@@ -1734,75 +1921,121 @@ extjsf.ActionBind = ZeT.defineClass(
 		return params
 	},
 
+	$response_xml    : function(x)
+	{
+		if(!x) return undefined
+
+		if(ZeTX.isnode(x))
+			return x
+
+		if(ZeTX.isnode(x.responseXML))
+			return x.responseXML
+	},
+
 	/**
 	 * Handles the results of POST calls resulting the
 	 * 'http://extjs.jsf.java.net/response' XMLs.
 	 *
 	 * Returns true when the validation is correct.
 	 */
-	$handle_response : function(domain, res)
+	$handle_response : function(ajaxres)
 	{
-		var xml = ZeT.assertn(res && res.responseXML,
+		//~: get the response document
+		var xml = ZeT.assertn(this.$response_xml(ajaxres),
 		  'Form [', this.name, '] got POST response not a XML!')
 
+		//~: response root node
+		var root = ZeT.assertn(ZeTX.node(xml, 'response'),
+		  'Form [', this.name, '] got POST response XML ',
+		  'having no <response> root tag!')
+
+		//HINT: global scripts are not executed in the case
+		//  of the validation failure, or absence of this block!
+
+		//~: validation root
+		var vnode = ZeT.assertn(ZeTX.node(root, 'validation'),
+		  'Form [', this.name, '] got POST response XML ',
+		  'having no <validation>  tag!')
+
 		//~: process validated fields
-		var val = ZeTX.node(xml, 'validation')
-		var scr, fds = val && ZeTX.nodes(val, 'field')
-		if(fds) for(var i = 0;(i < fds.length);i++)
+		var script, self = this
+		var fields = ZeTX.nodes(vnode, 'field')
+		ZeT.each(fields, function(fnode)
 		{
-			var target = ZeTX.attr(fds[i], 'target')
-			var field  = extjsf.co(target, domain)
+			var target = ZeTX.attr(fnode, 'target')
+			var field  = !ZeT.ises(target) &&
+			  extjsf.co(target, self.domain)
+			var error  = ZeTS.trim(ZeTX.text(
+			  ZeTX.node(fnode, 'error')))
 
-			if(field && field.isFormField)
-			{
-				var error = ZeTS.trim(ZeTX.text(
-				  ZeTX.node(fds[i], 'error')))
-				if(error.length) field.markInvalid(error)
-			}
+			//?: {field component is found}
+			if(field && field.isFormField && error.length)
+				field.markInvalid(error)
 
-			scr = ZeTX.node(fds[i], 'script')
-			if(scr) try
+			//~: evaluate the field script
+			self.$call_scripts(fnode)
+		})
+
+		//~: status of the validation
+		var success = ZeTX.attr(vnode, 'success')
+
+		//?: {validation success}
+		if('true' == ZeTS.trim(success))
+		{
+			//~: evaluate global scripts
+			this.$call_scripts(root)
+			return true
+		}
+
+		//~: failed, evaluate validation section script
+		this.$call_scripts(vnode)
+		return false
+	},
+
+	$call_success    : function(opts)
+	{
+		if(ZeT.isf(this._on_success))
+			this._on_success.apply(this, arguments)
+
+		if(ZeT.isf(opts.success))
+			opts.success.apply(this, arguments)
+	},
+
+	$call_failure    : function(opts)
+	{
+		if(ZeT.isf(this._on_failure))
+			this._on_failure.apply(this, arguments)
+
+		if(ZeT.isf(opts.failure))
+			opts.failure.apply(this, arguments)
+	},
+
+	/**
+	 * Private. Takes all script tags in the XML
+	 * document and evaluates them.
+	 */
+	$call_scripts    : function(xml)
+	{
+		//~: find each <script> node
+		var self = this, scripts = ZeTX.nodes(xml, 'script')
+
+		//~: and invoke them
+		ZeT.each(scripts, function(script)
+		{
+			script = ZeTX.text(script)
+
+			if(!ZeT.ises(script)) try
 			{
-				ZeT.xeval(ZeTX.text(scr))
+				ZeT.xeval(script)
 			}
 			catch(e)
 			{
-				ZeT.log('Error in evaluation script for field [',
-				  target, ']: \n', ZeTX.text(scr))
+				ZeT.log('Error evaluating submit response of [',
+				  self.name, '] script is: \n', script, '\n',  e)
 
 				throw e
 			}
-		}
-
-		//~: validation script
-		scr = val && ZeTX.node(val, 'script')
-		if(scr) try
-		{
-			ZeT.xeval(ZeTX.text(scr))
-		}
-		catch(e)
-		{
-			ZeT.log('Error in evaluation block script: \n',
-			  ZeTX.text(scr))
-
-			throw e
-		}
-
-		//~: process additional scripts
-		var scrs = ZeTX.nodes(ZeTX.node(xml, 'scripts'), 'script')
-		if(scrs) for(var si = 0;(si < scrs.length);si++) try
-		{
-			ZeT.xeval(ZeTX.text(scrs[si]))
-		}
-		catch(e)
-		{
-			ZeT.log('Error in evaluation response script: \n',
-			  ZeTX.text(scrs[si]))
-
-			throw e
-		}
-
-		return !val || (ZeTX.attr(val, 'success') == 'true')
+		})
 	}
 })
 
@@ -1857,14 +2090,14 @@ extjsf.FormBind = ZeT.defineClass(
 	 *
 	 * The options may contain these fields:
 	 *
-	 *  · success   alternative callback on form
-	 *    submit request. See callback();
+	 * · success   alternative callback on form
+	 *   submit request. See callback();
 	 *
-	 *  · failure   alternative callback on form
-	 *    submit failure. See failure();
+	 * · failure   alternative callback on form
+	 *   submit failure. See failure();
 	 *
-	 *  · params    additional parameters of the
-	 *    form post request.
+	 * · params    additional parameters of the
+	 *   form post request.
 	 *
 	 * Returns false when form is invalid, and
 	 * no post request was issued.
@@ -1895,35 +2128,6 @@ extjsf.FormBind = ZeT.defineClass(
 		  clientValidation: false //<-- our validation instead
 		})
 
-		return this
-	},
-
-	/**
-	 * Register the callback on successfull form submit.
-	 * Callback is invoked as:
-	 *
-	 *   cb.call(bind, submit opts, data, action, form)
-	 *
-	 * Data is object returned from the server (XML
-	 * document for body-post response format.)
-	 */
-	success          : function(cb)
-	{
-		if(!ZeT.isf(cb))
-			return this._on_success
-		this._on_success = cb
-		return this
-	},
-
-	/**
-	 * Register the callback on failed form submit,
-	 * of the validation failure.
-	 */
-	failure          : function(cb)
-	{
-		if(!ZeT.isf(cb))
-			return this._on_failure
-		this._on_failure = cb
 		return this
 	},
 
@@ -2016,71 +2220,15 @@ extjsf.FormBind = ZeT.defineClass(
 		})
 
 		//~: success status in the response attribute
-		if(xml = ZeT.get(form, 'errorReader', 'rawData')) try
-		{
-			var root   = ZeTX.node(xml, 'validation')
-			var status = root && ZeTX.attr(root, 'success')
-			if(status) success = ('true' === status)
-		}
-		catch(e)
-		{
-			success = false
-		}
+		if(xml = ZeT.get(form, 'errorReader', 'rawData'))
+			//?: {got <response> of the document}
+			if(ZeTX.node(xml, 'response'))
+				success = this.$handle_response(xml)
 
 		if(success)
 			this.$call_success(opts, xml, action, form)
 		else
 			this.$call_failure(opts, xml, action, form)
-	},
-
-	$call_success    : function(opts, xml)
-	{
-		//~: evaluate the scripts
-		this.$call_scripts(xml)
-
-		if(ZeT.isf(this._on_success))
-			this._on_success.apply(this, arguments)
-
-		if(ZeT.isf(opts.success))
-			opts.success.apply(this, arguments)
-	},
-
-	$call_failure    : function(opts, xml)
-	{
-		//~: evaluate the scripts
-		this.$call_scripts(xml)
-
-		if(ZeT.isf(this._on_failure))
-			this._on_failure.apply(this, arguments)
-
-		if(ZeT.isf(opts.failure))
-			opts.failure.apply(this, arguments)
-	},
-
-	/**
-	 * Private. Takes all script tags in the XML
-	 * document and evaluates them.
-	 */
-	$call_scripts    : function(xml)
-	{
-		var scripts = ZeTX.nodes(xml, 'script')
-		if(!scripts || !scripts.length) return
-
-		var self = this
-		ZeT.each(scripts, function(script)
-		{
-			try
-			{
-				ZeT.xeval(script)
-			}
-			catch(e)
-			{
-				ZeT.log('Error evaluating script after form [',
-				  self.name, '] submit: \n', script, '\n',  e)
-
-				throw e
-			}
-		})
 	}
 })
 
@@ -2475,10 +2623,13 @@ extjsf.LoadActionBind = ZeT.defineClass(
 			{ method = 'GET'; delete params.method }
 
 		//!: load the window
-		new extjsf.WinmainLoader(this.domain).
-		  form(this.$form_node()).button(true).
-		  addParams(params).setMethod(method).
-		  load()
+		new extjsf.LoadCo({
+
+		  name: 'window', domain: this.domain,
+		  form: this.$form_node(), button: true,
+		  params: params, method: method
+
+		}).load()
 	}
 })
 
@@ -2659,378 +2810,452 @@ extjsf.StoreBind = ZeT.defineClass(
 })
 
 
-// +----: Components to Refactor :------------------------------->
+// +----: Clear Component :-------------------------------------+
 
-ZeT.extend(extjsf,
+/**
+ * Strategy to clear a Component. Initialization method
+ * takes leading arguments of extjsf.co() or bind().
+ * The last argument is treated as options.
+ */
+extjsf.ClearCo = ZeT.defineClass('extjsf.ClearCo',
 {
-	//=       CSS  Support       =//
+	className        : 'extjsf.ClearCo',
 
-	/**
-	 * Returns the integer number of pixels in
-	 * the given (float) number of CSS ex-size.
-	 *
-	 * Argument 'vpx' if defined just adds the
-	 * given number of plain pixels to the result.
-	 */
-	ex               : function(v, vpx)
+	init             : function()
 	{
-		return this._css_sz(10, 'ex', v) + (ZeT.isn(vpx)?(vpx):(0));
-	},
+		//~: see the bind
+		this.bind = extjsf.bind.apply(extjsf, arguments)
 
-	dex              : function()
-	{
-		return ZeT.delay(ZeT.fbinda(this.ex, this, arguments));
-	},
+		//~: see the component
+		if(!this.bind)
+			this.co = extjsf.bind.co(extjsf, arguments)
 
-	exs              : function(ispx)
-	{
-		var s = '', a = arguments;
-		var x = (ispx === true);
-
-		if(ZeT.isb(ispx))
-			(a = ZeT.a(a)).shift();
-
-		for(var i = 0;(i < a.length);i++)
-		{
-			if(s.length) s += ' ';
-			s += this.ex(a[i]);
-			if(x) s += 'px';
-		}
-		return s;
-	},
-
-	dexs             : function()
-	{
-		return ZeT.delay(ZeT.fbinda(this.exs, this, arguments));
+		//~: options
+		var opts = arguments[arguments.length - 1]
+		this.opts = ZeT.extend({}, ZeT.isox(opts)?(opts):(null))
 	},
 
 	/**
-	 * Returns the integer number of pixels in
-	 * the given (float) number of CSS pt-size.
-	 *
-	 * Argument 'vpx' if defined just adds the
-	 * given number of plain pixels to the result.
+	 * Runs the strategy.
 	 */
-	pt               : function(v, vpx)
+	run              : function()
 	{
-		return this._css_sz(100, 'pt', v) + (ZeT.isn(vpx)?(vpx):(0));
+		ZeT.assertn(this.co(), 'Clear Component strategy',
+		  ' could not find the component!')
+
+		//~: remove child items
+		this.$rem_items()
+
+		//~: remove the listeners
+		this.$rem_listeners()
+
+		//~: remove the docked items
+		this.$rem_docked()
 	},
 
-	dpt              : function()
+	co               : function()
 	{
-		return ZeT.delay(ZeT.fbinda(this.pt, this, arguments));
+		return this.bind?(this.bind.co()):(this.co)
 	},
 
-	pts              : function(ispx)
+	$rem_items       : function()
 	{
-		var s = '', a = arguments;
-		var x = (ispx === true);
-
-		if(ZeT.isb(ispx))
-			(a = ZeT.a(a)).shift();
-
-		for(var i = 0;(i < a.length);i++)
-		{
-			if(s.length) s += ' ';
-			s += this.pt(a[i]);
-			if(x) s += 'px';
-		}
-		return s;
+		this.co().removeAll()
 	},
 
-	dpts             : function()
+	$rem_listeners   : function()
 	{
-		return ZeT.delay(ZeT.fbinda(this.pts, this, arguments));
+		if(this.opts.notListeners)
+			return
+
+		this.co().clearListeners()
 	},
 
-	inch             : function(v, vpx)
+	$rem_docked      : function()
 	{
-		return this._css_sz(2, 'in', v) + (ZeT.isn(vpx)?(vpx):(0));
-	},
+		var d = this.co().getDockedItems('component[dock]')
 
-	_css_sz          : function(width, units, v)
-	{
-		var key = '__css_sz_' + width + 'units';
-		var wds = this[key];
-
-		if(wds) return Math.round(wds * v / width);
-
-		var div = document.createElement('div');
-		div.style.visibility = 'hidden';
-		div.style.width  = '' + width + units;
-		div.style.height = '1px';
-
-		document.body.appendChild(div)
-		wds = 1.0; this[key] = wds = wds * div.offsetWidth;
-
-		if(wds == 0.0) throw 'Can not define ' +
-		  'DOM element offset width at this call time!';
-
-		return Math.round(wds * v / width);
-	},
-
-	_css_szs         : function(css_sz, args, ispx)
-	{
-		var s = ''; for(var i = 0;(i < args.length);i++)
-		{
-			if(s.length) s += ' ';
-			s += css_sz(args[i]);
-			if(ispx) s += 'px';
-		}
-		return s;
+		//~: removing docked item created from binds
+		for(var i = 0;(i < d.length);i++)
+			if(extjsf.bind(d[i]))
+				this.co().removeDocked(d[i])
 	}
-
 })
 
-extjsf.Bind.extend(
+// +----: Window Loader :---------------------------------------+
+
+/**
+ * Strategy to load content of a Component (a Window,
+ * Panel, or else) from a call to JSF. Implementation
+ * wraps Ext.ComponentLoader strategy.
+ *
+ * The options are:
+ *
+ * ·   ...   see extjsf.bind() or co();
+ *
+ * · domain  required name of ExtJSF domain;
+ *
+ * · url     address to send the request, not required
+ *           when form node is specified;
+ *
+ * · form    string with ID of DOM form node, also used
+ *           to take the request address. All fields
+ *           nested in the form are sent;
+ *
+ * · params  additional parameters to send;
+ *
+ * · method  default method of HTTP request. Defaults
+ *           to POST when form is set, of GET otherwise;
+ *
+ * · button  support for JSF command button when issuing
+ *           request. If value is true, takes eah button
+ *           (assumed only one). Else, must be a string
+ *           with the name of the button;
+ *
+ * · clear   tells to clean the window before loading,
+ *           by default is true;
+ *
+ * · to      timeout of the request in milliseconds.
+ *           Defaults to 30 minutes;
+ *
+ * · ajax    ajax options supported by Ext.ComponentLoader.
+ */
+extjsf.LoadCo = ZeT.defineClass('extjsf.LoadCo',
 {
-	clearComponent   : function(opts)
+	init             : function(opts)
 	{
-		var c = this.co(); if(!c) return this;
-
-		//~: remove the children
-		c.removeAll()
-
-		//~: clear all the listeners
-		if(!opts || !opts.notListeners)
-			c.clearListeners()
-
-		//~: remove docked panels
-		var d = c.getDockedItems('component[dock]');
-		for(var i = 0;(i < d.length);i++)
-		{
-			//ZeT.log('remove dock ', d[i].id)
-			if(d[i].extjsfBind) c.removeDocked(d[i])
-		}
-
-		return this;
+		this.opts = ZeT.extend({}, opts)
 	},
 
-	toggleReadWrite  : function(isread)
+	/**
+	 * Component to load to. Also supports the default
+	 * window of a Domain named 'window'.
+	 */
+	co               : function()
 	{
-		ZeT.assertn(this.co())
-		var collect = []; ZeT.each(this.co().query(), function(f)
+		//~: lookup the bind
+		var b = extjsf.bind(this.opts)
+		if(b) return b.co()
+
+		//~: lookup the component
+		var co = extjsf.co(this.opts)
+		if(co) return co
+
+		//~: take window in the domain
+		return ZeT.assertn(
+		  extjsf.bind('window', this.opts.domain),
+		  'Can not find window in the domain: [',
+		  this.opts.domain, ']!')
+	},
+
+	bind             : function()
+	{
+		var b = extjsf.bind(this.co())
+		return (b)?(b):extjsf.bind(this.opts)
+	},
+
+	load             : function()
+	{
+		var loader = this.$create()
+
+		//~: clear before loading
+		this.$clear()
+
+		//~: prepare before the loading
+		this.$prepare()
+
+		//!: reload content
+		Ext.create('Ext.ComponentLoader', loader)
+	},
+
+	$create          : function()
+	{
+		return {
+		  target: this.co(), url: this.$url(),
+		  params: this.$request_params(),
+		  ajaxOptions: this.$ajax_opts(),
+		  autoLoad: true, scripts: true
+		}
+	},
+
+	$form            : function()
+	{
+		return !ZeT.ises(this.opts.form)?
+		  Ext.get(this.opts.form):(this.opts.form)
+	},
+
+	$url             : function()
+	{
+		//?: {has option}
+		if(!ZeT.ises(this.opts.url))
+			return this.opts.url
+
+		//~: require a form
+		var form = ZeT.assertn(this.$form(),
+		  'Window Loader has neither URL option, nor form!')
+
+		//~: take action attribute
+		return ZeT.asserts(form.getAttribute('action'),
+		  'Form [', form, '] has no action attribute!')
+	},
+
+	$method          : function()
+	{
+		return !ZeT.ises(this.opts.method)?(this.opts.method):
+	     this.$form()?('POST'):('GET')
+	},
+
+	$clear           : function()
+	{
+		//~: clear the component
+		if(this.$is_clear_co())
+			this.$clear_co()
+
+		//~: clear the domain
+		if(this.$is_clear_domain())
+			this.$clear_domain()
+	},
+
+	$is_clear_co     : function()
+	{
+		return (this.opts.clear !== false)
+	},
+
+	$clear_co        : function()
+	{
+		new extjsf.ClearCo(this.co(),
+		  { notListeners: true }).run()
+	},
+
+	$is_clear_domain : function()
+	{
+		var b = this.bind()
+
+		return this.$is_clear_co() && !!b &&
+		  !ZeT.ises(b.domain) && !ZeT.ises(b.name) &&
+		  ZeT.isf(b.domainOwner) && b.domainOwner()
+	},
+
+	$clear_domain    : function()
+	{
+		var b = this.bind(), d = b.domain, n = b.name
+
+		//~: destroy the domain
+		extjsf.domain(d).destroy({ except: [ b ]})
+
+		//~: put the component back
+		extjsf.domain(d).bind(n, b)
+	},
+
+	$prepare         : function()
+	{
+		var co = this.co()
+
+		//~: set temporary title
+		if(ZeT.isf(co.setTitle) && !ZeT.ises(co.title))
+			co.setTitle('Выполняется запрос...')
+	},
+
+	$request_params  : function()
+	{
+		//~: copy parameters from the options
+		var ps = ZeT.extend({}, this.opts.params)
+
+		//~: add form parameters
+		if(this.$form())
+			this.$form_params(ps)
+
+		//~: resolve delayed parameters
+		ZeT.undelay(ps)
+
+		//~: domain parameter
+		var b = this.bind()
+		if(!ZeT.iss(ps.domain) && b.domain)
+			ps.domain = b.domain
+
+		return ps
+	},
+
+	$form_params     : function(params)
+	{
+		var button = this.opts.button
+
+		this.$form().select('input').each(function(item)
+		{
+			var n = item.getAttribute('name'); if(!n) return
+			var v = item.getAttribute('value') || ''
+
+			//?: {this field is a submit button} skip it
+			if(item.getAttribute('type') == 'submit')
+				if((button !== true) && (button !== n))
+					return
+
+			params[n] = v
+		})
+	},
+
+	$ajax_opts       : function()
+	{
+		var ao = ZeT.extend({}, this.opts.ajax)
+
+		//=: HTTP method
+		ao.method = this.$method()
+
+		//=: timeout
+		if(ZeT.isn(this.opts.to))
+			ao.timeout = opts.to
+
+		return ao
+	}
+})
+
+
+// +----: Utilities :-------------------------------------------+
+
+extjsf.u = ZeT.define('extjsf.utilities',
+{
+	/**
+	 * Makes fields marked with extjsfReadWrite
+	 * option (equal true) to be read-only or not.
+	 *
+	 * Takes leading arguments of extjsf.co() is a
+	 * root container of the fields.
+	 *
+	 * The last argument is boolean telling whether
+	 * to turn the fields to read-only (when true)
+	 * of editable states. Note that when not a field
+	 * is marked, it is set disabled instead.
+	 *
+	 * Returns the affected components.
+	 */
+	toggleReadWrite  : function(/* ... is read-only */)
+	{
+		var co = extjsf.co.apply(extjsf, arguments)
+		var ro = !!arguments[arguments.length - 1]
+
+		var fs = []; ZeT.each(co.query(), function(f)
 		{
 			if(f.extjsfReadWrite !== true) return
 
 			//?: {read-write}
 			if(ZeT.isf(f.setReadOnly))
-				f.setReadOnly(isread)
+				f.setReadOnly(ro)
 			else if(ZeT.isf(f.setDisabled))
-				f.setDisabled(isread)
+				f.setDisabled(ro)
 			else
 				return
 
-			collect.push(f)
+			fs.push(f)
 		})
 
-		return collect
+		return fs
 	},
 
-	toggleBlock      : function(block)
+	/**
+	 * Components that are marked with extjsfBlock
+	 * string option are displayed by this call.
+	 * All components that are marked with else
+	 * block code are hidden.
+	 *
+	 * Takes leading arguments of extjsf.co() is a
+	 * root container of the components. The last
+	 * argument names the block.
+	 */
+	toggleBlock      : function(/* ... block */)
 	{
-		ZeT.asserts(block)
+		var co = extjsf.co.apply(extjsf, arguments)
+		var bl = ZeT.asserts(arguments[arguments.length - 1])
 
-		//~: access the component' children
-		var c = this.co()
-		if(c) c.items.each(function(c)
+		var bs = []; ZeT.each(co.query(), function(c)
 		{
 			if(!ZeT.iss(c.extjsfBlock)) return
-			c.setVisible(c.extjsfBlock == block)
+			c.setVisible(c.extjsfBlock == bl)
+			bs.push(c)
 		})
 
-		//?: {has no component yet}
-		if(!c) ZeT.each(this._items, function(i)
-		{
-			ZeT.assert(i.extjsfBind === true)
-			if(!ZeT.iss(i._props.extjsfBlock)) return
-			i._props.hidden = (i._props.extjsfBlock != block)
-		})
-	}
-})
-
-
-extjsf.WinmainLoader = ZeT.defineClass('extjsf.WinmainLoader',
-{
-	init             : function(domain)
-	{
-		if(!ZeT.iss(domain)) throw 'Can not create ' +
-		  'window loader as no ExtJSF domain is defined!';
-
-		this._domain = domain;
-		this._params = {};
+		return bs
 	},
 
-	url              : function(url)
+	/**
+	 * Returns Columns of a Grid. Optional last argument
+	 * tells (when true) whether to return only visible
+	 * (by default is false, i.e., returns all).
+	 *
+	 * Leading arguments are of extjsf.co(), the grid.
+	 */
+	gridColumns      : function(/* ... visible only */)
 	{
-		if(!ZeT.iss(url)) return this;
-		this._url = url;
-		return this;
+		var grid = extjsf.co.apply(extjsf, arguments)
+		var viso = arguments[arguments.length - 1]
+		if(!ZeT.isb(viso)) viso = false
+
+		return (viso)?(grid.headerCt.getVisibleGridColumns()):
+		  (grid.headerCt.getGridColumns())
 	},
 
-	params           : function(params)
+	/**
+	 * Returns index of a grid column by it's daatIndex
+	 * configuration property.
+	 *
+	 * Leading arguments are of extjsf.co(), the grid.
+	 */
+	columnIByDataInd : function(/* ... dataIndex */)
 	{
-		if(!params) return this._params;
-		this._params = params;
-		return this;
+		var grid = extjsf.co.apply(extjsf, arguments)
+		var dati = arguments[arguments.length - 1]
+		var cols = ZeT.isa(grid)?(grid):
+		  extjsf.u.gridColumns(grid)
+
+		for(var i = 0;(i < cols.length);i++)
+			if(cols[i].dataIndex === dati)
+				return i
 	},
 
-	addParams        : function(params)
+	/**
+	 * Same as columnIByDataInd(), but returns
+	 * a Column component.
+	 */
+	columnByDataInd  : function(/* ... dataIndex */)
 	{
-		ZeT.extend(this._params, params)
-		return this;
+		var grid = extjsf.co.apply(extjsf, arguments)
+		var dati = arguments[arguments.length - 1]
+		var cols = ZeT.isa(grid)?(grid):
+		  extjsf.u.gridColumns(grid)
+
+		for(var i = 0;(i < cols.length);i++)
+			if(cols[i].dataIndex === dati)
+				return cols[i]
 	},
 
-	form             : function(form)
+	/**
+	 * Same as columnByDataInd(), but searches by
+	 * 'xtype' configuration property of the columns.
+	 * Returns the first column matching.
+	 */
+	columnByType     : function(/* ... xtype */)
 	{
-		if(!form) return this._form;
-		this._form = form;
-		return this;
+		var grid = extjsf.co.apply(extjsf, arguments)
+		var type = arguments[arguments.length - 1]
+		var cols = ZeT.isa(grid)?(grid):
+		  extjsf.u.gridColumns(grid)
+
+		for(var i = 0;(i < cols.length);i++)
+			if(cols[i].xtype === type)
+				return cols[i]
 	},
 
-	button           : function(button)
+	/**
+	 * Invalidates 'index' property of a grid row model
+	 * (record) that stores the internal index of the row.
+	 * Used for grids that display row index column.
+	 */
+	reindexGrid     : function(/* grid | store | array */)
 	{
-		if(!button) return this._button;
-		this._button = button;
-		return this;
-	},
+		var grid = extjsf.co.apply(extjsf, arguments)
+		if(!grid) grid = arguments[0]
 
-	setMethod        : function(m)
-	{
-		this._method = m;
-		return this;
-	},
-
-	load             : function()
-	{
-		//~: find the main window
-		var window = extjsf.bind('window', this._domain);
-		if(!window) throw 'Can not find window in ' +
-		  'the domain: [' + this._domain + ']!';
-
-		//~: get the support form
-		var supform = this._form && Ext.get(this._form);
-
-		//?: {has no specific url} take support form action
-		if(!this._url && supform)
-			this._url = supform.getAttribute('action');
-
-		//?: {has no action url}
-		if(!this._url || !this._url.length)
-			throw 'Can not reload window with undefined URL!';
-
-		//~: collect the parameters
-		var prms = ZeT.extend({}, this._params);
-		if(supform) this._form_params(supform, prms, this._button)
-
-		//~: resolve delayed parameters
-		ZeT.undelay(prms)
-
-		//~: cleanup the domain
-		if(extjsf.domain(this._domain))
-			extjsf.domain(this._domain).destroy({ except: [ window ]})
-
-		//~: create the domain with this window
-		extjsf.domain(this._domain).bind('window', window)
-
-		//~: clear the component
-		this._clear(window)
-
-		//~: set temporary title
-		window.co().setTitle('Выполняется запрос...')
-
-		var adr = this._url;
-		var mth = ZeT.iss(this._method)?(this._method):
-		  (supform)?('POST'):('GET');
-
-		//~: bind the domain
-		prms.domain = this._domain;
-
-		//!: reload content
-		Ext.create('Ext.ComponentLoader', {
-		  target: window.co(), url: adr,
-		  ajaxOptions: { method: mth, timeout: 30 * 60 * 1000 }, //<-- 30 min
-		  params: prms, autoLoad: true, scripts: true
-		})
-	},
-
-	_clear           : function(window)
-	{
-		//~: clear the window
-		window.clearComponent({notListeners: true})
-
-		//~: rebind domain deleter
-		//if(window._domain_deleter)
-		//	window.on('beforedestroy', window._domain_deleter)
-	},
-
-	_form_params     : function(form, prms, button)
-	{
-		var inputs = form.select('input');
-
-		if(inputs) for(var i = 0;(i < inputs.getCount());i++)
-		{
-			var item  = inputs.item(i);            if(!item) continue;
-			var name  = item.getAttribute('name'); if(!name) continue;
-			var value = item.getAttribute('value') || '';
-
-			//?: {this field is a submit button} skip it
-			if(item.getAttribute('type') == 'submit')
-				if(!(button === name) && !(button === true))
-					continue;
-
-			prms[name] = value;
-		}
-	}
-})
-
-
-extjsf.support = ZeT.singleInstance('extjsf.support',
-{
-	gridColumns            : function(grid, visible)
-	{
-		if(grid.extjsfBind === true) grid = grid.co();
-		return (visible)?(grid.headerCt.getVisibleGridColumns()):
-		  (grid.headerCt.getGridColumns());
-	},
-
-	columnIndexByDataIndex : function(grid, dataIndex)
-	{
-		var columns = ZeT.isa(grid)?(grid):(this.gridColumns(grid));
-
-		for(var i = 0;(i < columns.length);i++)
-			if(columns[i].dataIndex === dataIndex)
-				return i;
-
-		return undefined;
-	},
-
-	columnByDataIndex      : function(grid, dataIndex)
-	{
-		var columns = ZeT.isa(grid)?(grid):(this.gridColumns(grid));
-
-		for(var i = 0;(i < columns.length);i++)
-			if(columns[i].dataIndex === dataIndex)
-				return columns[i];
-
-		return undefined;
-	},
-
-	columnByType           : function(grid, xtype)
-	{
-		var columns = ZeT.isa(grid)?(grid):(this.gridColumns(grid));
-
-		for(var i = 0;(i < columns.length);i++)
-			if(columns[i].xtype === xtype)
-				return columns[i];
-
-		return undefined
-	},
-
-	refreshGridIndices     : function(grid)
-	{
 		if(ZeT.isa(grid))
-			return Ext.Array.forEach(grid, function(i) {i.index = null})
+			return ZeT.each(grid, function(i) {i.index = null})
 
 		var store = (grid.isStore === true)?(grid):(grid.getStore())
 		store.each(function(i) {i.index = null})
@@ -3038,55 +3263,58 @@ extjsf.support = ZeT.singleInstance('extjsf.support',
 	},
 
 	/**
-	 * Moves currently selected items of the grid up or
+	 * Moves currently selected item of the grid up or
 	 * down with optional callback notifier. The delay
 	 * timeout is optional and 1000 ms by the default.
 	 *
 	 * Returns false when no updates took place.
 	 */
-	moveGridSelected       : function(up, grid, delay_fn, fn)
+	moveGridSel     : function(up, grid, d_f, fn)
 	{
-		var b = extjsf.bind(grid), g = extjsf.co(grid);
+		var  b = extjsf.bind(grid), g = extjsf.co(grid)
+		var st = g.getStore()
 
 		//~: selected items
-		var s = g.getSelectionModel().getSelection();
-		if(!s || !s.length) return false
+		var se = g.getSelectionModel().getSelection()
+		if(!se || !se.length) return false
 
 		//?: {can't move up}
-		if(up && (g.getStore().indexOf(s[0]) == 0))
+
+		if(up && (st.indexOf(se[0]) == 0))
 			return false
 
 		//?: {can't move down}
-		if(!up && (g.getStore().indexOf(s[s.length - 1]) + 1 == g.getStore().getCount()))
+		if(!up && (st.getCount() ==
+			          st.indexOf(se[se.length - 1]) + 1))
 			return false
 
 		//~: deselect
 		g.getSelectionModel().deselectAll()
 
 		//~: move the selected up-down
-		Ext.Array.forEach(s, function(x)
+		ZeT.each(se, function(x)
 		{
-			var i = g.getStore().indexOf(x);
+			var i = st.indexOf(x)
 
 			if( up) ZeT.assert(i     > 0)
-			if(!up) ZeT.assert(i + 1 < g.getStore().getCount())
+			if(!up) ZeT.assert(i + 1 < st.getCount())
 
-			g.getStore().removeAt(i)
-			if( up) g.getStore().insert(i - 1, [x])
-			if(!up) g.getStore().insert(i + 1, [x])
+			st.removeAt(i)
+			if( up) st.insert(i - 1, [x])
+			if(!up) st.insert(i + 1, [x])
 		})
 
 		//~: select items back
-		g.getSelectionModel().select(s)
+		g.getSelectionModel().select(se)
 
 		//~: update delay
-		var dl = ZeT.isn(delay_fn)?(delay_fn):(1000);
-		    fn = ZeT.isf(delay_fn)?(delay_fn):ZeT.isf(fn)?(fn):(null);
-		if(!fn) return; //?: {has no callback}
+		var dl = ZeT.isn(d_f)?(d_f):(1000)
+		fn = ZeT.isf(d_f)?(d_f):ZeT.isf(fn)?(fn):(null)
+		if(!fn) return //?: {has no callback}
 
 		//~: update on the server with the delay
-		if(!b.updating) b.updating = 1;
-		var ui = ++b.updating;
+		if(!b.updating) b.updating = 1
+		var ui = ++b.updating
 
 		ZeT.timeout(dl, function()
 		{
@@ -3095,7 +3323,11 @@ extjsf.support = ZeT.singleInstance('extjsf.support',
 		})
 	},
 
-	collapseTreeToSel      : function()
+	/**
+	 * In the given tree (see extjsf.co()) expands
+	 * only paths to the currently selected nodes.
+	 */
+	showTreeToSel   : function(/* tree */)
 	{
 		var tree = extjsf.co.apply(extjsf, arguments)
 		var sel  = tree.getSelectionModel().getSelection()
