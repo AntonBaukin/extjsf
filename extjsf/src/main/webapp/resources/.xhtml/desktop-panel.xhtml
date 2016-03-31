@@ -108,10 +108,9 @@
             text: panel.$raw().title, panel: '#{cc.attrs.position}'
           }
 
-          ZeT.createInstance('ReTrade.DesktopRootPanelController', {
-            domain: '${extDom}', desktop: ReTrade.desktop, bind: panel,
-            position: '#{cc.attrs.position}', webLink: wlink,
-            domainOwner: ('#{cc.attrs.domainOwner}' === 'true')
+          ZeT.createInstance('extjsf.Desktop.Panel', {
+            bind: panel, desktop: extjsf.desktop,
+            webLink: wlink, position: '#{cc.attrs.position}'
           })
         })
 
@@ -126,7 +125,7 @@
     //<![CDATA[
 
       extjsf.bind("#{cc.attrs.coid}", '${extDom}').scope(
-        function(p){ p.rootPanelController.topbarItems(p.$items_replace()) })
+        function(p){ p.desktopPanelController.topbarItems(p.$items_replace()) })
 
     //]]>
     </script>
@@ -181,12 +180,12 @@
         function(p, tb, sb)
         {
           if(tb.isEmpty()) tb.destroy(); else
-            p.rootPanelController.toolbar(tb)
+            p.desktopPanelController.toolbar(tb)
 
           if(sb.isEmpty()) sb.destroy(); else
-            p.rootPanelController.statusbar(sb)
+            p.desktopPanelController.status(sb)
 
-          p.rootPanelController.insert()
+          p.desktopPanelController.insert()
         })
 
     //]]>

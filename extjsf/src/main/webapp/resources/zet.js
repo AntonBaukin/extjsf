@@ -527,6 +527,18 @@ ZeT.extend(ZeT,
 
 			return false
 		}
+	},
+
+	/**
+	 * Shortcut to (s.indexOf(x) >= 0).
+	 */
+	ii               : function(s /* x0, x1, ... */)
+	{
+		for(var i = 1;(i < arguments.length);i++)
+			if(s.indexOf(arguments[i]) >= 0)
+				return true
+
+		return false
 	}
 })
 
@@ -1981,7 +1993,10 @@ ZeT.extend(ZeT,
 			if(!o) return false
 
 			//?: {is plain object}
-			if(typeof o === 'object') return true
+			if(ZeT.isox(o)) return true
+
+			//?: {is class}
+			if(ZeT.isclass(o)) return true
 
 			//?: {is an element}
 			if(o.nodeType === 1) return true
