@@ -1,0 +1,299 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<project xmlns:if = "ant:if" xmlns:unless = "ant:unless">
+
+
+  <!--===============================================
+   =  Tomcat Variables                              =
+   ================================================-->
+
+  <property name  = 'tomcat-distr-page'
+            value = 'http://tomcat.apache.org/download-80.cgi'/>
+
+  <property name  = 'tomcat-target'
+            location = 'target/apache-tomcat'/>
+
+  <property name  = 'tomcat-distr-load'
+            value = 'target'/>
+
+  <property name  = 'tomcat-distr-extras'
+            value = '${tomcat-distr-load}/tomcat-extras'/>
+
+  <property name  = 'tomcat-log4j'
+            value = '2.5'/>
+
+  <property name  = 'tomcat-debug'
+            value = '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'/>
+
+
+  <!--——————————————————————————————————————————————+
+   | tomcat : run                                   |
+   +-——————————————————————————————————————————————-->
+
+  <target name    = 'tomcat-start'
+          depends = 'tomcat-install'>
+
+    <java classname = 'org.apache.catalina.startup.Bootstrap'
+          dir = '${tomcat-target}' fork = 'true' spawn = 'true'>
+
+      <jvmarg line = '-Xms192M -Xmx756M'/>
+      <jvmarg line = '-XX:+UseG1GC'/>
+      <jvmarg line = '-XX:+DisableExplicitGC'/>
+      <jvmarg line = '-XX:+OptimizeStringConcat'/>
+
+      <jvmarg line = '${tomcat-debug}'/>
+
+      <jvmarg line = '-Djava.awt.headless=true'/>
+      <jvmarg line = '-Djava.net.preferIPv4Stack=true'/>
+      <jvmarg line = '-Dfile.encoding=UTF-8'/>
+      <jvmarg line = '-Djava.io.tmpdir=${tomcat-target}/temp'/>
+      <jvmarg line = '-Dorg.apache.el.parser.COERCE_TO_ZERO=false'/>
+
+      <jvmarg line = '-Dcatalina.base=${tomcat-target}'/>
+      <jvmarg line = '-Dcatalina.home=${tomcat-target}'/>
+
+      <jvmarg line = '-Dcatalina.logs=${tomcat-target}/logs'/>
+      <jvmarg line = '-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager'/>
+
+      <classpath>
+        <pathelement path = '${tomcat-target}/bin'/>
+        <fileset dir = '${tomcat-target}/bin' includes = '*.jar'/>
+      </classpath>
+
+      <arg value = 'start'/>
+    </java>
+  </target>
+
+  <target name = 'tomcat-stop'>
+
+    <java classname = 'org.apache.catalina.startup.Bootstrap'
+          dir = '${tomcat-target}' fork = 'true'>
+
+      <jvmarg line = '-Dcatalina.base=${tomcat-target}'/>
+      <jvmarg line = '-Dcatalina.home=${tomcat-target}'/>
+
+      <jvmarg line = '-Dorg.apache.logging.log4j.simplelog.StatusLogger.level=OFF'/>
+
+      <classpath>
+        <fileset dir = '${tomcat-target}/bin' includes = '*.jar'/>
+      </classpath>
+
+      <arg value = 'stop'/>
+    </java>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | tomcat : install, get, discover                |
+   +-——————————————————————————————————————————————-->
+
+  <available property = '?tomcat-target'
+    file = '${tomcat-target}'/>
+
+  <available property = '?tomcat-distr-file'
+    file = '${tomcat-distr-load}/apache-tomcat.tgz'/>
+
+  <available property = '?tomcat-juli'
+    file = '${tomcat-distr-extras}/tomcat-juli.jar'/>
+
+  <available property = '?tomcat-juli-adapters'
+    file = '${tomcat-distr-extras}/tomcat-juli-adapters.jar'/>
+
+  <available property = '?tomcat-log4j-api'
+    file = '${tomcat-distr-extras}/log4j-api-${tomcat-log4j}.jar'/>
+
+  <available property = '?tomcat-log4j-core'
+    file = '${tomcat-distr-extras}/log4j-core-${tomcat-log4j}.jar'/>
+
+  <available property = '?tomcat-log4j-1.2-api'
+    file = '${tomcat-distr-extras}/log4j-1.2-api-${tomcat-log4j}.jar'/>
+
+  <available property = '?tomcat-log4j-jcl'
+    file = '${tomcat-distr-extras}/log4j-jcl-${tomcat-log4j}.jar'/>
+
+  <available property = '?tomcat-log4j-jul'
+    file = '${tomcat-distr-extras}/log4j-jul-${tomcat-log4j}.jar'/>
+
+  <condition property = '?tomcat-logging'>
+    <and>
+      <isset property = '?tomcat-juli'/>
+      <isset property = '?tomcat-juli-adapters'/>
+
+      <isset property = '?tomcat-log4j-api'/>
+      <isset property = '?tomcat-log4j-core'/>
+      <isset property = '?tomcat-log4j-1.2-api'/>
+      <isset property = '?tomcat-log4j-jcl'/>
+      <isset property = '?tomcat-log4j-jul'/>
+    </and>
+  </condition>
+
+  <target name    = 'tomcat-install'
+          depends = 'tomcat-extract, tomcat-logging'/>
+
+  <target name    = 'tomcat-extract'
+          depends = 'tomcat-get, tomcat-get-extras'
+          unless  = '?tomcat-target'>
+
+    <mkdir dir = '${tomcat-target}'/>
+
+    <untar src  = '${tomcat-distr-load}/apache-tomcat.tgz'
+           dest = '${tomcat-target}'
+           compression = 'gzip'>
+
+      <regexpmapper to = '\1'
+        from = '^apache-tomcat[^/]*/(.+)$$'/>
+
+    </untar>
+  </target>
+
+  <target name    = 'tomcat-logging'
+          depends = 'tomcat-extract, tomcat-get-extras'
+          if      = '?tomcat-logging'
+          unless  = '?tomcat-target'>
+
+    <copy todir = '${tomcat-target}/bin'>
+
+      <resources>
+        <file file = '${tomcat-distr-extras}/tomcat-juli.jar'/>
+        <file file = '${tomcat-distr-extras}/tomcat-juli-adapters.jar'/>
+
+        <file file = '${tomcat-distr-extras}/log4j-api-${tomcat-log4j}.jar'/>
+        <file file = '${tomcat-distr-extras}/log4j-core-${tomcat-log4j}.jar'/>
+        <file file = '${tomcat-distr-extras}/log4j-1.2-api-${tomcat-log4j}.jar'/>
+        <file file = '${tomcat-distr-extras}/log4j-jcl-${tomcat-log4j}.jar'/>
+        <file file = '${tomcat-distr-extras}/log4j-jul-${tomcat-log4j}.jar'/>
+      </resources>
+    </copy>
+
+    <echo file = '${tomcat-target}/bin/log4j2.xml'
+      ><![CDATA[<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<Configuration>
+  <Appenders>
+
+    <File name = "file" fileName = "${sys:catalina.logs}/server.log"
+      append = "false" bufferSize = "256">
+
+       <PatternLayout pattern = "%-5p %d{HH:mm:ss.SSS} [%t] %c{1}: %m%n"/>
+    </File>
+  </Appenders>
+
+  <Loggers>
+
+    <Root level = "INFO">
+
+      <AppenderRef ref = "file"/>
+    </Root>
+  </Loggers>
+</Configuration>]]></echo>
+  </target>
+
+  <target name    = 'tomcat-get'
+          depends = 'tomcat-discover'
+          unless  = '?tomcat-distr-file'>
+
+    <echo message = 'Found Tomcat 8: ${tomcat-distr-url}'/>
+
+    <mkdir dir = '${tomcat-distr-load}'/>
+
+    <get src   = '${tomcat-distr-url}'
+         dest  = '${tomcat-distr-load}/apache-tomcat.tgz'/>
+
+  </target>
+
+  <target name    = 'tomcat-get-extras'
+          depends = 'tomcat-discover'>
+
+    <mkdir dir = '${tomcat-distr-extras}'/>
+
+    <get  if:set = 'tomcat-juli-url'
+      unless:set = '?tomcat-juli'
+          src    = '${tomcat-juli-url}'
+          dest   = '${tomcat-distr-extras}/tomcat-juli.jar'/>
+
+    <get  if:set = 'tomcat-juli-adapters-url'
+      unless:set = '?tomcat-juli-adapters'
+          src    = '${tomcat-juli-adapters-url}'
+          dest   = '${tomcat-distr-extras}/tomcat-juli-adapters.jar'/>
+
+    <get unless:set = '?tomcat-log4j-api' dest = '${tomcat-distr-extras}'
+      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/${tomcat-log4j}/log4j-api-${tomcat-log4j}.jar'/>
+
+    <get unless:set = '?tomcat-log4j-core' dest = '${tomcat-distr-extras}'
+      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/${tomcat-log4j}/log4j-core-${tomcat-log4j}.jar'/>
+
+    <get unless:set = '?tomcat-log4j-1.2-api' dest = '${tomcat-distr-extras}'
+      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-1.2-api/${tomcat-log4j}/log4j-1.2-api-${tomcat-log4j}.jar'/>
+
+    <get unless:set = '?tomcat-log4j-jcl' dest = '${tomcat-distr-extras}'
+      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-jcl/${tomcat-log4j}/log4j-jcl-${tomcat-log4j}.jar'/>
+
+    <get unless:set = '?tomcat-log4j-jul' dest = '${tomcat-distr-extras}'
+      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-jul/${tomcat-log4j}/log4j-jul-${tomcat-log4j}.jar'/>
+
+  </target>
+
+  <condition property = '?tomcat-discovered'>
+    <and>
+      <isset property = '?tomcat-distr-file'/>
+      <isset property = '?tomcat-juli'/>
+      <isset property = '?tomcat-juli-adapters'/>
+    </and>
+  </condition>
+
+  <target name   = 'tomcat-discover'
+          unless = '?tomcat-discovered'>
+
+    <script language = 'javascript'>
+    <![CDATA[
+
+      var echo = project.createTask('echo')
+      echo.setMessage('Searching for Tomcat 8.0 distribution...')
+      echo.perform()
+
+      var url = project.getProperty('tomcat-distr-page')
+      echo.setMessage('Loading distribution page: ' + url)
+      echo.perform()
+
+      var page = readURL(url)
+      url = findText(page, 'https?://.+/apache-tomcat-8\\.0\\.\\d+\\.tar\\.gz')
+      if(!url || !url.length) throw 'Could not find Tomcat 8 download link!'
+      project.setProperty('tomcat-distr-url', url)
+
+      var url1 = findText(page, 'https?://.+/tomcat-juli\\.jar')
+      var url2 = findText(page, 'https?://.+/tomcat-juli-adapters\\.jar')
+      if(url1 && url1.length && url2 && url2.length) {
+          project.setProperty('tomcat-juli-url', url1)
+          project.setProperty('tomcat-juli-adapters-url', url2)
+      }
+
+      function readURL(url)
+      {
+          var bf = java.lang.reflect.Array.newInstance(Java.type('byte').class, 4096)
+          var is = new java.net.URL(url).openStream()
+          var os = new java.io.ByteArrayOutputStream()
+
+          try
+          {
+              var s; while((s = is.read(bf)) > 0)
+                os.write(bf, 0, s)
+          }
+          finally
+          {
+              is.close()
+          }
+
+          return new java.lang.String(os.toByteArray(), 'UTF-8')
+      }
+
+      function findText(text, pattern)
+      {
+        var m = java.util.regex.Pattern.
+          compile(pattern).matcher(text)
+
+        if(m.find()) return text.substring(m.start(), m.end())
+      }
+    ]]>
+    </script>
+  </target>
+</project>
