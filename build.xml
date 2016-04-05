@@ -75,4 +75,49 @@
 
   <import file = 'tomcat.xml'/>
 
+
+  <!--——————————————————————————————————————————————+
+   | demo                                           |
+   +-——————————————————————————————————————————————-->
+
+  <target name    = 'demo-install'
+          depends = 'extjsf, tomcat-install'>
+
+    <!-- collect and copy required libraries -->
+    <ant dir = 'extjsf' target = 'dependencies'/>
+
+    <unzip src = 'extjsf/target/dependencies.zip'
+      dest = '${tomcat-target}/lib'/>
+
+    <delete file = 'extjsf/target/dependencies.zip'/>
+
+
+    <!-- copy the application -->
+
+    <delete dir = '${tomcat-target}/webapps/extjsf'
+      failonerror = 'false'/>
+
+    <mkdir dir = '${tomcat-target}/webapps/extjsf'/>
+
+    <unzip src = 'target/extjsf.war'
+      dest = '${tomcat-target}/webapps/extjsf'/>
+
+    <delete file = 'target/extjsf.war'/>
+  </target>
+
+
+  <!--
+       Use this target during the development after updating
+       classes of files of the web project to rapidly copy
+       them into the exploded directory of the installed
+       ExtJSF demo application.
+  -->
+  <target name = 'demo-update'>
+
+    <ant dir = 'extjsf' target = 'explode-update'>
+
+      <property name = 'explode-path'
+        location = '${tomcat-target}/webapps/extjsf'/>
+    </ant>
+  </target>
 </project>

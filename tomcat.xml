@@ -25,6 +25,9 @@
   <property name  = 'tomcat-debug'
             value = '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005'/>
 
+  <property name  = 'maven-repo'
+            value = 'http://repo1.maven.org/maven2'/>
+
 
   <!--——————————————————————————————————————————————+
    | tomcat : run                                   |
@@ -93,39 +96,47 @@
   <available property = '?tomcat-distr-file'
     file = '${tomcat-distr-load}/apache-tomcat.tgz'/>
 
+  <property name = 'tomcat-juli'
+    value = '${tomcat-distr-extras}/tomcat-juli.jar'/>
+
   <available property = '?tomcat-juli'
-    file = '${tomcat-distr-extras}/tomcat-juli.jar'/>
+    file = '${tomcat-juli}'/>
+
+  <property name = 'tomcat-juli-adapters'
+    value = '${tomcat-distr-extras}/tomcat-juli-adapters.jar'/>
 
   <available property = '?tomcat-juli-adapters'
-    file = '${tomcat-distr-extras}/tomcat-juli-adapters.jar'/>
+    file = '${tomcat-juli-adapters}'/>
+
+  <property name = 'tomcat-log4j-api'
+    value = '${tomcat-distr-extras}/log4j-api-${tomcat-log4j}.jar'/>
 
   <available property = '?tomcat-log4j-api'
-    file = '${tomcat-distr-extras}/log4j-api-${tomcat-log4j}.jar'/>
+    file = '${tomcat-log4j-api}'/>
+
+  <property name = 'tomcat-log4j-core'
+    value = '${tomcat-distr-extras}/log4j-core-${tomcat-log4j}.jar'/>
 
   <available property = '?tomcat-log4j-core'
-    file = '${tomcat-distr-extras}/log4j-core-${tomcat-log4j}.jar'/>
+    file = '${tomcat-log4j-core}'/>
+
+  <property name = 'tomcat-log4j-1.2-api'
+    value = '${tomcat-distr-extras}/log4j-1.2-api-${tomcat-log4j}.jar'/>
 
   <available property = '?tomcat-log4j-1.2-api'
-    file = '${tomcat-distr-extras}/log4j-1.2-api-${tomcat-log4j}.jar'/>
+    file = '${tomcat-log4j-1.2-api}'/>
+
+  <property name = 'tomcat-log4j-jcl'
+    value = '${tomcat-distr-extras}/log4j-jcl-${tomcat-log4j}.jar'/>
 
   <available property = '?tomcat-log4j-jcl'
-    file = '${tomcat-distr-extras}/log4j-jcl-${tomcat-log4j}.jar'/>
+    file = '${tomcat-log4j-jcl}'/>
+
+  <property name = 'tomcat-log4j-jul'
+    value = '${tomcat-distr-extras}/log4j-jul-${tomcat-log4j}.jar'/>
 
   <available property = '?tomcat-log4j-jul'
-    file = '${tomcat-distr-extras}/log4j-jul-${tomcat-log4j}.jar'/>
-
-  <condition property = '?tomcat-logging'>
-    <and>
-      <isset property = '?tomcat-juli'/>
-      <isset property = '?tomcat-juli-adapters'/>
-
-      <isset property = '?tomcat-log4j-api'/>
-      <isset property = '?tomcat-log4j-core'/>
-      <isset property = '?tomcat-log4j-1.2-api'/>
-      <isset property = '?tomcat-log4j-jcl'/>
-      <isset property = '?tomcat-log4j-jul'/>
-    </and>
-  </condition>
+    file = '${tomcat-log4j-jul}'/>
 
   <target name    = 'tomcat-install'
           depends = 'tomcat-extract, tomcat-logging'/>
@@ -148,10 +159,22 @@
 
   <target name    = 'tomcat-logging'
           depends = 'tomcat-extract, tomcat-get-extras'
-          if      = '?tomcat-logging'
           unless  = '?tomcat-target'>
 
-    <copy todir = '${tomcat-target}/bin'>
+    <condition property = '?tomcat-logging'>
+      <and>
+        <available file = '${tomcat-juli}'/>
+        <available file = '${tomcat-juli-adapters}'/>
+
+        <available file = '${tomcat-log4j-api}'/>
+        <available file = '${tomcat-log4j-core}'/>
+        <available file = '${tomcat-log4j-1.2-api}'/>
+        <available file = '${tomcat-log4j-jcl}'/>
+        <available file = '${tomcat-log4j-jul}'/>
+      </and>
+    </condition>
+
+    <copy if:set = '?tomcat-logging' todir = '${tomcat-target}/bin'>
 
       <resources>
         <file file = '${tomcat-distr-extras}/tomcat-juli.jar'/>
@@ -165,7 +188,7 @@
       </resources>
     </copy>
 
-    <echo file = '${tomcat-target}/bin/log4j2.xml'
+    <echo if:set = '?tomcat-logging' file = '${tomcat-target}/bin/log4j2.xml'
       ><![CDATA[<?xml version = '1.0' encoding = 'UTF-8'?>
 
 <Configuration>
@@ -216,20 +239,23 @@
           src    = '${tomcat-juli-adapters-url}'
           dest   = '${tomcat-distr-extras}/tomcat-juli-adapters.jar'/>
 
+    <property name = 'tomcat-maven-log4j'
+       value = '${maven-repo}/org/apache/logging/log4j'/>
+
     <get unless:set = '?tomcat-log4j-api' dest = '${tomcat-distr-extras}'
-      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/${tomcat-log4j}/log4j-api-${tomcat-log4j}.jar'/>
+      src = '${tomcat-maven-log4j}/log4j-api/${tomcat-log4j}/log4j-api-${tomcat-log4j}.jar'/>
 
     <get unless:set = '?tomcat-log4j-core' dest = '${tomcat-distr-extras}'
-      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/${tomcat-log4j}/log4j-core-${tomcat-log4j}.jar'/>
+      src = '${tomcat-maven-log4j}/log4j-core/${tomcat-log4j}/log4j-core-${tomcat-log4j}.jar'/>
 
     <get unless:set = '?tomcat-log4j-1.2-api' dest = '${tomcat-distr-extras}'
-      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-1.2-api/${tomcat-log4j}/log4j-1.2-api-${tomcat-log4j}.jar'/>
+      src = '${tomcat-maven-log4j}/log4j-1.2-api/${tomcat-log4j}/log4j-1.2-api-${tomcat-log4j}.jar'/>
 
     <get unless:set = '?tomcat-log4j-jcl' dest = '${tomcat-distr-extras}'
-      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-jcl/${tomcat-log4j}/log4j-jcl-${tomcat-log4j}.jar'/>
+      src = '${tomcat-maven-log4j}/log4j-jcl/${tomcat-log4j}/log4j-jcl-${tomcat-log4j}.jar'/>
 
     <get unless:set = '?tomcat-log4j-jul' dest = '${tomcat-distr-extras}'
-      src = 'http://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-jul/${tomcat-log4j}/log4j-jul-${tomcat-log4j}.jar'/>
+      src = '${tomcat-maven-log4j}/log4j-jul/${tomcat-log4j}/log4j-jul-${tomcat-log4j}.jar'/>
 
   </target>
 

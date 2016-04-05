@@ -69,7 +69,13 @@
       needxmlfile = 'false'>
 
       <!-- compiled classes and direct resources -->
-      <classes dir = '${module-classes}'/>
+      <classes dir = '${module-classes}'>
+        <exclude name = 'META-INF/**'/>
+      </classes>
+
+      <!-- generated resources -->
+      <zipfileset prefix = 'META-INF'
+        dir = '${module-classes}/META-INF'/>
 
       <!-- additional resources -->
       <classes dir = '${module-resources}'
@@ -83,6 +89,58 @@
       <!-- libraries required to run -->
       <lib dir = '${deplibs-required}'/>
     </war>
+  </target>
+
+
+  <!--——————————————————————————————————————————————+
+   | explode refresh                                |
+   +-——————————————————————————————————————————————-->
+
+  <target name    = 'explode-update'
+          depends = 'compile'>
+
+    <!-- manifest directory -->
+    <delete dir = '${explode-path}/META-INF'
+      failonerror = 'false'/>
+
+    <mkdir dir = '${explode-path}/META-INF'/>
+
+    <copy todir = '${explode-path}/META-INF'>
+      <fileset dir = '${module-web}/META-INF'/>
+      <fileset dir = '${module-classes}/META-INF'/>
+    </copy>
+
+    <!-- manifest file -->
+    <manifest mode = 'update'
+      file = '${explode-path}/META-INF/MANIFEST.MF'/>
+
+    <!-- web content -->
+    <sync todir = '${explode-path}'
+      includeEmptyDirs = 'true'>
+
+      <preserveintarget>
+        <include name = 'META-INF/**'/>
+        <include name = 'WEB-INF/classes/**'/>
+        <include name = 'WEB-INF/lib/**'/>
+      </preserveintarget>
+
+      <!-- web resources -->
+      <fileset dir = '${module-web}'>
+        <exclude name = 'META-INF/**'/>
+      </fileset>
+    </sync>
+
+    <!-- classes -->
+    <sync todir = '${explode-path}/WEB-INF/classes'
+      includeEmptyDirs = 'true'>
+
+      <fileset dir = '${module-classes}'>
+        <exclude name = 'META-INF/**'/>
+      </fileset>
+
+      <fileset dir = '${module-resources}'
+         erroronmissingdir = 'false'/>
+    </sync>
   </target>
 
 
