@@ -46,8 +46,9 @@ var ZeT = window.ZeT =
 	},
 
 	/**
-	 * Invokes the function given. Optiona arguments
-	 * must go before the function-body.
+	 * Invokes the function given. Optional arguments
+	 * must go before the function-body. This-context
+	 * of the call is passed to the callback.
 	 */
 	scope            : function(/* [parameters] f */)
 	{
@@ -267,13 +268,13 @@ ZeT.extend(ZeT,
 			if(notdef(x)) return false
 
 			//?: {root check is not array-like}
-			if(!ZeT.isi(x.length)) return true
+			if(!ZeT.isax(x)) return true
 
 			//~: check all the items of array-like are defined
 			for(var i = 0;(i < x.length);i++)
-				if(notdef(x[i])) return false
+				if(!notdef(x[i])) return true
 
-			return true
+			return false //<-- array is empty
 		}
 	})
 })
@@ -614,7 +615,11 @@ var ZeTS = ZeT.define('ZeT.S',
 	 */
 	catifall         : function(/* various objects */)
 	{
-		return ZeT.test(arguments)?ZeTS.cati(0, arguments):('')
+		for(var i = 0;(i < arguments.length);i++)
+			if(!ZeT.test(arguments[i]))
+				return ''
+
+		return ZeTS.cati(0, arguments)
 	},
 
 	/**
@@ -2000,6 +2005,12 @@ ZeT.extend(ZeT,
 
 			//?: {is an element}
 			if(o.nodeType === 1) return true
+
+			//?: {is array having non-logged}
+			if(ZeT.isa(o))
+				for(var i = 0;(i < o.length);i++)
+					if(isxlog(o[i]))
+						return true
 
 			return false
 		}

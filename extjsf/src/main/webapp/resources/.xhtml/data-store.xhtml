@@ -86,7 +86,10 @@
 
           store.proxy = proxy
 
-          proxy.props({ type: 'ajax', url: "${z:url('/model')}" })
+          if(ZeT.ises(proxy.$raw().type)) proxy.props({ type: 'ajax' })
+          if((proxy.$raw().type === 'ajax') && ZeT.ises(proxy.$raw().url))
+            proxy.props({ url: "${z:url('/model')}" })
+
           proxy.props('extra', {
             key      : '#{cc.attrs.modelKey}',
             viewKey  : '#{cc.attrs.modelView.modelKey}',

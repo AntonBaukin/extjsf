@@ -47,7 +47,7 @@
          JSF extension point of the field.
     -->
     <co:editableValueHolder name = 'valueInput'
-      targets = '#{cc.attrs.coid}-field'/>
+      targets = 'field'/>
 
     <!--
          Properties of the drop list component.
@@ -64,7 +64,7 @@
 
   <co:implementation>
 
-    <h:inputHidden id = "#{cc.attrs.coid}-field" value = "#{cc.attrs.value}"/>
+    <h:inputHidden id = "field" value = "#{cc.attrs.value}"/>
 
     <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
       <co:renderFacet name = "drop-props"/>

@@ -52,8 +52,9 @@
       extjsf.domain('${extDom}').
         bind('#{cc.attrs.coid}', new extjsf.LoadActionBind()).
         ids('#{cc.clientId}').goAction().viewId('${rootView.id}').
-        props('params', { model: "#{cc.attrs.modelView.modelKeys}" }).
-        readPropsNode('params').postMode('${rootView.viewModeStr}')
+        scope(function(bind){ var m = '#{cc.attrs.modelView.modelKeys}'
+          if(!ZeT.ises(m)) bind.props('params', { model: m })
+        }).readPropsNode('params').postMode('${rootView.viewModeStr}')
 
     //]]>
     </script>

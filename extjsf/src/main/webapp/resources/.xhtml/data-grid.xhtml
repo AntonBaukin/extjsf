@@ -43,31 +43,17 @@
     //<![CDATA[
 
     extjsf.domain('${extDom}').
-      bind('#{cc.attrs.coid}', new extjsf.Bind()).
+      bind('#{cc.attrs.coid}', new extjsf.GridBind()).
       ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
       props({ margin: 0 }).readPropsNode().
       props({ xtype: 'grid', store: "#{cc.attrs.storeId}" }).
-        nest('pager', function(pager, grid)
-        {
-          if(grid.$raw().pager !== true) return false
-          delete grid.$raw().pager
+      scope(function(grid) {
+        grid.$raw().viewConfig = ZeT.extend(
+          { preserveScrollOnRefresh: true }, grid.$raw().viewConfig)
 
-          pager.props({ xtype: 'pagingtoolbar', displayInfo: true,
-            store: "#{cc.attrs.storeId}", emptyMsg: 'Данные не найдены!',
-            displayMsg: 'Записи {0}:{1} из {2}' }).readPropsNode()
-
-          grid.props({ bbar: pager.$raw() })
-          grid.on('destroy', pager.boundDestroy())
-        }).
-        scope(function(grid)
-        {
-          grid.$raw().viewConfig = ZeT.extend(
-            { preserveScrollOnRefresh: true }, grid.$raw().viewConfig)
-
-          if('true' == "#{cc.attrs.selset}")
-            ReTrade.selset.grid('#{cc.attrs.coid}', '${extDom}')
-        }).
-      install()
+        if('true' == "#{cc.attrs.selset}")
+          ReTrade.selset.grid('#{cc.attrs.coid}', '${extDom}')
+      }).install()
 
     //]]>
     </script>

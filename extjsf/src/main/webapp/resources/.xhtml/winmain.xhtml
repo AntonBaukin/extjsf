@@ -31,6 +31,9 @@
     <co:attribute name = 'webLink' default = 'true'
        type = 'java.lang.Boolean'/>
 
+    <co:attribute name = 'winAlign' default = 'lite'
+       type = 'java.lang.String'/>
+
     <!--
          Properties of the root content panel.
     -->
@@ -90,7 +93,8 @@
           })
 
       extjsf.bind('#{cc.attrs.windowBind}', '${extDom}').scope(function(window){
-        if(!window.WinAlign) new ReTrade.WinAlign({ window: window })
+        if(window.WinAlign) window.WinAlign.opts.behaviour = '#{cc.attrs.winAlign}'; else
+          new ReTrade.WinAlign({window: window, behaviour: '#{cc.attrs.winAlign}' })
       })
 
     //]]>
@@ -149,7 +153,7 @@
           if(tb.isEmpty()) tb.destroy(); else
             w.co().addDocked(tb.co(true))
 
-          if(tb.isEmpty()) tb.destroy(); else
+          if(sb.isEmpty()) sb.destroy(); else
             w.co().addDocked(sb.co(true))
 
           if("#{cc.attrs.webLink}" != 'false')

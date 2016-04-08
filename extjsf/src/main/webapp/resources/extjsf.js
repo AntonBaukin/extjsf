@@ -61,7 +61,7 @@ extjsf.Domain = ZeT.defineClass('extjsf.Domain',
 		this.binds.put(name, bind)
 		bind.defined(this.name, name)
 
-		//ZeT.log('@[', this.name, '] + Bind: ', name)
+		//ZeT.log('@[', this.name, '] + ', name)
 
 		return bind
 	},
@@ -977,7 +977,7 @@ extjsf.Bind = ZeT.defineClass('extjsf.Bind',
 		if(this._destroyed === true) return false
 		this._destroyed = true
 
-		//ZeT.log('@[', this.domain, '] - Bind: ', this.name)
+		//ZeT.log('@[', this.domain, '] - ', this.name)
 
 		var co; if(co = this._component) try
 		{
@@ -1342,7 +1342,7 @@ extjsf.Bind.extend(
 		var a = ZeT.a(arguments)
 		a.splice(0, 0, this)
 
-		ZeT.scope.apply(ZeT, a)
+		ZeT.scope.apply(this, a)
 		return this
 	},
 
@@ -1790,6 +1790,18 @@ extjsf.ActionBind = ZeT.defineClass(
 		//!: update the action attribute
 		this.$form_node().set({ action: p + 'go/' + a })
 
+		return this
+	},
+
+	/**
+	 * Requies single object argument, updates
+	 * the parameters with it's values.
+	 */
+	httpParams       : function(p)
+	{
+		ZeT.assert(arguments.length == 1)
+		ZeT.assert(ZeT.iso(p))
+		ZeT.extend(this.$raw('params'), p)
 		return this
 	},
 
@@ -2411,7 +2423,8 @@ extjsf.FieldBind = ZeT.defineClass(
 
 	$field_name      : function()
 	{
-		return this.$node_id('field')
+		ZeT.asserts(this._client_id)
+		return this._client_id + '-field'
 	}
 })
 
@@ -2659,7 +2672,7 @@ extjsf.StoreBind = ZeT.defineClass(
 		//?: {has no page size}
 		var ps = this.$raw().pageSize
 		ZeT.assert(ZeT.isu(ps) || (ZeT.isi(ps) && (ps >= 0)))
-		if(ps === 0) delete this.$raw().pageSize
+		if(ZeT.isu(ps)) this.props({ pageSize: 0 })
 
 		if(this.proxy) //?: {has proxy configured}
 			this.$install_proxy()
@@ -2808,6 +2821,242 @@ extjsf.StoreBind = ZeT.defineClass(
 
 		//~: add new parameters
 		ZeT.extend(params, sp)
+	}
+})
+
+
+// +----: Grid Bind :-------------------------------------------+
+
+extjsf.GridBind = ZeT.defineClass(
+  'extjsf.GridBind', extjsf.Bind,
+{
+	className        : 'extjsf.GridBind',
+
+	/**
+	 * Returns Bind of the related Store.
+	 */
+	store            : function()
+	{
+		//~: access via the component
+		if(extjsf.bind(this.co() && this.co().getStore()))
+			return extjsf.bind(this.co().getStore())
+
+		var s = this.$raw().store
+
+		if(ZeT.iss(s)) //?: {store is bind name}
+			return extjsf.bind(s, this.domain)
+
+		//?: {store option is a Store}
+		if(s && (s.isStore === true))
+			return extjsf.bind(s)
+	},
+
+	$install         : function()
+	{
+		//?: {build the pager}
+		if(this.$raw().pager === true)
+			this.nest('pager', this.$build_pager)
+
+		//?: {auto size of pages}
+		if(this.$is_auto_page())
+			this.$set_auto_page()
+
+		this.$applySuper(arguments)
+	},
+
+	$destroy         : function()
+	{
+		if(this.$applySuper(arguments) === false)
+			return false
+
+		//?: {still have the store}
+		var s = this.store(); if(s && s.co())
+		{
+			if(this._store_auto_page)
+			{
+				s.co().un('beforeload', this._store_auto_page)
+				delete this._store_auto_page
+			}
+
+			if(this._store_first_load)
+			{
+				s.co().un('load', this._store_first_load)
+				delete this._store_first_load
+			}
+		}
+	},
+
+	$build_pager     : function(pager)
+	{
+		//~: delete pager required flag
+		delete this.$raw().pager
+
+		//~: default pager properties
+		pager.props({ xtype: 'pagingtoolbar',
+		  store: this.$raw().store, displayInfo: true,
+		  emptyMsg: 'Данные не найдены!',
+		  displayMsg: 'Записи {0}:{1} из {2}'
+		})
+
+		//~: read from the facet
+		pager.readPropsNode()
+
+		//~: assign pager as the bottom bar
+		this.props({ bbar: pager.$raw() })
+
+		//~: destroy pager bind
+		this.on('destroy', pager.boundDestroy())
+
+		//~: assign the pager component
+		this.when(function()
+		{
+			var pg = this.co().getDockedItems(
+			  'pagingtoolbar[dock=bottom]')
+
+			ZeT.assert(ZeT.isa(pg) && (pg.length == 1))
+			pager.co(pg[0])
+		})
+	},
+
+	$is_auto_page    : function()
+	{
+		//?: {client forbids it}
+		if(this.$raw().autoPage === false)
+			return false
+
+		//?: {store is not used}
+		var s; if(!(s = this.store())) return
+
+		//?: {store has no paging}
+		if(s.co() && !s.co().getPageSize())
+			return false
+
+		//~: check the property
+		var ps = s.$raw().pageSize
+		return ZeT.isi(ps) && (ps > 0)
+	},
+
+	$set_auto_page   : function()
+	{
+		delete this.$raw().autoPage
+
+		//~: adapt store size on the grid height change
+		var $ap = ZeT.fbind(this.$auto_page, this, false)
+		this.on('resize', $ap)
+
+		//~: use it for the store
+		this._store_auto_page =
+		  ZeT.fbind(this.$auto_page, this, true)
+
+		//~: calculate store page size before loading
+		this.store().on('beforeload',
+		  this._store_auto_page)
+
+		//~: double-load as a fallback
+		this._store_first_load = $ap
+		this.store().on('load', $ap)
+	},
+
+	$auto_page       : function(loading)
+	{
+		//?: {unknown page size}
+		var ps = this.$rows_number()
+		if(!ZeT.isi(ps) || (ps <= 0)) return
+
+		//?: {store is not ready yet}
+		var s = this.store()
+		if(!s.co()) return
+
+		//?: {has the first load listener}
+		if(this._store_first_load)
+		{
+			s.co().un('load', this._store_first_load)
+			delete this._store_first_load
+		}
+
+		//?: {clear existing load request}
+		if(loading) delete this._page_load_ts
+
+		//?: {page size changed}
+		if(s.co().getPageSize() != ps)
+			this.$set_page_size(ps, !loading)
+	},
+
+	$rows_number     : function()
+	{
+		if(!this.co() || !this.co().getView())
+			return
+
+		var vh = this.co().getView().getHeight()
+		var rh = this.$rows_height()
+
+		if(ZeT.isn(vh) && ZeT.isn(rh))
+			return Math.floor(vh / rh)
+	},
+
+	/**
+	 * Private. Assigns the page size given when
+	 * the related Store component is created.
+	 */
+	$set_page_size   : function(ps, reload)
+	{
+		//~: assign the new page size
+		var s = this.store()
+		var x = s.co().getPageSize()
+		s.co().setPageSize(ps)
+
+		//?: {do not reload}
+		if(!reload) return
+
+		//~: define page of the top row
+		var p = s.co().currentPage
+		if(ZeT.isi(p) && (p > 0))
+			p = 1 + Math.floor(x * (p - 1) / ps)
+		if(!ZeT.isi(p) || (p <= 0)) p = 1
+
+		//~: now is the most recent load time
+		var ts = new Date().getTime()
+		this._page_load_ts = ts
+
+		//!: reload the store with delay
+		ZeT.timeout(1000, this.$reload_page, this, [ p, ts ])
+	},
+
+	$reload_page     : function(p, ts)
+	{
+		var s = this.store()
+		if(!s || !s.co()) return
+
+		//?: {this request is obsolete}
+		if(this._page_load_ts != ts) return
+		delete this._page_load_ts
+
+		s.co().loadPage(p)
+	},
+
+	/**
+	 * Assumes that each grid has the same height of
+	 * the rows. If not so, do not allow auto-paging
+	 * for such a grids!
+	 */
+	$rows_height     : function()
+	{
+		//~: take the cached value
+		var rh = this.$class.static.rows_height
+		if(rh) return rh
+
+		//~: collect stats over all grid rows
+		var s = {}, maxn = 0
+		Ext.getBody().select('.x-grid-item').each(function(n)
+		{
+			var h = n.getHeight(); if(!h) return
+			s[h] = !s[h]?(1):(s[h] + 1)
+			if(s[h] > maxn) { maxn = s[h]; rh = h}
+		})
+
+		//~: take the most probable height
+		if(ZeT.isn(rh) && (rh > 0))
+			return (this.$class.static.rows_height = rh)
 	}
 })
 
@@ -3071,7 +3320,7 @@ extjsf.LoadCo = ZeT.defineClass('extjsf.LoadCo',
 		var ps = ZeT.extend({}, this.opts.params)
 
 		//~: add form parameters
-		if(this.$form())
+		if(this.$form() && (this.$method() != 'GET'))
 			this.$form_params(ps)
 
 		//~: resolve delayed parameters
@@ -3128,6 +3377,48 @@ extjsf.LoadCo = ZeT.defineClass('extjsf.LoadCo',
 
 extjsf.u = ZeT.define('extjsf.utilities',
 {
+	/**
+	 * Wraps named method of a Component instance
+	 * with the function given. Function is invoked
+	 * with the same arguments as the original, but
+	 * it's this-context differs! It's an object of:
+	 * 'co' referring the component; $callSuper and
+	 * $applySuper analogues of ZeT.Class.
+	 */
+	wrap             : function(co, method, f)
+	{
+		if(extjsf.isbind(co))
+			co = co.co()
+
+		ZeT.assertn(co)
+		ZeT.asserts(method)
+		ZeT.assertf(f)
+
+		//~: save existing method
+		var old  = ZeT.assertf(co[method], 'Property [',
+		  method, '] is not a method of object!')
+
+		var that = { co : co }
+
+		//~: $applySuper()
+		that.$applySuper = function(args)
+		{
+			return old.apply(co, args)
+		}
+
+		//~: $callSuper()
+		that.$callSuper  = function()
+		{
+			return old.apply(co, arguments)
+		}
+
+		//~: wrap it
+		co[method] = function()
+		{
+			return f.apply(that, arguments)
+		}
+	},
+
 	/**
 	 * Makes fields marked with extjsfReadWrite
 	 * option (equal true) to be read-only or not.

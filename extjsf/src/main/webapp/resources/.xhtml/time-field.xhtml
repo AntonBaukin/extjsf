@@ -24,7 +24,7 @@
          JSF extension point of the field.
     -->
     <co:editableValueHolder name = 'valueInput'
-       targets = '#{cc.attrs.coid}-field'/>
+       targets = 'field'/>
 
     <co:facet name = 'extjs-props'/>
 
@@ -34,7 +34,7 @@
 
   <co:implementation>
 
-    <h:inputHidden id = "#{cc.attrs.coid}-field" value = "#{cc.attrs.value}">
+    <h:inputHidden id = "field" value = "#{cc.attrs.value}">
       <f:converter converterId = "com.tverts:fmt:time2str"/>
     </h:inputHidden>
 
