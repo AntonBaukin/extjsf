@@ -1,6 +1,6 @@
 package net.java.jsf.extjs.servlet.filters;
 
-/* Sprint Framework */
+/* Spring Framework */
 
 import org.springframework.stereotype.Component;
 
@@ -16,8 +16,7 @@ import net.java.jsf.extjs.servlet.RequestPoint;
  *
  * @author anton.baukin@gmail.com
  */
-@Component
-@PickFilter(order = { 0 })
+@Component @PickFilter(order = { 0 })
 public class WebApplicationRequestFilter extends FilterBase
 {
 	/* public: Filter interface */

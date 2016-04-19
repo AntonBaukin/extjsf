@@ -11,7 +11,7 @@ import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 
-/* Sprint Framework */
+/* Spring Framework */
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
