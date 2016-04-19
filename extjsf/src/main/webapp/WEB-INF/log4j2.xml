@@ -5,7 +5,7 @@
   <Appenders>
 
     <File name = 'spring' append = 'false' bufferSize = '512'
-      fileName = 'extjsf_spring.log'>
+      fileName = '${sys:catalina.logs}/extjsf_spring.log'>
 
       <PatternLayout pattern = '%-5p %d{HH:mm:ss.SSS} %c{1}: %m%n'/>
       <filters>
@@ -14,13 +14,13 @@
     </File>
 
     <File name = 'debug' append = 'false' bufferSize = '2048'
-      fileName = 'extjsf_debug.log'>
+      fileName = '${sys:catalina.logs}/extjsf_debug.log'>
 
-      <PatternLayout pattern = '%-5p %d{HH:mm:ss.SSS} %c{1}: %m%n'/>
+      <PatternLayout pattern = '%-5p %d{HH:mm:ss.SSS} [%t] %c{1}: %m%n'/>
     </File>
 
     <File name = 'debug.json' append = 'false' bufferSize = '2048'
-      fileName = 'extjsf_debug.json'>
+      fileName = '${sys:catalina.logs}/extjsf_debug.json'>
 
       <FastJSONLayout/>
     </File>

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import static net.java.jsf.extjs.support.SpringPoint.bean;
 
 
-/**
+ /**
  * Class-variable. Shortcut for
  * {@link RootView#getExtjsDomain()}.
  *

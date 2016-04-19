@@ -12,6 +12,25 @@
 
 
   <!--====================================================
+    =                 Context Parameters                 =
+    ====================================================-->
+
+  <context-param>
+    <description>
+      This parameter forbids implicit startup of the Log4j2
+      environment. The implementation is moved to the system
+      boot intializer instead. If allow Log4j to start itself,
+      it may be turned off before all else modules of the
+      application done their logging thus damaging the main
+      logging files of the server.
+    </description>
+
+    <param-name>isLog4jAutoInitializationDisabled</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+
+  <!--====================================================
     =                      Listeners                     =
     ====================================================-->
 

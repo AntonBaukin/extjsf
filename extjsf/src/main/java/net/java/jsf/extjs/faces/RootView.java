@@ -1,9 +1,18 @@
 package net.java.jsf.extjs.faces;
 
+/* Java */
+
+import java.util.Arrays;
+import java.util.List;
+
 /* Spring Framework */
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+/* extjsf: servlet */
+
+import net.java.jsf.extjs.servlet.REQ;
 
 /* extjsf: support */
 
@@ -23,13 +32,15 @@ public class RootView extends ViewWithModes
 {
 	/* Constants */
 
-	/**
-	 * Parameter that names the domain (scope
-	 * of names) of the ExtJSF Binds. It is
-	 * global for a request and not changed.
-	 */
 	public static final String PARAM_DOMAIN   =
-	  "extjs_domain";
+	  "domain";
+
+	/**
+	 * Position within the desktop layout panels.
+	 * See desktop-panel.xhtml
+	 */
+	public static final String PARAM_POSITION =
+	  "desktop-position";
 
 
 	/* Access Shared View State */
@@ -37,6 +48,16 @@ public class RootView extends ViewWithModes
 	public String    getExtjsDomainParam()
 	{
 		return PARAM_DOMAIN;
+	}
+
+	public String    getExtjsPosition()
+	{
+		return obtainExtjsPositionFromRequest();
+	}
+
+	public String    getExtjsPositionParam()
+	{
+		return PARAM_POSITION;
 	}
 
 	public String    getExtjsDomain()
@@ -52,6 +73,23 @@ public class RootView extends ViewWithModes
 		String p = getParam(getEntityParam());
 		return (p == null)?(null):Long.parseLong(p);
 	}
+
+	/**
+	 * Returns all additional parameters of the request
+	 * as JSON text excluding any of STD_PARAMS.
+	 */
+	public String    getRequestParams()
+	{
+		return REQ.jsonRequestParams(STD_PARAMS);
+	}
+
+	/**
+	 * TODO add ModelViewBase.MODEL_PARAM
+	 */
+	private static final List<String> STD_PARAMS = Arrays.asList(
+	  "_dc", RootView.PARAM_DOMAIN, /* ModelViewBase.MODEL_PARAM, */
+	  ViewWithModes.VIEWID_PARAM, ViewWithModes.ENTITY_PARAM
+	);
 
 
 	/* protected: view support interface */
@@ -69,5 +107,10 @@ public class RootView extends ViewWithModes
 	protected String obtainExtjsDomainFromRequest()
 	{
 		return getParam(getExtjsDomainParam());
+	}
+
+	protected String obtainExtjsPositionFromRequest()
+	{
+		return getParam(getExtjsPositionParam());
 	}
 }

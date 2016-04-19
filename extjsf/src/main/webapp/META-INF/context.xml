@@ -1,0 +1,15 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<!--——————————————————————————————————————————————+
+ | Apache Tomcat Server Web Aplication Context    |
+ +-——————————————————————————————————————————————-->
+
+<Context sessionCookiePathUsesTrailingSlash = 'false'>
+
+  <Resources className = 'org.apache.catalina.webresources.StandardRoot'>
+
+    <PreResources className = 'org.apache.catalina.webresources.DirResourceSet'
+      base = '${catalina.base}/webapps/extjsf' webAppMount = '/WEB-INF/classes'/>
+
+  </Resources>
+</Context>

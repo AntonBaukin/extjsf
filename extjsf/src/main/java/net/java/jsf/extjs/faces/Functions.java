@@ -18,7 +18,6 @@ import net.java.jsf.extjs.support.CMP;
 import net.java.jsf.extjs.support.SU;
 
 
-
 /**
  * JavaServer Faces functions.
  *
@@ -156,7 +155,7 @@ public class Functions
 			d = BigDecimal.ZERO;
 
 		if(d.scale() < 0)
-			d = d.setScale(0, BigDecimal.ROUND_UNNECESSARY);
+			d = d.setScale(0);
 
 		return d.toString();
 	}

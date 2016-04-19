@@ -1,9 +1,5 @@
 package net.java.jsf.extjs.faces;
 
-/* Java */
-
-import java.util.Arrays;
-
 /* JavaServer Faces */
 
 import javax.faces.context.FacesContext;
@@ -12,7 +8,6 @@ import javax.faces.event.PhaseId;
 /* extjsf: support */
 
 import net.java.jsf.extjs.support.EX;
-import net.java.jsf.extjs.support.SU;
 import static net.java.jsf.extjs.support.SpringPoint.bean;
 
 
@@ -44,7 +39,7 @@ public abstract class ViewWithModes extends ViewBase
 		  (this.id = obtainViewId());
 	}
 
-	private String id;
+	private String  id;
 
 	public ViewMode getViewMode()
 	{
@@ -165,10 +160,10 @@ public abstract class ViewWithModes extends ViewBase
 	{
 		//~: take value from the request
 		String id = obtainRequestedViewId();
-		return (id != null)?(id):(getNewViewId());
+		return (id != null)?(id):(genNewViewId());
 	}
 
-	protected String   getNewViewId()
+	protected String   genNewViewId()
 	{
 		//~: ask for the shared id
 		return EX.assertn(bean(RootView.class).getId(),
