@@ -1,0 +1,20 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<c:if test = '${rootView.viewModePagePost}'
+   xmlns:c = 'http://java.sun.com/jsp/jstl/core'
+   xmlns:f = 'http://java.sun.com/jsf/core'>
+
+<f:view contentType = 'application/xml;charset=UTF-8'>
+
+<response xmlns = 'http://extjs.jsf.java.net/response'
+  xmlns:xsi = 'http://www.w3.org/2001/XMLSchema-instance'
+  xmlns:ui  = 'http://java.sun.com/jsf/facelets'
+  xmlns:z   = 'uri:extjs.jsf.java.net'
+  xsi:schemaLocation = "${z:absurl('/resources/response.xsd')}">
+
+  <ui:insert name = 'validation'/>
+  <ui:insert name = 'scripts'/>
+
+</response>
+</f:view>
+</c:if>

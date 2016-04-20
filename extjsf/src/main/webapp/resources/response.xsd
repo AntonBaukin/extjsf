@@ -1,0 +1,78 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<xs:schema xmlns:xs = "http://www.w3.org/2001/XMLSchema"
+  targetNamespace = "http://extjs.jsf.java.net/response">
+
+  <xs:element name = "response">
+    <xs:complexType>
+      <xs:sequence>
+
+        <xs:element ref = "validation" minOccurs = "1" maxOccurs = "1"/>
+
+        <!--
+          Aditional payload scripts that are invoked
+          only in the case of validation success.
+        -->
+        <xs:element name = "script" type = "xs:string"/>
+
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name = "validation">
+    <xs:complexType>
+      <xs:sequence>
+
+        <!--
+             Definition of validation error related
+             to some specific field.
+        -->
+        <xs:element name = "field" maxOccurs = "unbounded">
+          <xs:complexType>
+            <xs:sequence>
+
+              <xs:element name = "error" minOccurs = "1" maxOccurs = "1"
+                type = "xs:string"/>
+
+              <xs:element name = "script" maxOccurs = "1"
+                type = "xs:string"/>
+
+            </xs:sequence>
+
+            <!--
+                 Tells the name of the Bind of the field.
+            -->
+            <xs:attribute name = "target" use = "required"
+              type = "xs:string"/>
+
+          </xs:complexType>
+        </xs:element>
+
+        <!--
+             Validation script that is invoked only in
+             the case of the validation failure, when
+             success attribute is false.
+        -->
+        <xs:element name = "script" maxOccurs = "1"
+          type = "xs:string"/>
+
+      </xs:sequence>
+
+      <!--
+           Tells the validation status. Note that presense
+           of a (failed) field block, in general, doesn't
+           mean that whole validation had failed!
+      -->
+      <xs:attribute name = "success" use = "required"
+        type = "xs:boolean"/>
+
+      <!--
+           Optional argument that defines the target
+           of validation (it's Bind name) . In a case
+           of form POST this is the form posted.
+      -->
+      <xs:attribute name = "target" type = "xs:string"/>
+
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

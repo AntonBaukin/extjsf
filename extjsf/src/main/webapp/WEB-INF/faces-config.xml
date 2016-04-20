@@ -17,8 +17,8 @@
     </el-resolver>
 
     <locale-config>
-      <default-locale>ru</default-locale>
-      <supported-locale>ru</supported-locale>
+      <default-locale>en</default-locale>
+      <supported-locale>en</supported-locale>
     </locale-config>
   </application>
 

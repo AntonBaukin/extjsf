@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<ui:component rendered = '#{rootView.viewModePageRendered}'
+  xmlns    = 'http://www.w3.org/1999/xhtml'
+  xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
+  xmlns:f  = 'http://java.sun.com/jsf/core'
+  xmlns:ui = 'http://java.sun.com/jsf/facelets'
+  xmlns:h  = 'http://java.sun.com/jsf/html'
+  xmlns:z  = 'uri:extjs.jsf.java.net'>
+
+<html lang = 'en'>
+<head>
+  <meta charset    = 'UTF-8'/>
+  <meta http-equiv = 'Content-Type' content = 'text/html;charset=UTF-8'/>
+  <meta name       = 'viewport'     content = 'width=device-width, initial-scale=1, maximum-scale=4, user-scalable=yes'/>
+
+  <link rel = 'icon' type = 'image/icon' href = "${z:url('/resources/favicon.ico')}"/>
+
+  <title><ui:insert name = 'page_title'/></title>
+
+
+  <!-- Lodash, JQuery, and Else Libraries -->
+
+  <script type = 'text/javascript' charset = 'UTF-8'
+    src = "${z:url('/resources/scripts.js')}"></script>
+
+  <link type = 'text/css' rel = 'stylesheet'
+    href = "${z:url('/resources/styles.css')}"/>
+
+
+  <!-- Ext JS Framework -->
+
+  <c:if test = '${systemConfig.debug}'>
+
+    <script type = 'text/javascript' charset = 'UTF-8'
+      src = "${z:url('/resources/extjs/ext-all-debug.js')}"></script>
+
+    <script type = 'text/javascript' charset = 'UTF-8'
+      src = "${z:url('/resources/extjs/ext-theme-crisp-touch.js')}"></script>
+
+    <link type = 'text/css' rel = 'stylesheet'
+      href = "${z:url('/resources/extjs/ext-theme-crisp-touch-all-debug.css')}"/>
+
+  </c:if>
+
+  <c:if test = 'not ${systemConfig.debug}'>
+
+    <script type = 'text/javascript' charset = 'UTF-8'
+      src = "${z:url('/resources/extjs/ext-all.js')}"></script>
+
+    <script type = 'text/javascript' charset = 'UTF-8'
+      src = "${z:url('/resources/extjs/ext-theme-crisp-touch.js')}"></script>
+
+    <link type = 'text/css' rel = 'stylesheet'
+      href = "${z:url('/resources/extjs/ext-theme-crisp-touch-all.css')}"/>
+
+  </c:if>
+
+
+  <!-- Zero ZeT Library -->
+
+  <script type = 'text/javascript' charset = 'UTF-8'
+     src = "${z:url('/resources/zet.js')}"></script>
+
+
+  <!-- Ext JS User Extentions -->
+
+  <!--
+  <script type = 'text/javascript' charset = 'UTF-8'
+     src = "${z:url('/resources/extux.js')}"></script>
+
+  <link type = 'text/css' rel = 'stylesheet'
+     href = "${z:url('/resources/extux.css')}"/>
+  -->
+
+
+  <!-- ExtJSF Library -->
+
+  <script type = 'text/javascript' charset = 'UTF-8'
+     src = "${z:url('/resources/extjsf.js')}"></script>
+
+  <!--
+  <script type = 'text/javascript' charset = 'UTF-8'
+     src = "${z:url('/retrade/resources/desktop.js')}"></script>
+  -->
+
+
+  <!-- Demo Application -->
+
+  <!--
+  <script type = 'text/javascript' charset = 'UTF-8'
+     src = "${z:url('/retrade/resources/demo.js')}"></script>
+
+  <link type = 'text/css' rel = 'stylesheet'
+     href = "${z:url('/retrade/resources/demo.css')}"/>
+  -->
+
+  <!-- Page Specific Styles and Scripts -->
+
+  <ui:insert name = 'page_head'/>
+
+</head>
+<body>
+
+  <ui:insert name = 'page_body'/>
+
+</body>
+</html>
+</ui:component>

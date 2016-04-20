@@ -13,6 +13,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class SystemConfig
 {
+	/* General Settings */
+
+	public boolean isDebug()
+	{
+		return debug;
+	}
+
+	private boolean debug = true;
+
+	public void setDebug(boolean debug)
+	{
+		this.debug = debug;
+	}
+
+
 	/* Servlets and Go-Filters */
 
 	public String getGoPagePrefix()

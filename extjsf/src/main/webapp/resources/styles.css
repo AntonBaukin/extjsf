@@ -1,0 +1,18 @@
+/*===============================================================+
+ |                                                               |
+ |   Styles Collection for ExtJSF Demo Application               |
+ |                                   / anton.baukin@gmail.com /  |
+ +===============================================================*/
+
+/* Fonts */
+
+@import url(http://fonts.googleapis.com/css?family=Roboto:300,300italic,700&subset=latin,cyrillic);
+
+@import url(http://fonts.googleapis.com/css?family=PT+Sans:400,400italic&subset=cyrillic,latin);
+
+@import url(http://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css);
+
+
+/* Animate CSS Framework */
+
+@import url(http://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.1/animate.min.css);
