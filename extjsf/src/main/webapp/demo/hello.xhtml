@@ -1,0 +1,95 @@
+<ui:component xmlns:ui = 'http://java.sun.com/jsf/facelets'
+  xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
+  xmlns:f  = 'http://java.sun.com/jsf/core'
+  xmlns:z  = 'uri:extjs.jsf.java.net'>
+
+<c:set var = "v" scope = "request" value = "${rootView}"/>
+
+<ui:decorate template = '/resources/.view-modes/body.xhtml'
+   xmlns    = 'http://www.w3.org/1999/xhtml'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/extjsf'>
+
+<ui:define name = 'page-body'>
+  <x:desktop-panel coid = "${z:vid(v, 'hello-root')}">
+
+    <f:facet name = "extjs-props">
+      title: 'Hello, ExtJSF!', bodyCls: 'demo-text-panel demo-hello',
+      layout: { type: 'vbox', align: 'stretch' }
+    </f:facet>
+
+
+    <x:html coid = "${z:vid(v, 'hello-up')}" table = "false">
+      <div class = "demo-hello-float-sides-up">
+        <div>Click on these arrows to move<br/>the contentinto left or right panels.</div>
+        <i class = "fa fa-arrow-up"></i>
+      </div>
+    </x:html>
+
+
+    <x:component coid = "${z:vid(v, 'fill-0')}">
+      <f:facet name = "extjs-props">
+        xtype: 'panel', flex: 1, border: false,
+        bodyCls: 'demo-transparent-panel'
+      </f:facet>
+    </x:component>
+
+
+    <x:html coid = "${z:vid(v, 'hello-left')}" table = "false">
+      <div class = "demo-hello-float-sides-left">
+        <i class = "fa fa-arrow-left"></i>
+        <div>Click on arrow on the left<br/>to collapse or expand<br/>the left panel.</div>
+      </div>
+    </x:html>
+
+
+    <!-- [ center content ] -->
+    <x:html coid = "${z:vid(v, 'hello-content')}" table = "false">
+
+      <f:facet name = "extjs-props">
+        margin: extjsf.pts(100, 0)
+      </f:facet>
+
+      <table cellpadding = "0" cellspacing = "0" border = "0">
+        <tr>
+          <td><div></div></td>
+          <td style = 'width:0.01%'>
+            <h3>Welcome to the demo application of ExtJSF concept library!</h3>
+          </td>
+          <td><div></div></td>
+        </tr>
+        <tr>
+          <td><div></div></td>
+          <td>
+            <i class = "fa fa-github"></i>
+            <div>
+              The source may be found at this GitHub repository:<br/>
+              <a href = "https://github.com/AntonBaukin/extjsf"
+                target = "_blank">https://github.com/AntonBaukin/extjsf</a>
+            </div>
+          </td>
+          <td><div></div></td>
+        </tr>
+      </table>
+    </x:html>
+
+
+    <x:html coid = "${z:vid(v, 'hello-right')}" table = "false">
+      <div class = "demo-hello-float-sides-right">
+        <div>Click on arrow on the right<br/>to collapse or expand<br/>the right panel.</div>
+        <i class = "fa fa-arrow-right"></i>
+      </div>
+    </x:html>
+
+
+    <x:component coid = "${z:vid(v, 'fill-1')}">
+      <f:facet name = "extjs-props">
+        xtype: 'panel', flex: 1, border: false,
+        bodyCls: 'demo-transparent-panel'
+      </f:facet>
+    </x:component>
+
+  </x:desktop-panel>
+</ui:define>
+</ui:decorate>
+</ui:component>

@@ -120,4 +120,13 @@
         location = '${tomcat-target}/webapps/extjsf'/>
     </ant>
   </target>
+
+  <target name = 'demo-update-web'>
+
+    <ant dir = 'extjsf' target = 'explode-web'>
+
+      <property name = 'explode-path'
+        location = '${tomcat-target}/webapps/extjsf'/>
+    </ant>
+  </target>
 </project>

@@ -97,7 +97,7 @@
    +-——————————————————————————————————————————————-->
 
   <target name    = 'explode-update'
-          depends = 'compile'>
+          depends = 'compile, explode-web'>
 
     <!-- manifest directory -->
     <delete dir = '${explode-path}/META-INF'
@@ -114,7 +114,22 @@
     <manifest mode = 'update'
       file = '${explode-path}/META-INF/MANIFEST.MF'/>
 
-    <!-- web content -->
+    <!-- classes -->
+    <sync todir = '${explode-path}/WEB-INF/classes'
+      includeEmptyDirs = 'true'>
+
+      <fileset dir = '${module-classes}'>
+        <exclude name = 'META-INF/**'/>
+      </fileset>
+
+      <fileset dir = '${module-resources}'
+         erroronmissingdir = 'false'/>
+    </sync>
+  </target>
+
+  <target name = 'explode-web'>
+
+   <!-- web content -->
     <sync todir = '${explode-path}'
       includeEmptyDirs = 'true'>
 
@@ -128,18 +143,6 @@
       <fileset dir = '${module-web}'>
         <exclude name = 'META-INF/**'/>
       </fileset>
-    </sync>
-
-    <!-- classes -->
-    <sync todir = '${explode-path}/WEB-INF/classes'
-      includeEmptyDirs = 'true'>
-
-      <fileset dir = '${module-classes}'>
-        <exclude name = 'META-INF/**'/>
-      </fileset>
-
-      <fileset dir = '${module-resources}'
-         erroronmissingdir = 'false'/>
     </sync>
   </target>
 
