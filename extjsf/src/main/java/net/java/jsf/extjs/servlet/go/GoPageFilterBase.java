@@ -54,23 +54,6 @@ public abstract class GoPageFilterBase extends FilterBase
 	}
 
 
-	/* protected: request processing (abstractions) */
-
-	/**
-	 * Tells that the URI given matches the target
-	 * servlet (faces, pages, etc.) exactly.
-	 */
-	protected abstract boolean isExactURI(String uri);
-
-	/**
-	 * Variates forwarding of not-certain requests.
-	 * See {@link #tryForward(FilterTask, String)}.
-	 *
-	 * Note that here page name doesn't start with '?'.
-	 */
-	protected abstract boolean varForward(FilterTask task, String page);
-
-
 	/* protected: request processing */
 
 	protected boolean isExactRequest(FilterTask task)
@@ -80,12 +63,32 @@ public abstract class GoPageFilterBase extends FilterBase
 	}
 
 	/**
+	 * Tells that the URI given matches the target
+	 * servlet (faces, pages, etc.) exactly.
+	 */
+	protected boolean isExactURI(String uri)
+	{
+		return false;
+	}
+
+	/**
 	 * See {@link GoDisper#isGoRequest(FilterTask)}
 	 * for the result format.
 	 */
 	protected String  isGoRequest(FilterTask task)
 	{
 		return getDisper().isGoRequest(task);
+	}
+
+	/**
+	 * Variates forwarding of not-certain requests.
+	 * See {@link #tryForward(FilterTask, String)}.
+	 *
+	 * Note that here page name doesn't start with '?'.
+	 */
+	protected boolean varForward(FilterTask task, String page)
+	{
+		return false;
 	}
 
 	/**

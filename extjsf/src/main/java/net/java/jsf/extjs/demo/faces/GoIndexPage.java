@@ -4,11 +4,20 @@ package net.java.jsf.extjs.demo.faces;
 
 import org.springframework.stereotype.Component;
 
+/* extjsf: config */
+
+import net.java.jsf.extjs.SystemConfig;
+
 /* extjsf: filters */
 
 import net.java.jsf.extjs.servlet.filters.FilterTask;
 import net.java.jsf.extjs.servlet.filters.PickFilter;
 import net.java.jsf.extjs.servlet.go.GoPageFilterBase;
+
+/* extjsf: support */
+
+import net.java.jsf.extjs.support.EX;
+import static net.java.jsf.extjs.support.SpringPoint.bean;
 
 
 /**
@@ -28,23 +37,57 @@ public class GoIndexPage extends GoPageFilterBase
 {
 	/* protected: GoFilterBase interface */
 
-	protected boolean isExactURI(String uri)
+	protected boolean isExactRequest(FilterTask task)
 	{
-		return uri.endsWith("/go/index");
+		return isNoPage(task) || task.getRequest().
+		  getRequestURI().equals(getGoIndexPage(task));
 	}
 
 	protected void    runExactMatch(FilterTask task)
 	{
+		//?: {empty path} redirect permanently
+		if(isNoPage(task)) try
+		{
+			task.getResponse().sendRedirect(
+			  task.getRequest().getContextPath() + "/go/index");
+
+			task.doBreak();
+			return;
+		}
+		catch(Throwable e)
+		{
+			throw EX.wrap(e);
+		}
+
 		runForward(task, "/welcome.xhtml");
 	}
 
-	protected String  isGoRequest(FilterTask task)
+	protected boolean isNoPage(FilterTask task)
 	{
-		return null;
+		String  cp = task.getRequest().getContextPath();
+		String uri = task.getRequest().getRequestURI();
+
+		if(uri.endsWith("/"))
+			uri = uri.substring(0, uri.length() - 1);
+
+		return uri.equals(cp);
 	}
 
-	protected boolean varForward(FilterTask task, String page)
+	protected String  getGoIndexPage(FilterTask task)
 	{
-		return false;
+		if(goIndex == null)
+		{
+			String cp = task.getRequest().getContextPath();
+			String go = bean(SystemConfig.class).getGoPagePrefix();
+
+			if(!go.startsWith("/")) go  = "/" + go;
+			if(!go.endsWith("/"))   go += "/";
+
+			goIndex = cp + go + "index";
+		}
+
+		return goIndex;
 	}
+
+	protected volatile String goIndex;
 }

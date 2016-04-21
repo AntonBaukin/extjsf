@@ -1271,5 +1271,5 @@ ZeT.defineClass('extjsf.Desktop.Load', extjsf.LoadCo,
 
 // +----: Desktop Instance :-------------------------------------+
 
-extjsf.desktop = ZeT.defineInstance(
-  'extjsf.desktop', extjsf.Desktop)
+//extjsf.desktop = ZeT.defineInstance(
+//  'extjsf.desktop', extjsf.Desktop)

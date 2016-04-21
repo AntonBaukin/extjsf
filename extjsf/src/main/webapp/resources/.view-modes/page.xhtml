@@ -15,7 +15,7 @@
 
   <link rel = 'icon' type = 'image/icon' href = "${z:url('/resources/favicon.ico')}"/>
 
-  <title><ui:insert name = 'page_title'/></title>
+  <title><ui:insert name = 'page-title'/></title>
 
 
   <!-- Lodash, JQuery, and Else Libraries -->
@@ -34,9 +34,6 @@
     <script type = 'text/javascript' charset = 'UTF-8'
       src = "${z:url('/resources/extjs/ext-all-debug.js')}"></script>
 
-    <script type = 'text/javascript' charset = 'UTF-8'
-      src = "${z:url('/resources/extjs/ext-theme-crisp-touch.js')}"></script>
-
     <link type = 'text/css' rel = 'stylesheet'
       href = "${z:url('/resources/extjs/ext-theme-crisp-touch-all-debug.css')}"/>
 
@@ -46,9 +43,6 @@
 
     <script type = 'text/javascript' charset = 'UTF-8'
       src = "${z:url('/resources/extjs/ext-all.js')}"></script>
-
-    <script type = 'text/javascript' charset = 'UTF-8'
-      src = "${z:url('/resources/extjs/ext-theme-crisp-touch.js')}"></script>
 
     <link type = 'text/css' rel = 'stylesheet'
       href = "${z:url('/resources/extjs/ext-theme-crisp-touch-all.css')}"/>
@@ -78,17 +72,16 @@
   <script type = 'text/javascript' charset = 'UTF-8'
      src = "${z:url('/resources/extjsf.js')}"></script>
 
-  <!--
   <script type = 'text/javascript' charset = 'UTF-8'
-     src = "${z:url('/retrade/resources/desktop.js')}"></script>
-  -->
+     src = "${z:url('/resources/desktop.js')}"></script>
 
 
   <!-- Demo Application -->
 
-  <!--
   <script type = 'text/javascript' charset = 'UTF-8'
      src = "${z:url('/retrade/resources/demo.js')}"></script>
+
+  <!--
 
   <link type = 'text/css' rel = 'stylesheet'
      href = "${z:url('/retrade/resources/demo.css')}"/>
@@ -96,12 +89,12 @@
 
   <!-- Page Specific Styles and Scripts -->
 
-  <ui:insert name = 'page_head'/>
+  <ui:insert name = 'page-head'/>
 
 </head>
 <body>
 
-  <ui:insert name = 'page_body'/>
+  <ui:insert name = 'page-body'/>
 
 </body>
 </html>

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 /* extjsf: servlet */
 
 import net.java.jsf.extjs.servlet.filters.FilterBase;
+import net.java.jsf.extjs.servlet.filters.FilterStage;
 import net.java.jsf.extjs.servlet.filters.FilterTask;
 import net.java.jsf.extjs.servlet.filters.PickFilter;
 
@@ -27,10 +28,12 @@ public class DotFilter extends FilterBase
 {
 	public void openFilter(FilterTask task)
 	{
-		String p = task.getRequest().getRequestURI();
+		//?: {not external request}
+		if(!FilterStage.REQUEST.equals(task.getFilterStage()))
+			return;
 
 		//?: {is dot resource} react as not found
-		if(p.contains("/.")) try
+		if(task.getRequest().getRequestURI().contains("/.")) try
 		{
 			task.getResponse().sendError(404);
 		}

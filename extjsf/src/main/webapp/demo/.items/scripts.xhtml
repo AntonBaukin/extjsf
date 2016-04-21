@@ -1,0 +1,56 @@
+<!--
+  This file is a component of desktop.xhtml page.
+  It provides scripts that depend on the server side.
+-->
+<ui:component xmlns = 'http://www.w3.org/1999/xhtml'
+  xmlns:ui = 'http://java.sun.com/jsf/facelets'
+  xmlns:f  = 'http://java.sun.com/jsf/core'>
+
+<script type = "text/javascript">
+//<![CDATA[
+
+extjsf.desktop  = ZeT.defineInstance('extjsf.desktop', extjsf.Desktop)
+
+extjsf.Defaults =
+{
+  'main-topbar'     : { height: 42 },
+  'button'          : { height: 30 },
+  'button-square'   : { width: 30, height: 30 },
+  'inline-header'   : { minHeight: 32 }
+}
+
+/**
+ * Returns the property (value, object) extending on demand.
+ */
+function extjsf_default(p, ext)
+{
+  var o = extjsf.Defaults[p]
+  if(ZeT.isx(ext)) return o
+
+  ZeT.assert(ZeT.iso(o))
+  ZeT.assert(ZeT.iso(ext))
+
+  return ZeT.extend(ZeT.deepClone(o), ext)
+}
+
+/**
+ * Returns URL to short name of (demo) application page.
+ */
+function extjsf_go_url(url)
+{
+  ZeT.asserts(url, 'No load URL is provided!')
+
+  //?: {create relative go-address}
+  if(url.indexOf('/go/demo') == -1)
+  {
+    if(ZeTS.starts(url, '/'))
+      url = ZeT.asserts(url.substring(1))
+    url = "${z:url('/go/demo/XYZ')}".replace('XYZ', url)
+  }
+
+  return url
+}
+
+//]]>
+</script>
+</ui:component>

@@ -68,7 +68,7 @@
 
       <!--
            Optional argument that defines the target
-           of validation (it's Bind name) . In a case
+           of validation (it's Bind name). In a case
            of form POST this is the form posted.
       -->
       <xs:attribute name = "target" type = "xs:string"/>

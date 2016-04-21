@@ -1,0 +1,421 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<ui:component xmlns = 'http://www.w3.org/1999/xhtml'
+  xmlns:ui = 'http://java.sun.com/jsf/facelets'
+  xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
+  xmlns:f  = 'http://java.sun.com/jsf/core'
+  xmlns:z  = 'uri:extjs.jsf.java.net'>
+
+<ui:decorate template = '/resources/.view-modes/page.xhtml'
+   xmlns    = 'http://www.w3.org/1999/xhtml'
+   xmlns:h  = 'http://java.sun.com/jsf/html'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/extjsf'>
+
+<ui:define name = 'page-title'>
+  <ui:insert name = 'page-title'/>
+</ui:define>
+
+<ui:define name = 'page-head'>
+  <ui:insert name = 'page-head'/>
+</ui:define>
+
+
+<ui:define name = 'page-body'>
+
+<ui:decorate template = "scripts.xhtml"/>
+
+<x:viewport coid = "${z:vid(desktopView, 'desktop')}">
+
+  <f:facet name = "extjs-props">
+    layout: { type: 'hbox', align: 'stretch' }
+  </f:facet>
+
+
+  <!-- [desktop left panel -->
+
+  <x:component coid = "${z:vid(desktopView, 'desktop-left')}">
+
+    <f:facet name = "extjs-props">
+      xtype: 'panel', flex: 1, frame: false, border: false,
+      minWidth: 64, layout: { type: 'vbox', align: 'stretch' },
+      animCollapse: false, collapseDirection: 'left',
+      hideCollapseTool: true, titleCollapse: true,
+      collapsedCls: 'retrade-desktop-panel-left-collapsed',
+      bodyCls: 'retrade-desktop-panel-left'
+    </f:facet>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+      extjsf.desktop.bindPanel("${z:vid(desktopView, 'desktop-left')}", '${extDom}', 'left')
+
+    //]]>
+    </script>
+
+
+    <!-- [left topbar -->
+
+    <x:component coid = "${z:vid(desktopView, 'left-topbar')}">
+      <f:facet name = "extjs-props">
+        region: 'north', frame: false, border:false,
+        height: extjsf_default('main-topbar').height,
+        margin: extjsf.pts(0, 2, 0, 2),
+        bodyCls: 'retrade-desktop-panel-topbar',
+        layout: { type: 'hbox', align: 'middle' }
+      </f:facet>
+    </x:component>
+
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  extjsf.desktop.controller('left').mainTopbar("${z:vid(desktopView, 'left-topbar')}", '${extDom}')
+  extjsf.desktop.controller('left').mainTopbarExt("${z:vid(desktopView, 'left-topbar')}", '${extDom}')
+
+    //]]>
+    </script>
+
+    <!-- left topbar] -->
+
+
+    <!-- [left void panel -->
+
+    <x:component coid = "${z:vid(desktopView, 'left-void')}">
+      <f:facet name = "extjs-props">
+        xtype: 'panel', flex: 1, hidden: true,
+        frame: false, border: false,
+        layout: { type: 'vbox', align: 'stretch' },
+        bodyCls: 'retrade-desktop-panel-void'
+      </f:facet>
+
+      <x:component coid = "${z:vid(desktopView, 'left_void_0')}">
+        <f:facet name = "extjs-props">
+          flex: 1, frame: false, border: false,
+          bodyCls: 'retrade-transparent-panel'
+        </f:facet>
+      </x:component>
+
+      <x:component coid = "${z:vid(desktopView, 'left_void_1')}">
+        <f:facet name = "extjs-props">
+          frame: false, border: false,
+          bodyCls: 'retrade-desktop-panel-void-center',
+          bodyStyle: { cursor: 'pointer' }
+        </f:facet>
+      </x:component>
+
+      <x:component coid = "${z:vid(desktopView, 'left_void_2')}">
+        <f:facet name = "extjs-props">
+          flex: 1, frame: false, border: false,
+          bodyCls: 'retrade-transparent-panel'
+        </f:facet>
+      </x:component>
+    </x:component>
+
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+    extjsf.desktop.controller('left').voidPanel("${z:vid(desktopView, 'left-void')}", '${extDom}')
+
+    //~: collapse left on center component click
+    extjsf.bind("${z:vid(desktopView, 'left_void_1')}", '${extDom}').
+      on('afterrender', function(panel)
+    {
+      panel.getEl().on('click', function()
+      {
+        extjsf.co("${z:vid(desktopView, 'desktop-left')}", '${extDom}').collapse()
+      })
+    })
+
+    //~: make background image square
+    extjsf.bind("${z:vid(desktopView, 'left-void')}", '${extDom}').
+      on('resize', function(p, w, h)
+    {
+      var v = extjsf.co("${z:vid(desktopView, 'left_void_1')}", '${extDom}')
+      var H = p.getViewRegion(); H = Math.round((H.bottom - H.top) / 3)
+      var s = v.getSize()
+
+      s.height = Math.min(s.width, H)
+      v.setHeight(s.height)
+    })
+
+    //]]>
+    </script>
+
+    <!-- left void panel] -->
+
+
+    <!-- [left content -->
+
+    <x:component coid = "${z:vid(desktopView, 'left-panel')}">
+
+      <f:facet name = "extjs-props">
+        xtype: 'panel', flex: 1, frame: false,
+        border: false, layout: 'fit',
+        bodyCls: 'retrade-desktop-panel-content'
+      </f:facet>
+
+      <script type = "text/javascript">
+      //<![CDATA[
+
+        extjsf.desktop.controller('left').contentPanel("${z:vid(desktopView, 'left-panel')}", '${extDom}')
+
+      //]]>
+      </script>
+    </x:component>
+
+    <!-- left content] -->
+
+  </x:component>
+
+
+  <!-- desktop left panel] -->
+
+
+  <x:component coid = "${z:vid(desktopView, '_desktop_left_splitter')}">
+    <f:facet name = "extjs-props">
+      xtype: 'splitter', collapsible: false,
+      margin: extjsf_default('main-topbar').height + ' 0 0 0'
+    </f:facet>
+  </x:component>
+
+
+  <!-- [desktop center item  -->
+
+  <x:component coid = "${z:vid(desktopView, 'desktop-center')}">
+
+    <f:facet name = "extjs-props">
+      xtype: 'panel', minWidth: 768, flex: 2,
+      frame: false, border: false, layout: 'border',
+      bodyCls: 'retrade-desktop-panel-center'
+    </f:facet>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+      extjsf.desktop.bindPanel("${z:vid(desktopView, 'desktop-center')}", '${extDom}', 'center')
+
+    //]]>
+    </script>
+
+
+    <!-- [desktop main topbar] -->
+    <ui:insert name = 'main-topbar'/>
+
+
+    <!-- [content panel] -->
+
+    <x:component coid = "${z:vid(desktopView, 'desktop-root-panel')}">
+
+      <f:facet name = "extjs-props">
+        xtype: 'panel', region: 'center',
+        frame: false, border: false, layout: 'fit',
+        bodyCls: 'retrade-desktop-panel-content'
+      </f:facet>
+
+      <script type = "text/javascript">
+      //<![CDATA[
+
+        extjsf.desktop.controller('center').contentPanel("${z:vid(desktopView, 'desktop-root-panel')}", '${extDom}')
+
+      //]]>
+      </script>
+    </x:component>
+  </x:component>
+
+  <!-- desktop center item] -->
+
+
+  <x:component coid = "${z:vid(desktopView, '_desktop_right_splitter')}">
+    <f:facet name = "extjs-props">
+      xtype: 'splitter', collapsible: false,
+      margin: extjsf_default('main-topbar').height + ' 0 0 0'
+    </f:facet>
+  </x:component>
+
+
+  <!-- [desktop right panel -->
+
+  <x:component coid = "${z:vid(desktopView, 'desktop-right')}">
+
+    <f:facet name = "extjs-props">
+      xtype: 'panel', flex: 1, frame: false, border: false,
+      minWidth: 64, layout: { type: 'vbox', align: 'stretch' },
+      animCollapse: false, collapseDirection: 'right',
+      hideCollapseTool: true, titleCollapse: true,
+      collapsedCls: 'retrade-desktop-panel-right-collapsed',
+      bodyCls:  'retrade-desktop-panel-right'
+    </f:facet>
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+      extjsf.desktop.bindPanel("${z:vid(desktopView, 'desktop-right')}", '${extDom}', 'right')
+
+    //]]>
+    </script>
+
+
+    <!-- [right topbar -->
+
+    <x:component coid = "${z:vid(desktopView, 'right-topbar')}">
+      <f:facet name = "extjs-props">
+        region: 'north', frame: false, border:false,
+        height: extjsf_default('main-topbar').height,
+        margin: extjsf.pts(0, 2, 0, 2),
+        bodyCls: 'retrade-desktop-panel-topbar',
+        layout: {type: 'hbox', align: 'middle'}
+      </f:facet>
+    </x:component>
+
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+  extjsf.desktop.controller('right').mainTopbar("${z:vid(desktopView, 'right-topbar')}", '${extDom}')
+  extjsf.desktop.controller('right').mainTopbarExt("${z:vid(desktopView, 'right-topbar')}", '${extDom}')
+
+    //]]>
+    </script>
+
+    <!-- right topbar] -->
+
+
+    <!-- [right void panel -->
+
+    <x:component coid = "${z:vid(desktopView, 'right-void')}">
+      <f:facet name = "extjs-props">
+        xtype: 'panel', flex: 1, hidden: true,
+        frame: false, border: false,
+        layout: { type: 'vbox', align: 'stretch' },
+        bodyCls: 'retrade-desktop-panel-void'
+      </f:facet>
+
+      <x:component coid = "${z:vid(desktopView, 'right_void_0')}">
+        <f:facet name = "extjs-props">
+          flex: 1, frame: false, border: false,
+          bodyCls: 'retrade-transparent-panel'
+        </f:facet>
+      </x:component>
+
+      <x:component coid = "${z:vid(desktopView, 'right_void_1')}">
+        <f:facet name = "extjs-props">
+          frame: false, border: false,
+          bodyCls: 'retrade-desktop-panel-void-center',
+          bodyStyle: { cursor: 'pointer' }
+        </f:facet>
+      </x:component>
+
+      <x:component coid = "${z:vid(desktopView, 'right_void_2')}">
+        <f:facet name = "extjs-props">
+          flex: 1, frame: false, border: false,
+          bodyCls: 'retrade-transparent-panel'
+        </f:facet>
+      </x:component>
+    </x:component>
+
+
+    <script type = "text/javascript">
+    //<![CDATA[
+
+    extjsf.desktop.controller('right').voidPanel("${z:vid(desktopView, 'right-void')}", '${extDom}')
+
+    //~: collapse right on center component click
+    extjsf.bind("${z:vid(desktopView, 'right_void_1')}", '${extDom}').
+      on('afterrender', function(panel)
+    {
+      panel.getEl().on('click', function()
+      {
+        extjsf.co("${z:vid(desktopView, 'desktop-right')}", '${extDom}').collapse()
+      })
+    })
+
+    //~: make background image square
+    extjsf.bind("${z:vid(desktopView, 'right-void')}", '${extDom}').
+      on('resize', function(p, w, h)
+    {
+      var v = extjsf.co("${z:vid(desktopView, 'right_void_1')}", '${extDom}')
+      var H = p.getViewRegion(); H = Math.round((H.bottom - H.top) / 3)
+      var s = v.getSize()
+
+      s.height = Math.min(s.width, H)
+      v.setHeight(s.height)
+    })
+
+    //]]>
+    </script>
+
+    <!-- [right void panel -->
+
+
+    <!-- [right content -->
+
+    <x:component coid = "${z:vid(desktopView, 'right-panel')}">
+
+      <f:facet name = "extjs-props">
+        xtype: 'panel', flex: 1, frame: false,
+        border: false, layout: 'fit',
+        bodyCls: 'retrade-desktop-panel-content'
+      </f:facet>
+
+      <script type = "text/javascript">
+      //<![CDATA[
+
+        extjsf.desktop.controller('right').contentPanel("${z:vid(desktopView, 'right-panel')}", '${extDom}')
+
+      //]]>
+      </script>
+    </x:component>
+
+    <!-- right content] -->
+
+  </x:component>
+
+  <!-- desktop right panel] -->
+</x:viewport>
+
+<script type = "text/javascript">
+//<![CDATA[
+
+  //~: register ready point for desktop initial size
+  extjsf.desktop.readyPoint('extjsf.desktop.initial-size')
+
+  //~: register ready point for the selection set
+  //extjsf.desktop.readyPoint('ReTrade.selset')
+
+  //~: collapse the left-right panels if screen is too small
+  Ext.onReady(function()
+  {
+    //~: activate the desktop
+    extjsf.desktop.activate()
+
+    if($(window).innerWidth() < 1216) {
+      extjsf.desktop.panels.left.co().collapse()
+      extjsf.desktop.panels.right.co().collapse()
+    }
+
+    //!: notify that initial desktop layout is gained
+    extjsf.desktop.readyPoint('extjsf.desktop.initial-size', true)
+  })
+
+//]]>
+</script>
+
+
+<!-- [content of the index page] -->
+<ui:insert name = 'index-content'/>
+
+</ui:define>
+</ui:decorate>
+
+<ui:decorate template = '/resources/.view-modes/page_post.xhtml'>
+
+  <ui:define name = 'validation'>
+    <ui:insert name = 'desktop-validation'/>
+  </ui:define>
+
+  <ui:define name = 'scripts'>
+    <ui:insert name = 'desktop-scripts'/>
+  </ui:define>
+</ui:decorate>
+</ui:component>

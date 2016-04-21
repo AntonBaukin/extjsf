@@ -3,10 +3,8 @@
 <ui:fragment xmlns = 'http://www.w3.org/1999/xhtml'
    xmlns:ui = 'http://java.sun.com/jsf/facelets'
    xmlns:co = 'http://java.sun.com/jsf/composite'
-   xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
-   xmlns:f  = 'http://java.sun.com/jsf/core'
    xmlns:h  = 'http://java.sun.com/jsf/html'
-   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'
+   xmlns:x  = 'http://java.sun.com/jsf/composite/extjsf'
    xmlns:z  = 'uri:extjs.jsf.java.net'>
 
   <co:interface>
@@ -15,10 +13,10 @@
        type = 'java.lang.String'/>
 
     <!--
-         Date value of the field.
+         Value of the field.
     -->
-    <co:attribute name = 'value' required = 'true'
-       type = 'java.util.Date'/>
+    <co:attribute name = 'value' required = 'false'
+       type = 'java.lang.Object'/>
 
     <!--
          JSF extension point of the field.
@@ -28,15 +26,20 @@
 
     <co:facet name = 'extjs-props'/>
 
+    <!--
+         Properties of additional label component
+         added before or after (labelAlign property
+         is 'left') the field. Label is not created
+         if this facet is empty. By default it's
+         placed on the right of the checkbox.
+    -->
     <co:facet name = 'label-props'/>
 
   </co:interface>
 
   <co:implementation>
 
-    <h:inputHidden id = "field" value = "#{cc.attrs.value}">
-      <f:converter converterId = "com.tverts:fmt:date2str"/>
-    </h:inputHidden>
+    <h:inputHidden id = "field" value = "#{cc.attrs.value}"/>
 
     <div id = "#{cc.clientId}-#{cc.attrs.coid}-props" style = "display:none">
       <co:renderFacet name = "extjs-props"/>
@@ -52,11 +55,11 @@
       extjsf.domain('${extDom}').
         bind('#{cc.attrs.coid}', new extjsf.FieldBind()).
         ids('#{cc.clientId}').parent('#{cc.parent.attrs.coid}').
-        props({ format: 'd.m.Y', submitFormat: 'd.m.Y' }).
-        props({ maxLength: 10, enforceMaxLength: true }).
-        props({ width: extjsf.ex(15), cls: 'x-field-date' }).
-        props({ xtype: 'datefield' }).readPropsNode().
-        buildLabel().install()
+        props({ inputValue : 'true', uncheckedValue: 'false' }).
+        props({ xtype: 'checkboxfield' }).readPropsNode().
+        props('label', { labelAlign: 'right' }).
+        readPropsNode('label').buildLabel(true).
+        install()
 
     //]]>
     </script>

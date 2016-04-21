@@ -1,25 +1,44 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
-<ui:component xmlns = 'http://www.w3.org/1999/xhtml'
-  xmlns:ui = 'http://java.sun.com/jsf/facelets'
+<ui:component xmlns:ui = 'http://java.sun.com/jsf/facelets'
   xmlns:c  = 'http://java.sun.com/jsp/jstl/core'
-  xmlns:f  = 'http://java.sun.com/jsf/core'
-  xmlns:z  = 'uri:extjs.jsf.java.net'>
+  xmlns:f  = 'http://java.sun.com/jsf/core'>
 
-<ui:decorate template = '/resources/.view-modes/page.xhtml'
-   xmlns:h  = 'http://java.sun.com/jsf/html'
-   xmlns:x  = 'http://java.sun.com/jsf/composite/.xhtml'>
+  <ui:decorate template = '/demo/.items/desktop.xhtml'
+    xmlns    = 'http://www.w3.org/1999/xhtml'
+    xmlns:x  = 'http://java.sun.com/jsf/composite/extjsf'
+    xmlns:z  = 'uri:extjs.jsf.java.net'>
 
-<ui:define name = 'page_title'>
-  Welcome to ExtJSF Concept Demo
-</ui:define>
+    <ui:param name = "desktopView" value = "#{facesDesktopView}"/>
 
-<ui:define name = 'page_body'>
+    <ui:define name = "page-title">
+      Welcome to ExtJSF Concept Demo
+    </ui:define>
 
-  <h3>Welcome to ExtJSF Concept Library Demo Application!</h3>
 
-  <p>This content would be replaced with the Desktop layout.</p>
+    <!-- [application main topbar] -->
+    <ui:define name = "main-topbar">
+    </ui:define>
 
-</ui:define>
-</ui:decorate>
+
+    <!-- [load the default scontent] -->
+    <ui:define name = "index-content">
+      <script type = "text/javascript">
+      //<![CDATA[
+
+        extjsf.desktop.onReady(function()
+        {
+          //ReTrade.desktop.loadPanel('hello')
+          ZeT.log('Desktop entered!')
+        })
+
+      //]]>
+      </script>
+    </ui:define>
+
+    <!-- validation of logout request -->
+    <ui:define name = 'desktop-validation'>
+      <validation success = "true"/>
+    </ui:define>
+  </ui:decorate>
 </ui:component>

@@ -132,19 +132,12 @@
   </context-param>
 
   <context-param>
-    <param-name>javax.faces.FACELETS_LIBRARIES</param-name>
-    <param-value>/WEB-INF/extjsf.taglib.xml</param-value>
-  </context-param>
-
-  <context-param>
     <param-name>javax.faces.PROJECT_STAGE</param-name>
     <param-value>Development</param-value>
   </context-param>
 
   <context-param>
     <param-name>javax.faces.FACELETS_REFRESH_PERIOD</param-name>
-
-    <!-- Tells to scan for changes in XHTML files -->
     <param-value>0</param-value>
   </context-param>
 
@@ -190,27 +183,12 @@
     </filter-class>
   </filter>
 
-
-  <!-- filter external requests -->
-  <filter-mapping>
-    <filter-name>Filters Bridge</filter-name>
-
-    <url-pattern>/go/*</url-pattern>
-    <url-pattern>/model</url-pattern>
-    <url-pattern>/download</url-pattern>
-    <url-pattern>/download/*</url-pattern>
-    <url-pattern>/upload</url-pattern>
-
-    <dispatcher>REQUEST</dispatcher>
-  </filter-mapping>
-
-
-  <!-- filter all internal requests -->
   <filter-mapping>
     <filter-name>Filters Bridge</filter-name>
 
     <url-pattern>/*</url-pattern>
 
+    <dispatcher>REQUEST</dispatcher>
     <dispatcher>FORWARD</dispatcher>
     <dispatcher>INCLUDE</dispatcher>
     <dispatcher>ERROR</dispatcher>
@@ -220,10 +198,6 @@
   <!--====================================================
     = JSP Engine Configuration                           =
     ====================================================-->
-
-  <welcome-file-list>
-    <welcome-file>/go/index</welcome-file>
-  </welcome-file-list>
 
   <jsp-config>
     <jsp-property-group>
