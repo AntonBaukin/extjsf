@@ -2,9 +2,11 @@ package net.java.jsf.extjs.support;
 
 /* Java */
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -17,6 +19,63 @@ import java.util.TreeMap;
 public class SU
 {
 	/* Simplifications */
+
+	/**
+	 * Breaks string into words. The words
+	 * are separated by any character except
+	 * a letter, a digit, '-', ':', '/', '\'.
+	 *
+	 * Side whitespaces of the words are ignored,
+	 * empty strings are removed.
+	 */
+	public static String[] s2a(String s)
+	{
+		if((s = s2s(s)) == null)
+			return new String[0];
+
+		List<String> sa = new ArrayList<>(8);
+		StringBuilder sb = new StringBuilder(16);
+		char          c, cc;
+
+		for(int x = 0, i = 0, l = s.length();(i < l);i++)
+		{
+			cc = c = s.charAt(i);
+
+			if(Character.isLetterOrDigit(c))
+				c = '\0';
+			else if(c == '-' || c == ':' || c == '/' || c == '\\')
+				c = '\0';
+
+			//?: {in the word & continue}
+			if(x == 0 && c == '\0')
+				sb.append(cc);
+			//?: {in the word & break}
+			else if(x == 0)
+			{
+				if(sb.length() != 0)
+				{
+					sa.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+
+				x = 1;
+			}
+			//?: {out of a word & enter}
+			else if(c == '\0')
+			{
+				sb.append(cc);
+				x = 0;
+			}
+		}
+
+		if(sb.length() != 0)
+			sa.add(sb.toString());
+
+		if(sa.isEmpty())
+			return new String[0];
+
+		return sa.toArray(new String[sa.size()]);
+	}
 
 	/**
 	 * Checks whether the string is {@code null}

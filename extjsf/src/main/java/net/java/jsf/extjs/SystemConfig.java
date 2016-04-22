@@ -4,6 +4,11 @@ package net.java.jsf.extjs;
 
 import org.springframework.stereotype.Component;
 
+/* extjsf: support */
+
+import net.java.jsf.extjs.support.EX;
+import net.java.jsf.extjs.support.SpringPoint;
+
 
 /**
  * Collection of parameters of various subsystems.
@@ -13,6 +18,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class SystemConfig
 {
+	/* Singleton */
+
+	public static SystemConfig getInstance()
+	{
+		return SpringPoint.bean(SystemConfig.class);
+	}
+
+
 	/* General Settings */
 
 	public boolean isDebug()
@@ -25,6 +38,22 @@ public class SystemConfig
 	public void setDebug(boolean debug)
 	{
 		this.debug = debug;
+	}
+
+	/**
+	 * Default UI grid size.
+	 */
+	public int getGridSize()
+	{
+		return (gridSize != 0)?(gridSize):(20);
+	}
+
+	private int gridSize;
+
+	public void setGridSize(int gridSize)
+	{
+		EX.assertx(gridSize >= 1);
+		this.gridSize = gridSize;
 	}
 
 
