@@ -28,5 +28,6 @@
    +-——————————————————————————————————————————————-->
 
   <import resource = 'spring/models.xml'/>
+  <import resource = 'spring/xmapping.xml'/>
 
 </beans>

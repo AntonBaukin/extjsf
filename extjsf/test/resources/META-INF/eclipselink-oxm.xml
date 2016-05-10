@@ -1,0 +1,11 @@
+<!-- This is the template used for auto-generation -->
+<xml-bindings package-name = "$PACKAGE"
+  xmlns = "http://www.eclipse.org/eclipselink/xsds/persistence/oxm">
+  <xml-java-type-adapters>
+
+    <!-- JSON: represents decimals as strings, not numbers -->
+    <xml-java-type-adapter type = "java.math.BigDecimal"
+      value = "net.java.jsf.extjs.support.jaxb.BigDecimalAdapter"/>
+
+  </xml-java-type-adapters>
+</xml-bindings>

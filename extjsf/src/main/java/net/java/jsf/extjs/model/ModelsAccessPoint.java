@@ -1,10 +1,10 @@
 package net.java.jsf.extjs.model;
 
-/* com.tverts: models (store) */
+/* extjsf: models (store) */
 
 import net.java.jsf.extjs.model.store.ModelsStoreAccess;
 
-/* com.tverts: support */
+/* extjsf: support */
 
 import net.java.jsf.extjs.support.EX;
 import static net.java.jsf.extjs.support.SpringPoint.bean;

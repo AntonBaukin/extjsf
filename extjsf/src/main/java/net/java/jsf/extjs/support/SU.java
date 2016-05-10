@@ -53,6 +53,49 @@ public class SU
 			}
 			//?: {out of a word & enter}
 			else if(!w && !f)
+			{
+				b = i;
+				w = true;
+			}
+		}
+
+		//?: {last word}
+		if(w && b != i)
+			a.add(s.substring(b, i));
+
+		return a.toArray(new String[a.size()]);
+	}
+
+	/**
+	 * Splits the string by the separators given.
+	 * Note that whitespaces are not trimmed here.
+	 */
+	public static String[] s2a(String s, char... p)
+	{
+		if(s == null) return new String[0];
+		EX.assertx(p.length != 0);
+
+		List<String> a = new ArrayList<>(4);
+		boolean      w = true, f;
+		int          l, i, j, b = 0;
+
+		for(i = 0, l = s.length();(i < l);i++)
+		{
+			char c = s.charAt(i);
+
+			//?: {is a separator}
+			for(f = false, j = 0;(j < p.length);j++)
+				if(c == p[j]) { f = true; break; }
+
+			//?: {in a word & break}
+			if(w && f)
+			{
+				if(b != i)
+					a.add(s.substring(b, i));
+				w = false;
+			}
+			//?: {out of a word & enter}
+			else if(!w && !f)
 				{ b = i; w = true; }
 		}
 
@@ -102,6 +145,32 @@ public class SU
 					size += sXl(x);
 
 		return size;
+	}
+
+	/**
+	 * Returns an array of not-whitespace-strings
+	 * collected from the array provided.
+	 *
+	 * Omits {@code null} strings. Returns always
+	 * not {@code null}!
+	 *
+	 * A copy of the original array is always created.
+	 */
+	public static String[] a2a(String[] a)
+	{
+		if(a == null) return new String[0];
+
+		String[] r;
+		int      i = 0, l = 0;
+
+		for(String s : a)
+			if(!sXe(s)) l++;
+
+		r = new String[l];
+		for(String s : a)
+			if(!sXe(s)) r[i++] = s2s(s);
+
+		return r;
 	}
 
 
