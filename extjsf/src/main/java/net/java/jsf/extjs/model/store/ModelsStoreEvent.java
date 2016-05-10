@@ -25,6 +25,12 @@ public class ModelsStoreEvent
 		this.eventTime = eventTime;
 	}
 
+	public boolean  before(ModelsStoreEvent e)
+	{
+		return (this.eventTime != 0L) &&
+		  (this.eventTime < e.getEventTime());
+	}
+
 	/**
 	 * This flag tells the service
 	 * to cleanup the persistent backend.

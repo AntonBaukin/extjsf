@@ -31,8 +31,8 @@ public class ModelsAccessPoint
 	public static ModelsStore store()
 	{
 		//?: {has no store access strategy}
-		ModelsStoreAccess msa =
-		  EX.assertn(getInstance().modelAccess);
+		ModelsStoreAccess msa = EX.assertn(
+		  getInstance().getModelAccess());
 
 		//?: {access strategy got no store}
 		return EX.assertn(msa.accessStore());
@@ -53,8 +53,7 @@ public class ModelsAccessPoint
 		   !beanClass.isAssignableFrom(mb.getClass())
 		  )
 			throw EX.state("Model bean requested by the key [", key,
-			  "] is not a class checked [", beanClass.getName(), "]!"
-			);
+			  "] is not a class checked [", beanClass.getName(), "]!");
 
 		return (B) mb;
 	}
@@ -62,10 +61,15 @@ public class ModelsAccessPoint
 
 	/* Models Access Point (configuration) */
 
+	public ModelsStoreAccess getModelAccess()
+	{
+		return modelAccess;
+	}
+
+	private ModelsStoreAccess modelAccess;
+
 	public void setModelAccess(ModelsStoreAccess modelAccess)
 	{
 		this.modelAccess = EX.assertn(modelAccess);
 	}
-
-	private ModelsStoreAccess modelAccess;
 }

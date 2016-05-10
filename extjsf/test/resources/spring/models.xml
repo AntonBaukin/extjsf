@@ -1,0 +1,44 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<beans xmlns          = 'http://www.springframework.org/schema/beans'
+   xmlns:xsi          = 'http://www.w3.org/2001/XMLSchema-instance'
+   xsi:schemaLocation = 'http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd'>
+
+  <!--——————————————————————————————————————————————+
+   | Models Access Point                            |
+   +-——————————————————————————————————————————————-->
+
+  <bean name = 'modelsAccessPoint'
+    class = 'net.java.jsf.extjs.model.ModelsAccessPoint'>
+
+    <property name = 'modelAccess' ref = 'modelsStoreService'/>
+  </bean>
+
+
+  <!--——————————————————————————————————————————————+
+   | Models Store Mock                              |
+   +-——————————————————————————————————————————————-->
+
+  <bean name = 'modelsStoreService'
+    class = 'net.java.jsf.extjs.model.store.ModelsServiceMock'>
+
+    <property name = 'synchDelay' value = '1'/>
+
+    <property name = 'keysGen'>
+      <bean class = 'net.java.jsf.extjs.model.store.ModelKeysGenUUID'/>
+    </property>
+
+    <property name = 'backend'>
+      <bean class = 'net.java.jsf.extjs.model.store.ModelsBackendMock'/>
+    </property>
+
+    <property name = 'modelsStore'>
+      <bean class = 'net.java.jsf.extjs.model.store.LinkedCacheModelsStore'>
+
+        <!-- See TestModelsStore.CACHE -->
+        <constructor-arg value = '10'/>
+      </bean>
+    </property>
+  </bean>
+</beans>

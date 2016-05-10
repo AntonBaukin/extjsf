@@ -212,6 +212,15 @@
       conf = 'sources; compile -> runtime, master'/>
 
 
+    <!-- JUnit 4.1x [manually provided] -->
+
+    <dependency
+      org  = 'junit'
+      name = 'junit'
+      rev  = '4.12'
+      conf = 'sources; compile -> compile, master'/>
+
+
     <!-- Java Bytecode [excluded, manually provided] -->
 
     <exclude org  = 'javassist' conf = '*'

@@ -5,7 +5,6 @@ package net.java.jsf.extjs.support;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -28,9 +27,10 @@ public class IO
 	/* Serialization Support */
 
 	/**
-	 * Maximum size of the compressed bytes of XML text (64 MBytes).
+	 * 64 MBytes. Maximum size of the compressed bytes of
+	 * XML text, or any other bynary array.
 	 */
-	public static final long MAX_XML_BYTES = 64 * 1024 * 1024;
+	public static final long MAX_OUT_BYTES = 64 * 1024 * 1024;
 
 	public static void   xml(DataOutput d, Object bean)
 	{
@@ -45,7 +45,7 @@ public class IO
 			gz.close();
 
 			//?: {too big}
-			EX.assertx(bs.length() <= MAX_XML_BYTES,
+			EX.assertx(bs.length() <= MAX_OUT_BYTES,
 			  "Object as XML Document is too big!");
 
 			//~: write the bytes
@@ -69,7 +69,7 @@ public class IO
 		{
 			//~: bytes number
 			long s = d.readLong();
-			EX.assertx((s > 0) & (s <= MAX_XML_BYTES));
+			EX.assertx((s > 0) & (s <= MAX_OUT_BYTES));
 
 			//~: read that bytes
 			byte[] b = new byte[(int) s];
@@ -161,11 +161,7 @@ public class IO
 			return null;
 
 		byte[] buf = new byte[l];
-		if((l = i.read(buf)) != buf.length)
-			throw new EOFException(SU.cats(
-			  "Was unable to read [", buf.length,
-			  "] string bytes from the stream, read [", l, "] bytes!"
-			));
+		i.readFully(buf);
 
 		return new String(buf, "UTF-8");
 	}
@@ -204,11 +200,7 @@ public class IO
 			return null;
 
 		byte[] buf = new byte[l];
-		if((l = i.read(buf)) != buf.length)
-			throw new EOFException(SU.cats(
-			  "Was unable to read [", buf.length,
-			  "] class name bytes from the stream, read [", l, "] bytes!"
-			));
+		i.readFully(buf);
 
 		return Thread.currentThread().getContextClassLoader().
 		  loadClass(new String(buf, "UTF-8"));
@@ -301,5 +293,36 @@ public class IO
 			return false;
 		else
 			throw EX.state();
+	}
+
+	public static void    bytes(ObjectOutput o, byte[] b)
+	  throws IOException
+	{
+		if(b == null)
+		{
+			o.writeInt(-1);
+			return;
+		}
+
+		EX.assertx(b.length <= MAX_OUT_BYTES);
+
+		o.writeInt(b.length);
+		o.write(b);
+	}
+
+	public static byte[]  bytes(ObjectInput i)
+	  throws IOException
+	{
+		byte[] b;
+		int    s = i.readInt();
+
+		//?: {undefined}
+		if(s == -1)
+			return null;
+
+		EX.assertx(s >= 0 && s <= MAX_OUT_BYTES);
+		i.readFully(b = new byte[s]);
+
+		return b;
 	}
 }

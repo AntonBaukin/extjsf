@@ -3,7 +3,7 @@ package net.java.jsf.extjs.support;
 /* Spring Framework */
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /* extjsf: servlet */
@@ -34,7 +34,7 @@ public class SpringPoint
 
 	/* Spring Framework Access Interface */
 
-	public static Object         bean(String name)
+	public static Object      bean(String name)
 	{
 		EX.asserts(name);
 		return getInstance().getSpringContext().getBean(name);
@@ -44,7 +44,7 @@ public class SpringPoint
 	 * The same as {@link #bean(String)}, but returns
 	 * {@code null} if the bean is not registered.
 	 */
-	public static Object         beanOrNull(String name)
+	public static Object      beanOrNull(String name)
 	{
 		EX.asserts(name);
 
@@ -64,7 +64,7 @@ public class SpringPoint
 	 * the first letter lower-cased.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <B> B          bean(Class<B> beanClass)
+	public static <B> B       bean(Class<B> beanClass)
 	{
 		String        sn = beanClass.getSimpleName();
 		StringBuilder sb = new StringBuilder(sn);
@@ -77,7 +77,7 @@ public class SpringPoint
 	 * The same as {@link #bean(Class)}, but returns
 	 * {@code null} if the bean is not registered.
 	 */
-	public static <B> B          beanOrNull(Class<B> beanClass)
+	public static <B> B       beanOrNull(Class<B> beanClass)
 	{
 		try
 		{
@@ -89,11 +89,22 @@ public class SpringPoint
 		}
 	}
 
-	public WebApplicationContext getSpringContext()
+	public ApplicationContext getSpringContext()
 	{
+		if(testContext != null)
+			return testContext;
+
 		return EX.assertn(WebApplicationContextUtils.
 		  getWebApplicationContext(RequestPoint.context()),
 		  "Spring Framework web context does not exist!"
 		);
+	}
+
+	private static ApplicationContext testContext;
+
+	public void               setTestContext(ApplicationContext ctx)
+	{
+		EX.assertx((ctx == null) || (testContext == null));
+		testContext = ctx;
 	}
 }

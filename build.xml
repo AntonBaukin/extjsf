@@ -51,8 +51,10 @@
       failonerror = 'false'/>
 
     <!-- remove the libraries -->
-    <delete failonerror = 'false' includeemptydirs = 'true'>
-      <dirset dir = 'build' includes = 'libs.*'/>
+    <delete failonerror = 'false'
+      includeemptydirs  = 'true'>
+
+      <fileset dir = 'build' includes = 'libs.*/**'/>
     </delete>
   </target>
 

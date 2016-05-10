@@ -145,7 +145,7 @@ public abstract class ModelViewBase extends ViewWithModes
 		//~: split the keys
 		Set<String> keys = new LinkedHashSet<>(prms.length);
 		for(String s : prms) if((s = SU.s2s(s)) != null)
-			keys.addAll(Arrays.asList(SU.s2a(s)));
+			keys.addAll(Arrays.asList(SU.s2aw(s)));
 
 		return keys;
 	}

@@ -28,53 +28,39 @@ public class SU
 	 * Side whitespaces of the words are ignored,
 	 * empty strings are removed.
 	 */
-	public static String[] s2a(String s)
+	public static String[] s2aw(String s)
 	{
-		if((s = s2s(s)) == null)
-			return new String[0];
+		if(s == null) return new String[0];
 
-		List<String> sa = new ArrayList<>(8);
-		StringBuilder sb = new StringBuilder(16);
-		char          c, cc;
+		List<String> a = new ArrayList<>(4);
+		boolean      w = true, f;
+		int          l, i, j, b = 0;
 
-		for(int x = 0, i = 0, l = s.length();(i < l);i++)
+		for(i = 0, l = s.length();(i < l);i++)
 		{
-			cc = c = s.charAt(i);
+			char c = s.charAt(i);
 
-			if(Character.isLetterOrDigit(c))
-				c = '\0';
-			else if(c == '-' || c == ':' || c == '/' || c == '\\')
-				c = '\0';
+			//?: {is a separator}
+			f = !Character.isLetterOrDigit(c) &&
+			  (c != '-' & c != ':' & c != '/' & c != '\\');
 
-			//?: {in the word & continue}
-			if(x == 0 && c == '\0')
-				sb.append(cc);
-			//?: {in the word & break}
-			else if(x == 0)
+			//?: {in a word & break}
+			if(w && f)
 			{
-				if(sb.length() != 0)
-				{
-					sa.add(sb.toString());
-					sb.delete(0, sb.length());
-				}
-
-				x = 1;
+				if(b != i)
+					a.add(s.substring(b, i));
+				w = false;
 			}
 			//?: {out of a word & enter}
-			else if(c == '\0')
-			{
-				sb.append(cc);
-				x = 0;
-			}
+			else if(!w && !f)
+				{ b = i; w = true; }
 		}
 
-		if(sb.length() != 0)
-			sa.add(sb.toString());
+		//?: {last word}
+		if(w && b != i)
+			a.add(s.substring(b, i));
 
-		if(sa.isEmpty())
-			return new String[0];
-
-		return sa.toArray(new String[sa.size()]);
+		return a.toArray(new String[a.size()]);
 	}
 
 	/**

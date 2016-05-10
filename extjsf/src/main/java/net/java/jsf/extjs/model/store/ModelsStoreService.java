@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /* extjsf: model */
 
@@ -16,7 +17,6 @@ import net.java.jsf.extjs.model.ModelsStore;
 
 import net.java.jsf.extjs.support.EX;
 import net.java.jsf.extjs.support.LU;
-import static net.java.jsf.extjs.support.SpringPoint.bean;
 
 
 /**
@@ -28,16 +28,9 @@ import static net.java.jsf.extjs.support.SpringPoint.bean;
 public class      ModelsStoreService
        implements ModelsStore, ModelsStoreAccess
 {
-	/* Models Store Service Singleton */
-
-	public static ModelsStoreService getInstance()
+	public ModelsStoreService()
 	{
-		return bean(ModelsStoreService.class);
-	}
-
-	protected ModelsStoreService()
-	{
-		modelsStore = new LinkedCacheModelsStore(100);
+		modelsStore = new LinkedCacheModelsStore(101);
 		modelsStore.setDelegate(createDelegate());
 	}
 
@@ -77,11 +70,33 @@ public class      ModelsStoreService
 
 	/* Service */
 
+	public void start()
+	{
+		EX.assertn(this.backend);
+
+		//?: {activate the backend}
+		if(this.backend instanceof Runnable)
+			((Runnable)this.backend).run();
+
+		//~: plan initial events
+		startupPlan();
+	}
+
 	public void destroy()
 	{
 		//~: save all the entities
 		if(!saveShutdown())
 			saveShutdown(); //<-- try second time
+
+		//?: {close the backend}
+		if(this.backend instanceof AutoCloseable) try
+		{
+			((AutoCloseable) this.backend).close();
+		}
+		catch(Throwable e)
+		{
+			throw EX.wrap(e);
+		}
 	}
 
 
@@ -112,16 +127,16 @@ public class      ModelsStoreService
 
 	/**
 	 * Persistent store cleanup timeout
-	 * of old-stored records in minutes.
+	 * of old-stored records in milliseconds.
 	 * Defaults to 4 hours.
 	 */
-	public void setSweepTimeout(int sweepTimeout)
+	public void setSweepTimeout(long sweepTimeout)
 	{
 		EX.assertx(sweepTimeout > 0);
 		this.sweepTimeout = sweepTimeout;
 	}
 
-	protected int sweepTimeout = 240;
+	protected long sweepTimeout = 240 * 60 * 1000L;
 
 	/**
 	 * Delay to start synchronization of
@@ -147,9 +162,15 @@ public class      ModelsStoreService
 		e.setSweep(true);
 
 		//~: delay [1; 11) seconds
-		delay(e, 1000L + System.currentTimeMillis() % 10000L);
+		delay(e, startSweepDelay());
+	}
 
-		LU.I(LU.cls(this), ": system is ready, planning periodical sweep task");
+	/**
+	 * Delay [1; 11) seconds of start sweep.
+	 */
+	protected long    startSweepDelay()
+	{
+		return 1000L + System.currentTimeMillis() % 10000L;
 	}
 
 	protected void    sweepDelay()
@@ -160,7 +181,7 @@ public class      ModelsStoreService
 		e.setSweep(true);
 
 		//~: delay (in minutes ÷ 10)
-		delay(e, 1000L * 60 / 10 * sweepTimeout);
+		delay(e, sweepTimeout);
 	}
 
 	protected void    synchDelay()
@@ -186,44 +207,77 @@ public class      ModelsStoreService
 	}
 
 	/**
-	 * Replace this method with call to messaging
-	 * subsystem instead of saving events as fields.
+	 * Runs events if they are ready. This method is
+	 * not required if a Messaging Subsystem works.
+	 */
+	protected void    runEvents()
+	{
+		ModelsStoreEvent  x;
+		final long       ts = System.currentTimeMillis();
+
+		//?: {execute sweep}
+		x = sweepEvent.getAndSet(null);
+		if(x != null)
+			if(x.getEventTime() > ts)
+				sweepEvent.compareAndSet(null, x);
+			else
+			{
+				//HINT: not to call twice
+				synchEvent.compareAndSet(x, null);
+
+				doExecute(x);
+			}
+
+		//?: {execute synch}
+		x = synchEvent.getAndSet(null);
+		if(x != null)
+			if(x.getEventTime() > ts)
+				synchEvent.compareAndSet(null, x);
+			else
+				doExecute(x);
+	}
+
+	/**
+	 * Replace this method with call to Messaging
+	 * Subsystem instead of saving events as fields.
 	 */
 	protected void    delay(ModelsStoreEvent e, long dt)
 	{
-		ModelsStoreEvent  x;
-		long             ts = System.currentTimeMillis();
+		ModelsStoreEvent x;
 
+		//=: the time of the event
 		EX.assertx(dt >= 0L);
-		e.setEventTime(ts + dt);
+		e.setEventTime(System.currentTimeMillis() + dt);
 
-		//?: {execute sweep}
-		x = sweepEvent; this.sweepEvent = null;
-		if((x != null) && (x.getEventTime() >= ts))
-			doExecute(x);
-
-		//?: {execute synch}
-		if(synchEvent != x)
+		if(e.isSweep())
 		{
-			x = synchEvent; this.synchEvent = null;
-			if((x != null) && (x.getEventTime() >= ts))
-				doExecute(x);
+			x = sweepEvent.getAndSet(e);
+			LU.I(LU.cls(this), "planned sweep at ",
+			  new java.util.Date(e.getEventTime()).toInstant());
+
+			//?: {current sweep is closer}
+			if((x != null) && x.before(e))
+				sweepEvent.compareAndSet(e, x);
 		}
 
-		//?: {set execute sweep}
-		if(e.isSweep())
-			this.sweepEvent = e;
-
-		//?: {set execute synch}
 		if(e.isSynch())
-			this.synchEvent = e;
+		{
+			x = synchEvent.getAndSet(e);
+
+			//?: {current synch is closer}
+			if((x != null) && x.before(e))
+				synchEvent.compareAndSet(e, x);
+		}
 	}
 
 	/**
 	 * Replace this fields with event queue.
 	 */
-	protected ModelsStoreEvent sweepEvent;
-	protected ModelsStoreEvent synchEvent;
+	protected final AtomicReference<ModelsStoreEvent>
+	  sweepEvent = new AtomicReference<>();
+
+	protected final AtomicReference<ModelsStoreEvent>
+	  synchEvent = new AtomicReference<>();
 
 	protected void    doExecute(ModelsStoreEvent e)
 	{
@@ -258,12 +312,12 @@ public class      ModelsStoreService
 
 	protected void    doSweep()
 	{
-		if(this.backend != null) try
+		try
 		{
-			LU.I(LU.cls(this), ": executing sweep of UI models persisted");
+			LU.I(LU.cls(this), "executing sweep of UI models persisted");
 
 			//~: do database sweep
-			this.backend.sweep(1000L * 60 * sweepTimeout);
+			this.backend.sweep(sweepTimeout);
 		}
 		finally
 		{
@@ -319,7 +373,7 @@ public class      ModelsStoreService
 		//~: collect all the items of the store
 		((CachingModelsStore) modelsStore).copyAll(items);
 
-		LU.I(LU.cls(this), ": there are [", items.size(),
+		LU.I(LU.cls(this), "there are [", items.size(),
 		  "] model beans to synchronize");
 
 		//?: {nothing to save}
@@ -341,8 +395,9 @@ public class      ModelsStoreService
 
 	protected void delegateFind(ModelEntry e)
 	{
-		if(backend != null)
-			backend.find(e);
+		backend.find(e);
+
+		runEvents();
 	}
 
 	protected void delegateFound(ModelEntry e)
@@ -352,8 +407,9 @@ public class      ModelsStoreService
 
 	protected void delegateRemove(ModelEntry e)
 	{
-		if(backend != null)
-			backend.remove(e);
+		backend.remove(e);
+
+		runEvents();
 	}
 
 	protected void delegateSave(ModelEntry e)
@@ -361,11 +417,11 @@ public class      ModelsStoreService
 		//HINT: in present implementation we do not save the beans
 		//  into the database at the moment they are created.
 
-		if(backend == null) return;
-
 		//?: {it is not just created}
 		if(e.accessInc.get() != 0)
 			backend.store(Collections.singleton(e));
+
+		runEvents();
 	}
 
 	protected void delegateCreate(ModelEntry e)
@@ -376,6 +432,7 @@ public class      ModelsStoreService
 	protected void delegateOverflow(int size)
 	{
 		synchDelay();
+		runEvents();
 	}
 
 	protected CachingModelsStore.CachingDelegate createDelegate()
