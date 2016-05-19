@@ -100,6 +100,6 @@ console.log('\tsizes       : %d', lo.keys(sizes).length)
 console.log('\tbrands      : %d', lo.keys(brands).length)
 console.log('\tretailers   : %d', lo.keys(retailers).length)
 
-var data = { categories: cats, sizes, brands, retailers, goods }
+var data = { categories: cats, colors, sizes, brands, retailers, goods }
 
 fs.writeFileSync('/Users/anton/Downloads/goods.json', JSON.stringify(data))

@@ -113,9 +113,102 @@ function genPerson()
 	return p
 }
 
+var goodsdb = readJSON('goods.json.gz')
+var cats = lo.keyBy(goodsdb.categories, 'key')
 
-for(let i = 0;(i < 5);i++)
-	console.log(genPerson())
+goodsdb.categories.forEach(c =>
+{
+	delete c.key
+	cats[c.id] = c
+	genId(c)
+	cats[c._id] = c
+})
+
+goodsdb.categories.forEach(c =>
+{
+	if(!c.parentId) return
+	delete c.id
+	c.parent = cats[c.parentId]._id
+	delete c.parentId
+})
+
+function namesMap(map)
+{
+	var res = {}
+
+	lo.keys(map).forEach(k =>
+	{
+		var c = res[k] = {}
+		genId(c)
+		c.name = map[k]
+	})
+
+	return res
+}
+
+var colors = namesMap(goodsdb.colors)
+var sizes = namesMap(goodsdb.sizes)
+var brands = namesMap(goodsdb.brands)
+var retailers = namesMap(goodsdb.retailers)
+
+function procGood(s)
+{
+	var g = {}
+
+	genId(g)
+	lo.extend(g, {
+		name: s.name, description: s.de,
+		price: { value: s.price, currency: s.cu },
+		brand: brands[s.brand],
+		retailer: retailers[s.ret]
+	})
+
+	if(s.sizes)
+	{
+		g.sizes = []
+		s.sizes.forEach(ss =>
+		{
+			var x = ss.id && sizes[ss.id]
+			var s = {}; if(x) lo.extend(s, x)
+			if(ss.nm) s.title = ss.nm
+			g.sizes.push(s)
+		})
+	}
+
+	if(s.colors)
+	{
+		g.colors = []
+		s.colors.forEach(cc =>
+		{
+			var x = cc.id && colors[cc.id]
+			var c = {}; if(x) lo.extend(c, x)
+			if(cc.nm) c.title = cc.nm
+			g.colors.push(c)
+		})
+	}
+
+	if(s.cats)
+	{
+		g.categories = []
+		s.cats.forEach(cc => cats[cc] && g.categories.push(cats[cc]))
+	}
+
+	return g
+}
+
+var goods = []
+{
+	let n = 2*size + rand(9*size)
+	n = Math.min(n, goodsdb.goods.length)
+	console.error('Goods number: %d', n)
+	shuffle(goodsdb.goods)
+	goodsdb.goods.slice(0, n).forEach(s => goods.push(procGood(s)))
+}
+
+console.log(JSON.stringify(goods, null, '\t'))
+
+//for(let i = 0;(i < 5);i++)
+//	console.log(genPerson())
 
 
 function rand(/* n | array | map */)
@@ -145,6 +238,18 @@ function rands(/* rand() argument, times */)
 	for(var r = [], i = 0;(i < n);i++)
 		r.push(rand(arguments[0]))
 	return r
+}
+
+function shuffle(a)
+{
+	for(let i = 0;(i < a.length / 2);i++)
+	{
+		let k = rand(a.length)
+		let n = rand(a.length)
+		let x = a[k]
+		a[k]  = a[n]
+		a[n]  = x
+	}
 }
 
 function scope(/* [parameters] f */)
