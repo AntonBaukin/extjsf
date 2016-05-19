@@ -108,7 +108,7 @@ function genPerson()
 	var a = genAddress()
 
 	p.phone = genStatePhone(a.state)
-	p.addess = a
+	p.address = a
 
 	return p
 }
@@ -158,7 +158,7 @@ function procGood(s)
 	genId(g)
 	lo.extend(g, {
 		name: s.name, description: s.de,
-		price: { value: s.price, currency: s.cu },
+		price: { value: s.price.pr, currency: s.price.cu },
 		brand: brands[s.brand],
 		retailer: retailers[s.ret]
 	})
@@ -198,18 +198,140 @@ function procGood(s)
 
 var goods = []
 {
-	let n = 2*size + rand(9*size)
+	let n = 5*size + rand(5*size)
 	n = Math.min(n, goodsdb.goods.length)
 	console.error('Goods number: %d', n)
 	shuffle(goodsdb.goods)
 	goodsdb.goods.slice(0, n).forEach(s => goods.push(procGood(s)))
 }
 
-console.log(JSON.stringify(goods, null, '\t'))
+var persons = []
+{
+	let n = size + rand(size)
+	console.error('Persons number: %d', n)
+	lo.times(n, () => persons.push(genPerson()))
+}
 
-//for(let i = 0;(i < 5);i++)
-//	console.log(genPerson())
+function genTimestamp(after)
+{
+	if(!after)
+	{
+		var ts = Date.parse('2016-01-01')
+		ts -= rand(1000 * 60 * 24 * 365)
+		return new Date(ts)
+	}
 
+	var ts = after.getTime()
+	ts += rand(1000 * 60 * 24 * 5)
+	return new Date(ts)
+}
+
+function genInvoice(person)
+{
+	var i = {}
+
+	genId(i)
+	i.created = genTimestamp()
+	i.status = 'open'
+	i.person = person
+
+	i.shipping = { shipped: null }
+	if(rand(10) == 0) i.shipping.address = genAddress()
+
+	i.payment = { paid: null }
+
+	var gs = genInvoiceGoods(i)
+	i.total = calcInvoiceTotal(gs)
+	i.goods = gs
+
+	if(rand(4) != 0)
+	{
+		i.status = 'paid'
+		i.payment.paid = genTimestamp(i.created)
+		i.payment.tx = genId()._id
+	}
+
+	if((i.status == 'paid') && (rand(10) != 0))
+	{
+		i.status = 'shipped'
+		i.shipping.shipped = genTimestamp(i.payment.paid)
+	}
+
+	return i
+}
+
+function genInvoiceGoods(i)
+{
+	let n = 1 + rand(10)
+	if(n > goods.length) n = goods.length
+	shuffle(goods)
+
+	var gs = goods.slice(0, n)
+	gs.forEach((g, j) =>
+	{
+		g = copyJSON(g)
+		gs[j] = g
+
+		delete g.description
+
+		var sz = g.sizes
+		delete g.sizes
+		if(sz && sz.length)
+			g.size = rand(sz)
+
+		var cs = g.colors
+		delete g.colors
+		if(cs && cs.length)
+			g.color = rand(cs)
+	})
+
+	return gs
+}
+
+function calcInvoiceTotal(goods)
+{
+	var cost = {}
+	goods.forEach(g =>
+	{
+		var c = cost[g.price.currency]
+		if(!c) cost[g.price.currency] = copyJSON(g.price); else
+		{
+			var v = parseFloat(g.price.value)
+			v += parseFloat(c.value)
+			c.value = v.toFixed(2)
+		}
+	})
+
+	var total = { items: goods.length }
+	if(lo.keys(cost).length == 1)
+		total.cost = cost[lo.keys(cost)[0]]
+	else
+		total.cost = lo.values(cost)
+
+	return total
+}
+
+var invoices = []
+{
+	persons.forEach(p =>
+	{
+		let n = 1 + rand(20)
+		lo.times(n, () => invoices.push(genInvoice(p)))
+	})
+
+	console.error('Invoices number: %d', invoices.length)
+}
+
+var data = {
+	colors, sizes, brands, retailers,
+	categories: lo.values(goodsdb.categories),
+	goods, persons, invoices
+}
+
+process.stdout.write(JSON.stringify(data, null, '\t'), err =>
+{
+	process.exit(err?1:0)
+})
 
 function rand(/* n | array | map */)
 {
@@ -296,4 +418,8 @@ function readJSON(file)
 	return o
 }
 
-process.exit(0)
+function copyJSON(o)
+{
+	var s = JSON.stringify(o)
+	return JSON.parse(s)
+}
